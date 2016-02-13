@@ -29,10 +29,10 @@ my %MYGLOBUS = (
    hostdir     => undef,                          # identical to request output directory $rdir
    rqstendpoint => 'rda#data_request',            # Globus shared endpoint for dsrqst transfers
    fileendpoint => 'rda#datashare',               # Globus shared endpoint for general dataset file transfers
-#   rqstendpoint => 'd20e610e-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for dsrqst transfers
-#   fileendpoint => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
+   rqstendpointUUID => 'd20e610e-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for dsrqst transfers
+   fileendpointUUID => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
    datacartendpoint => 'rda#datacart',            # Globus shared endpoint for data cart transfers
-   sshkey      => '/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
+   sshkey      => '/glade/u/home/rdadata/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
    endpointURL => 'https://www.globus.org/xfer/StartTransfer?origin=rda'  # URL for shared Globus endpoints
 #   endpointURL => 'https://www.globus.org/app/'  # URL for shared Globus endpoints
 );
@@ -81,7 +81,6 @@ if($options{removeperm}) {
   show_usage("dsglobus");
 }
 
-
 exit 1;
 
 #
@@ -106,8 +105,7 @@ sub add_endpoint_permission{
      $options{email} = $myrqst->{email};
      if($myrqst->{globus_rid}) {
        $logmsg = "The Globus permission rule ID " . $myrqst->{globus_rid} . 
-                 " has already been created for request $ridx. Use option -rs to " .
-                 "resend the invitation.";
+                 " has already been created for request $ridx.";
        return mylog($logmsg, LGWNEX);
      }
    } elsif ($action == 2) {
@@ -118,7 +116,7 @@ sub add_endpoint_permission{
      if($myshare->{globus_rid}) {
        $logmsg = "The Globus permission rule ID " . $myshare->{globus_rid} . 
                  " has already been created for user e-mail $email and dataset " .
-                 "$dsid. Use option -rs to resend the invitation.";
+                 "$dsid.";
        return mylog($logmsg, LGWNEX);
      }
    } elsif ($action == 3) {
@@ -132,22 +130,21 @@ sub add_endpoint_permission{
      $path = $options{path};
    }
    
-   # Query user's Globus username
-   # $globus_user = get_globus_username();
-   
    $ssh_id =  " -i $MYGLOBUS{sshkey}";
-#   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityusername $options{email} --notify-email $options{email}";
-   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm=r --email=$options{email}";
+
+# New CLI command syntax 2015-02-13
+   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityusername $options{email} --notify-email $options{email}";
+
+# Obsolete 2015-02-13   
+# $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm=r --email=$options{email}";
    
-   print "$cmd\n";
-   
+   print "$cmd\n";   
    $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
-   
    print "$stdout\n";
 
 # Parse UUID from stdout (in the form of a 8-4-4-4-12 hexadecimal pattern)  
-#   if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
-   if($stdout && $stdout =~ /(\d+)$/) {
+   if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
+#   if($stdout && $stdout =~ /(\d+)$/) {
      $rule_id = $1;
      return $rule_id;
    } else {
@@ -255,22 +252,24 @@ sub construct_endpoint_url {
   ($endpoint_prefix, $endpoint_suffix) = split('#', $options{endpoint});
 
   if($action == 1) {
-    $origin_id = $MYGLOBUS{rqstendpoint};
+    $origin_id = $MYGLOBUS{rqstendpointUUID};
     $ridx = $options{ridx};
     $myrqst = myget("dsrqst", "*", "rindex = $ridx", LOGWRN, __FILE__, __LINE__);   
     return mylog("$ridx: Request Index not on file", LGWNEX) if(!$myrqst);
     return mylog("$ridx: Request ID is missing", LGWNEX) if(!$myrqst->{rqstid});   
-    $urlpath = $urlhash . $endpoint_suffix . $urlslash . "download.auto" . 
-               $urlslash . $myrqst->{rqstid} . $urlslash;
-#    $origin_path = $urlslash . "download.auto" . $urlslash . $myrqst->{rqstid} . $urlslash;
+# Obsolete 2016-02-13    
+#    $urlpath = $urlhash . $endpoint_suffix . $urlslash . "download.auto" . 
+#               $urlslash . $myrqst->{rqstid} . $urlslash;
+    $origin_path = $urlslash . "download.auto" . $urlslash . $myrqst->{rqstid} . $urlslash;
   } elsif ($action == 2) {
-    $origin_id = $MYGLOBUS{fileendpoint};
+    $origin_id = $MYGLOBUS{fileendpointUUID};
     $dsid = $options{dsid};
-    $urlpath = $urlhash . $endpoint_suffix . $urlslash . $dsid . $urlslash;
-#    $origin_path = $urlslash . $dsid . $urlslash;
+# Obsolete 2016-02-13
+#    $urlpath = $urlhash . $endpoint_suffix . $urlslash . $dsid . $urlslash;
+    $origin_path = $urlslash . $dsid . $urlslash;
   }  
-  $endpointURL = $MYGLOBUS{endpointURL} . $urlpath;
-#  $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path;
+# Obsolete 2016-02-13  $endpointURL = $MYGLOBUS{endpointURL} . $urlpath;
+  $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path;
 
   return $endpointURL;
 }
