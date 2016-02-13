@@ -32,7 +32,7 @@ function manage_acl() {
    } elseif ($gtype == 2) {
      acl_dataset($msg, $gtype, $email);
    } else {
-     return pmessage("Globus request gtype not valid (1=dsrqst, 2=dataset share)", true);
+     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share)", true);
    }
 
 }
@@ -67,12 +67,13 @@ function acl_dsrqst($msg, $gtype, $email) {
                       "and do not have permission to initiate a Globus data transfer.");
    }
    if(!empty($rqst["globus_rid"])) {
-     if(empty($_POST["resend"])) {
-       $message = "A Globus share permission has already been created for this data request. " .
-                "Please check your e-mail account <span style=\"font-weight: bold\">" . 
-                 $rqst["email"] . "</span> for a data share invitation from Globus. If " .
-                 "you wish to resend the invitation, click the 'Resend invitation' " .
-                 "button.";
+     if(!empty($rqst["globus_url"])) {
+       $message = "Please go to <a href=\"" . $rqst["globus_url"] . "\">" . $rqst["globus_url"] . 
+                "</a> to transfer your data using Globus.  From the Globus website, you may sign in " .
+                "with your RDA e-mail login <span style=\"font-weight: bold\">" . 
+                 $rqst["email"] . "</span> and password by selecting 'NCAR RDA' from " .
+                "the list of organizations. A Globus account is not required to use this " .
+                "service.";
        return resendForm($message, $gtype, $ridx, null, null);
      } else {
        $cmd = escapeshellcmd('dsglobus -rs -ri ' . $ridx);
@@ -81,10 +82,13 @@ function acl_dsrqst($msg, $gtype, $email) {
      $cmd = escapeshellcmd('dsglobus -ap -ri ' . $ridx);
    }
    $info = globus_cli_cmd($cmd);
-   bmessage("A new Globus data share invitation has been sent to your e-mail address " .
-            "<span style=\"font-weight: bold\">(" . $rqst["email"] . ")</span>. Please " .
-            "follow the instructions in the e-mail message to download your data via " .
-            "Globus.");
+   $rqst = request_record($msg, $ridx, $mfunc);
+   bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
+            $rqst["globus_url"] . "\">" . $rqst["globus_url"] . "</a> From the Globus " .
+            "website, please select 'NCAR RDA' from the list of organizations " .
+            "and then enter your RDA e-mail address " .
+            "<span style=\"font-weight: bold\">(" . $rqst["email"] . ")</span> and " .
+            "password to log in.");
 }
 
 /**
@@ -100,12 +104,14 @@ function acl_dataset($msg, $gtype, $email) {
    $datashare = dataset_share_record($msg, $email, $dsid, $mfunc);
    
    if(!empty($datashare)) {
-     if(empty($_POST["resend"])) {
-       $message = "A Globus share permission has already been created for this dataset. " .
-                "Please check your e-mail account <span style=\"font-weight: bold\">" . 
-                 $email . "</span> for a data share invitation from Globus. If " .
-                 "you wish to resend the invitation, click the 'Resend invitation' " .
-                 "button.";
+     if(!empty($datashare["globus_url"])) {
+       $message = "Please go to <a href=\"" . $datashare["globus_url"] . "\">" . 
+                $datashare["globus_url"] . 
+                "</a> to transfer your data using Globus.  From the Globus website, you may sign in " .
+                "with your RDA e-mail login <span style=\"font-weight: bold\">" . 
+                 $email . "</span> and password by selecting 'NCAR RDA' from " .
+                "the list of organizations. A Globus account is not required to use this " .
+                "service.";
        return resendForm($message, $gtype, null, $dsid, $email);
      } else {
        $cmd = escapeshellcmd('dsglobus -rs -ds ' . $dsid . ' -em ' . $email);
@@ -114,10 +120,13 @@ function acl_dataset($msg, $gtype, $email) {
      $cmd = escapeshellcmd('dsglobus -ap -ds ' . $dsid . ' -em ' . $email);
    }
    $info = globus_cli_cmd($cmd);
-   bmessage("A new Globus data share inivitation has been sent to your e-mail address " .
-            "<span style=\"font-weight: bold\">(" . $email . ")</span>. Please " .
-            "follow the instructions in the e-mail message to download your data via " .
-            "Globus.");
+   $datashare = dataset_share_record($msg, $email, $dsid, $mfunc);
+   bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
+            $datashare["globus_url"] . "\">" . $datashare["globus_url"] . "</a> From the Globus " .
+            "website, please select 'NCAR RDA' from the list of organizational logins " .
+            "and then enter your RDA e-mail address " .
+            "<span style=\"font-weight: bold\">(" . $email . ")</span> and " .
+            "password to log in.");
 }
 
 /**
@@ -154,9 +163,7 @@ function resendForm($message, $gtype, $ridx=0, $dsid=0, $email) {
           "<p>$message</p>\n " .
           "<input type=\"hidden\" name=\"gtype\" value=\"" . $gtype . "\">\n" . 
           "<input type=\"hidden\" name=\"ridx\" value=\"" . $ridx . "\">\n" . 
-          "<input type=\"hidden\" name=\"resend\" value=\"true\">\n" . 
-          "<p><input type=\"submit\" value=\"Resend invitation\">&nbsp;" .
-          "<input type=\"button\" value=\"Cancel\" onClick=\"self.close()\">" . 
+          "<p><input type=\"button\" value=\"Cancel\" onClick=\"self.close()\">" . 
           "</p></form></body></html>\n";
     } elseif ($gtype == 2) {
      echo "<html><head><title>Globus data transfer</title></head><body>\n" .
@@ -164,9 +171,7 @@ function resendForm($message, $gtype, $ridx=0, $dsid=0, $email) {
           "<p>$message</p>\n " .
           "<input type=\"hidden\" name=\"gtype\" value=\"" . $gtype . "\">\n" . 
           "<input type=\"hidden\" name=\"dsid\" value=\"" . $dsid . "\">\n" . 
-          "<input type=\"hidden\" name=\"resend\" value=\"true\">\n" . 
-          "<p><input type=\"submit\" value=\"Resend invitation\">&nbsp;" .
-          "<input type=\"button\" value=\"Cancel\" onClick=\"self.close()\">" . 
+          "<p><input type=\"button\" value=\"Cancel\" onClick=\"self.close()\">" . 
           "</p></form></body></html>\n";    
     }
 }
