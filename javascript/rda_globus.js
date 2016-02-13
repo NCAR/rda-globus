@@ -30,7 +30,7 @@ function requestGlobusInvite(gtype, ridx, dsid) {
      alert(errmsg);
      return;
    }
-   win = window.open("", "Globus data transfer invitation", "width=500,height=400,scrollbars=yes,resizable=yes");
+   win = window.open("", "Globus data transfer request", "width=500,height=400,scrollbars=yes,resizable=yes");
    doc = win.document;
    doc.write("<html><head><title>Globus data transfer</title></head><body>\n");
    if(gtype == 1) {
@@ -42,10 +42,10 @@ function requestGlobusInvite(gtype, ridx, dsid) {
    doc.write("<div id=\"load\">\n");
    doc.write("<p>Click the button labeled 'Request Globus transfer' to \n");
    doc.write( + msg + " via the Globus data transfer service. A Globus user \n");
-   doc.write("account is not required. If you have a Globus user account, you \n");
-   doc.write("may sign into Globus with your RDA user name and password by \n");
-   doc.write("selecting the 'alternate identity' link on the Globus login page \n");
-   doc.write("and selecting the 'NCAR RDA' identity provider.</p>\n");      
+   doc.write("account is not required. You may sign into Globus with your RDA \n");
+   doc.write("user e-mail and password by selecting 'NCAR RDA' organizational \n");
+   doc.write("login on the Globus login page, and then enter your RDA e-mail \n");
+   doc.write("login and password.</p>\n");      
    doc.write("</div>\n");
 
    doc.write("<form name=\"globusForm\" action=\"/php/dsglobus.php\" method=\"post\" onsubmit=\"showLoading()\">\n");
