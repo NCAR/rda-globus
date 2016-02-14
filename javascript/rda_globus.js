@@ -41,7 +41,7 @@ function requestGlobusInvite(gtype, ridx, dsid) {
    }
    doc.write("<div id=\"load\">\n");
    doc.write("<p>Click the button labeled 'Request Globus transfer' to \n");
-   doc.write( + msg + " via the Globus data transfer service. A Globus user \n");
+   doc.write( msg + " via the Globus data transfer service. A Globus user \n");
    doc.write("account is not required. You may sign into Globus with your RDA \n");
    doc.write("user e-mail and password by selecting 'NCAR RDA' organizational \n");
    doc.write("login on the Globus login page, and then enter your RDA e-mail \n");
