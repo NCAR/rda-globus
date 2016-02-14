@@ -84,7 +84,7 @@ function acl_dsrqst($msg, $gtype, $email) {
    $info = globus_cli_cmd($cmd);
    $rqst = request_record($msg, $ridx, $mfunc);
    bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
-            $rqst["globus_url"] . "\">" . $rqst["globus_url"] . "</a> From the Globus " .
+            $rqst["globus_url"] . "\">" . $rqst["globus_url"] . "</a>.<br /> From the Globus " .
             "website, please select 'NCAR RDA' from the list of organizations " .
             "and then enter your RDA e-mail address " .
             "<span style=\"font-weight: bold\">(" . $rqst["email"] . ")</span> and " .
@@ -122,7 +122,7 @@ function acl_dataset($msg, $gtype, $email) {
    $info = globus_cli_cmd($cmd);
    $datashare = dataset_share_record($msg, $email, $dsid, $mfunc);
    bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
-            $datashare["globus_url"] . "\">" . $datashare["globus_url"] . "</a> From the Globus " .
+            $datashare["globus_url"] . "\">" . $datashare["globus_url"] . "</a>.<br /> From the Globus " .
             "website, please select 'NCAR RDA' from the list of organizational logins " .
             "and then enter your RDA e-mail address " .
             "<span style=\"font-weight: bold\">(" . $email . ")</span> and " .
