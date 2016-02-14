@@ -32,7 +32,7 @@ my %MYGLOBUS = (
    rqstendpointUUID => 'd20e610e-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for dsrqst transfers
    fileendpointUUID => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
    datacartendpoint => 'rda#datacart',            # Globus shared endpoint for data cart transfers
-   sshkey      => '/glade/u/home/rdadata/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
+   sshkey      => '/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
    endpointURL => 'https://www.globus.org/xfer/StartTransfer?origin=rda'  # URL for shared Globus endpoints
 #   endpointURL => 'https://www.globus.org/app/'  # URL for shared Globus endpoints
 );
@@ -246,6 +246,7 @@ sub construct_endpoint_url {
   my ($myrqst, $ridx, $dsid);
   my ($urlpath, $endpointURL);
   my ($endpoint_prefix, $endpoint_suffix);
+  my ($origin_id, $origin_path);
   my $urlhash = "%23";
   my $urlslash = "%2F";
   
