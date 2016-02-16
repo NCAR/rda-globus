@@ -33,8 +33,8 @@ my %MYGLOBUS = (
    fileendpointUUID => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
    datacartendpoint => 'rda#datacart',            # Globus shared endpoint for data cart transfers
    sshkey      => '/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
-   endpointURL => 'https://www.globus.org/xfer/StartTransfer?origin=rda'  # URL for shared Globus endpoints
-#   endpointURL => 'https://www.globus.org/app/'  # URL for shared Globus endpoints
+#   endpointURL => 'https://www.globus.org/xfer/StartTransfer?origin=rda'  # URL for shared Globus endpoints
+   endpointURL => 'https://www.globus.org/app/'  # URL for shared Globus endpoints
 );
 
 my %options = (
