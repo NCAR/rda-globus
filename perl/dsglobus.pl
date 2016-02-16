@@ -33,7 +33,6 @@ my %MYGLOBUS = (
    fileendpointUUID => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
    datacartendpoint => 'rda#datacart',            # Globus shared endpoint for data cart transfers
    sshkey      => '/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
-#   endpointURL => 'https://www.globus.org/xfer/StartTransfer?origin=rda'  # URL for shared Globus endpoints
    endpointURL => 'https://www.globus.org/app/'  # URL for shared Globus endpoints
 );
 
@@ -46,6 +45,7 @@ my %options = (
    ridx           => undef,    # dsrqst ID
    dsid           => undef,    # dataset ID
    email          => undef,    # user e-mail address
+   donotnotify    => undef,    # If set, do not send e-mail notification to user when new share is created (default behavior sends notification)
    globus_rid     => undef,    # Globus rule ID for data share permission
    globus_url     => undef     # URL for shared data endpoint
 );
@@ -131,20 +131,15 @@ sub add_endpoint_permission{
    }
    
    $ssh_id =  " -i $MYGLOBUS{sshkey}";
+   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityusername $options{email}";
+   $cmd .= " --notify-email $options{email}" if(!$options{donotnotify});
 
-# New CLI command syntax 2015-02-13
-   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityusername $options{email} --notify-email $options{email}";
-
-# Obsolete 2015-02-13   
-# $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm=r --email=$options{email}";
-   
    print "$cmd\n";   
    $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
    print "$stdout\n";
 
 # Parse UUID from stdout (in the form of a 8-4-4-4-12 hexadecimal pattern)  
    if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
-#   if($stdout && $stdout =~ /(\d+)$/) {
      $rule_id = $1;
      return $rule_id;
    } else {
@@ -244,34 +239,23 @@ sub construct_endpoint_url {
   my ($action) = @_;
   
   my ($myrqst, $ridx, $dsid);
-  my ($urlpath, $endpointURL);
-  my ($endpoint_prefix, $endpoint_suffix);
-  my ($origin_id, $origin_path);
+  my ($origin_id, $origin_path, $endpointURL);
   my $urlhash = "%23";
   my $urlslash = "%2F";
   
-  ($endpoint_prefix, $endpoint_suffix) = split('#', $options{endpoint});
-
   if($action == 1) {
     $origin_id = $MYGLOBUS{rqstendpointUUID};
     $ridx = $options{ridx};
     $myrqst = myget("dsrqst", "*", "rindex = $ridx", LOGWRN, __FILE__, __LINE__);   
     return mylog("$ridx: Request Index not on file", LGWNEX) if(!$myrqst);
     return mylog("$ridx: Request ID is missing", LGWNEX) if(!$myrqst->{rqstid});   
-# Obsolete 2016-02-13    
-#    $urlpath = $urlhash . $endpoint_suffix . $urlslash . "download.auto" . 
-#               $urlslash . $myrqst->{rqstid} . $urlslash;
     $origin_path = $urlslash . "download.auto" . $urlslash . $myrqst->{rqstid} . $urlslash;
   } elsif ($action == 2) {
     $origin_id = $MYGLOBUS{fileendpointUUID};
     $dsid = $options{dsid};
-# Obsolete 2016-02-13
-#    $urlpath = $urlhash . $endpoint_suffix . $urlslash . $dsid . $urlslash;
     $origin_path = $urlslash . $dsid . $urlslash;
   }  
-# Obsolete 2016-02-13  $endpointURL = $MYGLOBUS{endpointURL} . $urlpath;
   $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path;
-
   return $endpointURL;
 }
 
@@ -320,7 +304,7 @@ sub parse_input {
   my ($aname) = @_;
   
   my ($us, $ridx, $dsid, $action);
-  my ($addperm, $removeperm, $resend, $help, $path, $endpoint, $email);
+  my ($addperm, $removeperm, $resend, $help, $path, $endpoint, $email, $donotnotify);
 
   $action = 0;
   
@@ -341,6 +325,7 @@ sub parse_input {
                  "dp|DownloadPath=s" => \$path,
                  "ep|Endpoint=s" => \$endpoint,
                  "em|Email=s" => \$email,
+                 "ne|DoNotNotify" => \$donotnotify,
                  "h|help" => \$help)) {
     show_usage($aname);
   }
@@ -358,6 +343,7 @@ sub parse_input {
   $options{addperm} = $addperm if($addperm);
   $options{removeperm} = $removeperm if($removeperm);
   $options{resend} = $resend if($resend);
+  $options{donotnotify} = $donotnotify if($donotnotify);
 
   if ($ridx) {
     $options{ridx} = $ridx;
