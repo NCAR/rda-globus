@@ -240,7 +240,7 @@ sub construct_share_path {
 sub construct_endpoint_url {
   my ($action) = @_;
   
-  my ($myrqst, $ridx, $dsid, $ssh_id, $cmd, $stdout);
+  my ($myrqst, $ridx, $dsid, $ssh_id, $cmd, $stdout, $json);
   my ($origin_id, $origin_path, $endpointURL);
   my $urlhash = "%23";
   my $urlslash = "%2F";
@@ -251,7 +251,8 @@ sub construct_endpoint_url {
   $cmd = $MYGLOBUS{ssh} . $ssh_id . " identity-details $options{email}";
   $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
   if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
-    $identity = parse_json($1);
+    $json = $1;
+    $identity = parse_json($json);
   }
   
   if($action == 1) {
