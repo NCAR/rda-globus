@@ -244,15 +244,15 @@ sub construct_endpoint_url {
   my ($origin_id, $origin_path, $endpointURL);
   my $urlhash = "%23";
   my $urlslash = "%2F";
-  my $identity;
+  my ($identity, $add_identity);
   
 # Get user's identity UUID
   $ssh_id =  " -i $MYGLOBUS{sshkey}";
   $cmd = $MYGLOBUS{ssh} . $ssh_id . " identity-details $options{email}";
   $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
   if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
-    $json = $1;
-    $identity = parse_json($json);
+    $identity = parse_json($stdout);
+    $add_identity = "&add_identity=$identity->{id}";
   }
   
   if($action == 1) {
@@ -267,7 +267,7 @@ sub construct_endpoint_url {
     $dsid = $options{dsid};
     $origin_path = $urlslash . $dsid . $urlslash;
   }  
-  $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path . "&add_identity=$identity->{id}";
+  $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path . $add_identity;
   return $endpointURL;
 }
 
