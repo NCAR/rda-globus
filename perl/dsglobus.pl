@@ -20,6 +20,7 @@ use MyDBI;
 use MyLOG;
 use MySubset;
 use MyUtil;
+use JSON::Parse ':all';
 
 my %MYGLOBUS = (
    user        => 'rda',                          # RDA Globus user name
@@ -238,10 +239,18 @@ sub construct_share_path {
 sub construct_endpoint_url {
   my ($action) = @_;
   
-  my ($myrqst, $ridx, $dsid);
+  my ($myrqst, $ridx, $dsid, $cmd, $stdout);
   my ($origin_id, $origin_path, $endpointURL);
   my $urlhash = "%23";
   my $urlslash = "%2F";
+  my $identity;
+  
+# Get user's identity UUID
+  $cmd = $MYGLOBUS{ssh} . $ssh_id . " identity-details $options{email}";
+  $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
+  if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
+    $identity = parse_json($1);
+  }
   
   if($action == 1) {
     $origin_id = $MYGLOBUS{rqstendpointUUID};
@@ -255,7 +264,7 @@ sub construct_endpoint_url {
     $dsid = $options{dsid};
     $origin_path = $urlslash . $dsid . $urlslash;
   }  
-  $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path;
+  $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path . "&add_identity=$identity->{id}";
   return $endpointURL;
 }
 
