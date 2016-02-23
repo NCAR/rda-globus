@@ -17,7 +17,6 @@ use strict;
 use Getopt::Long;
 use lib "/glade/u/home/rdadata/lib/perl";
 use lib "/glade/apps/opt/perlmods/lib/perl5/x86_64-linux-thread-multi";
-use lib "";
 use MyDBI;
 use MyLOG;
 use MySubset;
