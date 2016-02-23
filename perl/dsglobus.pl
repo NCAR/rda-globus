@@ -241,7 +241,7 @@ sub construct_share_path {
 sub construct_endpoint_url {
   my ($action) = @_;
   
-  my ($myrqst, $ridx, $dsid, $cmd, $stdout);
+  my ($myrqst, $ridx, $dsid, $ssh_id, $cmd, $stdout);
   my ($origin_id, $origin_path, $endpointURL);
   my $urlhash = "%23";
   my $urlslash = "%2F";
