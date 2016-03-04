@@ -142,6 +142,7 @@ def add_tasks(go_table, data):
 # Get list of files transferred successfully
 
 def get_successful_transfers(task_id):
+	my_logger.info("[get_successful_transfers] task_id: {0}".format(task_id))
 	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
 	r = requests.get(url+resource, headers=headers)
 	data = r.json()
@@ -155,7 +156,8 @@ def get_successful_transfers(task_id):
 	
 	# Check for additional pages.  Append response to data_transfers.
 		while (data['next_marker']):
-			markers = {'marker':data['next_marker']}
+			my_logger.debug("[get_successful_transfers] next_marker: {0}".format(data['next_marker']))
+			markers = {'limit':1000, 'marker':data['next_marker']}
 			r = requests.get(url+resource, headers=headers, params=markers)
 			data = r.json()
 			if (r.status_code >= 400):
@@ -166,31 +168,6 @@ def get_successful_transfers(task_id):
 	# return all successful transfers
 		return data_transfers
 
-#=========================================================================================
-# Handle errors returned by API resource
-
-# Example:
-# Verify that task id exists.  Response will be as follows if not:
-# r.status_code = 404
-# r.headers['x-transfer-api-error'] = 'TaskNotFound'
-# data['code'] = 'TaskNotFound'
-# data['message'] = 'Task ID <task_id> not found'
-# data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
-
-# Also, for failed tasks, the task ID will exist, but response will have zero content:
-# len(data['DATA']) = 0
-
-def handle_error(r, data):
-	msg = "Error {0}: {1}".format(str(r.status_code), data['message'])
-	msg += " Resource: {0}".format(data['resource'])
-	my_logger.error(msg)
-	error_code = r.headers['x-transfer-api-error']
-	
-	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
-		sys.exit()
-	else:
-		return
-	
 #=========================================================================================
 # Parse file names in data_transfers dictionary
 
@@ -528,6 +505,31 @@ def print_doc(data, keys):
 			else:
 				continue
 
+#=========================================================================================
+# Handle errors returned by API resource
+
+# Example:
+# Verify that task id exists.  Response will be as follows if not:
+# r.status_code = 404
+# r.headers['x-transfer-api-error'] = 'TaskNotFound'
+# data['code'] = 'TaskNotFound'
+# data['message'] = 'Task ID <task_id> not found'
+# data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
+
+# Also, for failed tasks, the task ID will exist, but response will have zero content:
+# len(data['DATA']) = 0
+
+def handle_error(r, data):
+	msg = "Error {0}: {1}, {2}".format(str(r.status_code), data['code'], data['message'])
+	msg += " Resource: {0}".format(data['resource'])
+	my_logger.error(msg)
+	error_code = r.headers['x-transfer-api-error']
+	
+	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
+		sys.exit()
+	else:
+		return
+	
 #=========================================================================================
 
 if __name__ == "__main__":
