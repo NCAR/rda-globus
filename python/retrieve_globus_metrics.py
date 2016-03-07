@@ -58,14 +58,11 @@ transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
 def main(filters):
 
 # Get Globus transfer tasks
-	my_logger.info(__name__+': Getting tasks')
 	data_tasks = get_tasks(filters)
 	if doprint: print_doc(data_tasks, task_keys)
-	my_logger.info(__name__+': Adding/updating tasks in RDA DB')
 	add_tasks('gotask', data_tasks)
 
 # Get list of successful transfers for each Globus task id.
-	my_logger.info(__name__+': Getting and adding Globus transfers')
 	for i in range(len(data_tasks['DATA'])):
 		task_id = data_tasks['DATA'][i]['task_id']
 		bytes = data_tasks['DATA'][i]['bytes_transferred']
@@ -79,6 +76,7 @@ def main(filters):
 # Get Globus transfer tasks
 
 def get_tasks(filters):
+	my_logger.debug('[get_tasks] Getting tasks')
 	resource = 'endpoint_manager/task_list'
 	r = requests.get(url+resource, headers=headers, params=filters)
 	data = r.json()
@@ -106,6 +104,7 @@ def get_tasks(filters):
 # Insert/update Globus transfer tasks
 
 def add_tasks(go_table, data):
+	my_logger.debug('[add_tasks] Adding/updating tasks in RDA DB')
 	
 # Prepare database records
 	if (len(data['DATA']) >= 1):
@@ -142,7 +141,7 @@ def add_tasks(go_table, data):
 # Get list of files transferred successfully
 
 def get_successful_transfers(task_id):
-	my_logger.info("[get_successful_transfers] task_id: {0}".format(task_id))
+	my_logger.info("[get_successful_transfers] Processsing task_id: {0}".format(task_id))
 	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
 	r = requests.get(url+resource, headers=headers)
 	data = r.json()
@@ -229,7 +228,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 # Insert/update list of files transferred successfully
 
 def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
-	my_logger.info("[add_successful_transfers] task_id: {0}".format(task_id))
+	my_logger.debug("[add_successful_transfers] Processing task_id: {0}".format(task_id))
 
 # Prepare database records
 
@@ -263,7 +262,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 					if (cmp(records[i],myrec) != 0):
 						myupdt(go_table, records[i], condition)
 					else:
-						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
+						my_logger.debug("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
 				else:
 					myadd(go_table, records[i])
 			elif (endpoint == 'rda#data_request'):
@@ -297,7 +296,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			if (cmp(dsrqst_rec, myrec) != 0):
 				myupdt(go_table, dsrqst_rec[0], condition)
 			else:
-				my_logger.info("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
+				my_logger.debug("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
 		else:
 			myadd(go_table, dsrqst_rec[0])
 
@@ -356,7 +355,7 @@ def update_allusage(task_id):
 			if (cmp(all_recs[i], myrec) != 0):
 				myupdt(go_table, all_recs[i], condition)
 			else:
-				my_logger.info("[update_allusage] DB record already exists and is up to date.")
+				my_logger.debug("[update_allusage] DB record already exists and is up to date.")
 		else:
 			myadd(go_table, all_recs[i])
 
@@ -364,7 +363,7 @@ def update_allusage(task_id):
 # Define filters to apply in API requests
 
 def set_filters(args):
-	my_logger.info('[set_filters] Defining Globus API filters')
+	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	if (args['endpoint']): filters['filter_endpoint'] = args['endpoint']		
 	if (args['user'] != ''): filters['filter_username'] = args['user']
@@ -391,7 +390,7 @@ def parse_opts(argv):
 	from datetime import timedelta
 	global doprint
 
-	my_logger.info('[parse_opts] Parsing command line arguments')
+	my_logger.debug('[parse_opts] Parsing command line arguments')
 	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
 	date_fmt = "%Y-%m-%d"
 	thirtyDays = timedelta(days=30)
