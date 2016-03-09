@@ -529,9 +529,9 @@ def handle_error(r, data):
 def mylog(logpath, logfile, level):
 	loggerName = 'GlobusMetricsLog'
 	my_logger = logging.getLogger(loggerName)
-	num_level = getattr(logging, loglevel.upper())
+	num_level = getattr(logging, level.upper())
 	my_logger.setLevel(num_level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=1000000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(logpath+'/'+logfile,maxBytes=1000000000,backupCount=10)
 	handler.setLevel(num_level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(message)s')
 	handler.setFormatter(formatter)
