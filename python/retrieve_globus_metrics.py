@@ -382,7 +382,6 @@ def parse_opts(argv):
 	global doprint
 	global my_debug
 
-	my_debug.debug('[parse_opts] Parsing command line arguments')
 	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
 	date_fmt = "%Y-%m-%d"
 	thirtyDays = timedelta(days=30)
