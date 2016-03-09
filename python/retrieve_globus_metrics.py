@@ -27,7 +27,6 @@ import urllib
 LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
 LOGFILE = 'retrieve_globus_metrics.log'
 DBGLOG  = 'retrieve_globus_metrics.dbg'
-my_logger = mylog(LOGPATH, LOGFILE, 'INFO')
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
 token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/goauth-token', 'r')
@@ -558,6 +557,7 @@ def mydbg(logpath, dbglog):
 #=========================================================================================
 
 if __name__ == "__main__":
+	my_logger = mylog(LOGPATH, LOGFILE, 'INFO')
 	args = parse_opts(sys.argv[1:])
 	filters = set_filters(args)
 	main(filters)
