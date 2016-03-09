@@ -26,6 +26,7 @@ import urllib
 
 LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
 LOGFILE = 'retrieve_globus_metrics.log'
+ERRLOG = 'retrieve_globus_metrics.err'
 DBGLOG  = 'retrieve_globus_metrics.dbg'
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
@@ -66,7 +67,7 @@ def main(filters):
 # Get Globus transfer tasks
 
 def get_tasks(filters):
-	my_logger.debug('[get_tasks] Getting tasks')
+	my_debug.debug('[get_tasks] Getting tasks')
 	resource = 'endpoint_manager/task_list'
 	r = requests.get(url+resource, headers=headers, params=filters)
 	data = r.json()
@@ -94,7 +95,7 @@ def get_tasks(filters):
 # Insert/update Globus transfer tasks
 
 def add_tasks(go_table, data):
-	my_logger.debug('[add_tasks] Adding/updating tasks in RDA DB')
+	my_debug.debug('[add_tasks] Adding/updating tasks in RDA DB')
 	
 # Prepare database records
 	if (len(data['DATA']) >= 1):
@@ -145,7 +146,7 @@ def get_successful_transfers(task_id):
 	
 	# Check for additional pages.  Append response to data_transfers.
 		while (data['next_marker']):
-			my_logger.debug("[get_successful_transfers] next_marker: {0}".format(data['next_marker']))
+			my_debug.debug("[get_successful_transfers] next_marker: {0}".format(data['next_marker']))
 			markers = {'limit':1000, 'marker':data['next_marker']}
 			r = requests.get(url+resource, headers=headers, params=markers)
 			data = r.json()
@@ -218,7 +219,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 # Insert/update list of files transferred successfully
 
 def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
-	my_logger.debug("[add_successful_transfers] Processing task_id: {0}".format(task_id))
+	my_debug.debug("[add_successful_transfers] Processing task_id: {0}".format(task_id))
 
 # Prepare database records
 
@@ -252,7 +253,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 					if (cmp(records[i],myrec) != 0):
 						myupdt(go_table, records[i], condition)
 					else:
-						my_logger.debug("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
+						my_debug.debug("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
 				else:
 					myadd(go_table, records[i])
 			elif (endpoint == 'rda#data_request'):
@@ -286,7 +287,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			if (cmp(dsrqst_rec, myrec) != 0):
 				myupdt(go_table, dsrqst_rec[0], condition)
 			else:
-				my_logger.debug("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
+				my_debug.debug("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
 		else:
 			myadd(go_table, dsrqst_rec[0])
 
@@ -345,7 +346,7 @@ def update_allusage(task_id):
 			if (cmp(all_recs[i], myrec) != 0):
 				myupdt(go_table, all_recs[i], condition)
 			else:
-				my_logger.debug("[update_allusage] DB record already exists and is up to date.")
+				my_debug.debug("[update_allusage] DB record already exists and is up to date.")
 		else:
 			myadd(go_table, all_recs[i])
 
@@ -353,7 +354,7 @@ def update_allusage(task_id):
 # Define filters to apply in API requests
 
 def set_filters(args):
-	my_logger.debug('[set_filters] Defining Globus API filters')
+	my_debug.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	if (args['endpoint']): filters['filter_endpoint'] = args['endpoint']		
 	if (args['user'] != ''): filters['filter_username'] = args['user']
@@ -381,7 +382,7 @@ def parse_opts(argv):
 	global doprint
 	global my_debug
 
-	my_logger.debug('[parse_opts] Parsing command line arguments')
+	my_debug.debug('[parse_opts] Parsing command line arguments')
 	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
 	date_fmt = "%Y-%m-%d"
 	thirtyDays = timedelta(days=30)
@@ -514,7 +515,7 @@ def print_doc(data, keys):
 def handle_error(r, data):
 	msg = "Error {0}: {1}, {2}".format(str(r.status_code), data['code'], data['message'])
 	msg += " Resource: {0}".format(data['resource'])
-	my_logger.error(msg)
+	my_err.error(msg)
 	error_code = r.headers['x-transfer-api-error']
 	
 	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
@@ -533,10 +534,26 @@ def mylog(logpath, logfile, level):
 	my_logger.setLevel(num_level)
 	handler = logging.handlers.RotatingFileHandler(logpath+'/'+logfile,maxBytes=1000000000,backupCount=10)
 	handler.setLevel(num_level)
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(message)s')
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - line %(lineno)d - %(message)s')
 	handler.setFormatter(formatter)
 	my_logger.addHandler(handler)
 	return my_logger
+ 
+#=========================================================================================
+# Open error log file
+
+def myerr(logpath, errlog):
+	loglevel = 'ERROR'
+	loggerName = 'GlobusMetricsErrorLog'
+	my_err = logging.getLogger(loggerName)
+	num_level = getattr(logging, loglevel.upper())
+	my_err.setLevel(num_level)
+	handler = logging.handlers.RotatingFileHandler(logpath+'/'+errlog,maxBytes=1000000000,backupCount=10)
+	handler.setLevel(num_level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - line %(lineno)d - %(message)s')
+	handler.setFormatter(formatter)
+	my_err.addHandler(handler)
+	return my_err
  
 #=========================================================================================
 # Open debug log file
@@ -549,7 +566,7 @@ def mydbg(logpath, dbglog):
 	my_debug.setLevel(num_level)
 	handler = logging.handlers.RotatingFileHandler(logpath+'/'+dbglog,maxBytes=1000000000,backupCount=10)
 	handler.setLevel(num_level)
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - line %(lineno)d - %(message)s')
 	handler.setFormatter(formatter)
 	my_debug.addHandler(handler)
 	return my_debug
@@ -558,6 +575,7 @@ def mydbg(logpath, dbglog):
 
 if __name__ == "__main__":
 	my_logger = mylog(LOGPATH, LOGFILE, 'INFO')
+	my_err = myerr(LOGPATH, ERRLOG)
 	args = parse_opts(sys.argv[1:])
 	filters = set_filters(args)
 	main(filters)
