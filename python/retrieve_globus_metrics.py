@@ -132,7 +132,7 @@ def add_tasks(go_table, data):
 # Get list of files transferred successfully
 
 def get_successful_transfers(task_id):
-	my_logger.info("[get_successful_transfers] Processsing task_id: {0}".format(task_id))
+	my_debug.debug("[get_successful_transfers] Processsing task_id: {0}".format(task_id))
 	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
 	r = requests.get(url+resource, headers=headers)
 	data = r.json()
