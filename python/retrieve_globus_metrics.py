@@ -26,17 +26,8 @@ import urllib
 
 LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
 LOGFILE = 'retrieve_globus_metrics.log'
-loglevel = 'INFO'
-loggerName = 'GlobusMetricsLog'
-
-my_logger = logging.getLogger(loggerName)
-num_level = getattr(logging, loglevel.upper())
-my_logger.setLevel(num_level)
-handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=1000000000,backupCount=10)
-handler.setLevel(num_level)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(message)s')
-handler.setFormatter(formatter)
-my_logger.addHandler(handler)
+DBGLOG  = 'retrieve_globus_metrics.dbg'
+my_logger = mylog(LOGPATH, LOGFILE, 'INFO')
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
 token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/goauth-token', 'r')
@@ -389,6 +380,7 @@ def parse_opts(argv):
 	import getopt
 	from datetime import timedelta
 	global doprint
+	global my_debug
 
 	my_logger.debug('[parse_opts] Parsing command line arguments')
 	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
@@ -405,7 +397,7 @@ def parse_opts(argv):
 	doprint = bool(False)
 	rem = ''
 	
-	opts, rem = getopt.getopt(argv, 'n:u:s:e:p', ['endpoint=','user=','startdate=','enddate=','print'])
+	opts, rem = getopt.getopt(argv, 'n:u:s:e:p:b', ['endpoint=','user=','startdate=','enddate=','print','debug'])
 	
 	for opt, arg in opts:
 		if opt in ('-n', '--endpoint'):
@@ -422,6 +414,8 @@ def parse_opts(argv):
 			my_logger.info('END       : {0}'.format(end_date))
 		elif opt in ('-p', '--print'):
 			doprint = bool(True)
+		elif opt in ('-b', '--debug'):
+			my_debug = mydbg(LOGPATH, DBGLOG)
 		elif opt in ('-h', '--help'):
 			print usg
 	
@@ -529,6 +523,38 @@ def handle_error(r, data):
 	else:
 		return
 	
+#=========================================================================================
+# Open log file
+# level = DEBUG, INFO, WARNING, ERROR, or CRITICAL
+
+def mylog(logpath, logfile, level):
+	loggerName = 'GlobusMetricsLog'
+	my_logger = logging.getLogger(loggerName)
+	num_level = getattr(logging, loglevel.upper())
+	my_logger.setLevel(num_level)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=1000000000,backupCount=10)
+	handler.setLevel(num_level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(message)s')
+	handler.setFormatter(formatter)
+	my_logger.addHandler(handler)
+	return my_logger
+ 
+#=========================================================================================
+# Open debug log file
+
+def mydbg(logpath, dbglog):
+	loglevel = 'DEBUG'
+	loggerName = 'GlobusMetricsDebug'
+	my_debug = logging.getLogger(loggerName)
+	num_level = getattr(logging, loglevel.upper())
+	my_debug.setLevel(num_level)
+	handler = logging.handlers.RotatingFileHandler(logpath+'/'+dbglog,maxBytes=1000000000,backupCount=10)
+	handler.setLevel(num_level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	my_debug.addHandler(handler)
+	return my_debug
+ 
 #=========================================================================================
 
 if __name__ == "__main__":
