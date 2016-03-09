@@ -25,12 +25,14 @@ function manage_acl() {
    $email = cookie_email($msg, true, $mfunc);
    if(empty($email)) return;
 
-   if(empty($_POST["gtype"])) return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share)", true);
+   if(empty($_POST["gtype"])) return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share, 3=custom file list)", true);
    $gtype = escape_input_string($_POST["gtype"]);
    if($gtype == 1) {
      acl_dsrqst($msg, $gtype, $email);
    } elseif ($gtype == 2) {
      acl_dataset($msg, $gtype, $email);
+   } elseif ($gtype == 3) {
+     acl_datacart($msg, $gtype, $email);
    } else {
      return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share)", true);
    }
@@ -130,6 +132,46 @@ function acl_dataset($msg, $gtype, $email) {
 }
 
 /**
+ * Manage ACLs for custom file lists, and also for a prototype data cart.
+ */
+
+function acl_datacart($msg, $gtype, $email) {
+
+   $mfunc = "bmessage";
+
+   $unames = get_ruser_names($email, 5);
+   $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
+
+   # create data cart order record
+   $nidx = new_datacart_id();
+   $mycart["orderid"] = $unames["rid"] . $nidx;
+   $mycart["email"] = $email;
+   $mycart["size_cart"] = ;
+   $mycart["fcount"] = ;
+   $mycart["date_order"] = curdate();
+   $mycart["time_order"] = curtime();
+   $mycart["date_purge"] = adddate($mycart["date_order"], 5);
+   $mycart["time_purge"] = $mycar["time_order"];
+   
+   $cidx = myadd("dscart", $mycart, true, true);   
+
+   if($nidx != $cidx) { # reset order ID only if it is different
+      $mycart["orderid"] = $record["orderid"] = $unames["rid"] . $cidx;
+      myupdt("dscart", $record, "cartindex = $cidx");
+   }
+
+   $cmd = escapeshellcmd('dsglobus -ap -ci ' . $cidx);
+   $info = globus_cli_cmd($cmd);
+   $order = datacart_record($msg, $cidx, $mfunc);
+   bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
+            $order["globus_url"] . "\">" . $order["globus_url"] . "</a>.<br /> From the Globus " .
+            "website, please select 'NCAR RDA' from the list of organizations " .
+            "and then enter your RDA e-mail address " .
+            "<span style=\"font-weight: bold\">(" . $rqst["email"] . ")</span> and " .
+            "password to log in.");
+}
+
+/**
  * get dataset share record for a given $email and $dsid, use $_POST["dsid"] if 
  * $dsid = 0
  */
@@ -151,6 +193,42 @@ function dataset_share_record($msg, $email, $dsid = 0, $mfunc = "pmessage") {
      return $datashare;
    }
 }
+
+/**
+ * get a single record for a data cart order, given the $email and $cidx
+ */
+ 
+function datacart_record($msg, $cidx = 0, $mfunc = "pmessage") {
+   if(!$cidx) {
+      if(empty($_POST["cidx"])) {
+         if($msg) $mfunc("Data cart order index is missing.");
+         return null;
+      }
+      $cidx = escape_input_string($_POST["cidx"]);
+   }
+   $cond = "cartindex=$cidx";
+   $datacart = myget("dscart", "*", $cond, FALSE);
+
+   if(empty($datacart)) {
+     return null;
+   } else {
+     return $datacart;
+   }
+}
+
+/**
+ * find a unique request name/ID from given user last name
+ * by appending (existing maximum rindex + 1) 
+ */
+function new_datacart_id() {
+
+   $myrec = myget("dscart", "MAX(cartindex) maxid");
+   if($myrec) {
+      return ($myrec["maxid"] + 1);
+   } else {
+      return 0;
+   }
+} 
 
 /**
  * Show HTML message with the user option of re-sending the Globus share invitation.

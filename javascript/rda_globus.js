@@ -11,7 +11,7 @@
  * requestGlobusInvite - function to add Globus permission to a shared endpoint
  *                       directory and send an e-mail invitation to the user.
  *
- * gtype: Globus transfer type (1 = dsrqst, 2 = dataset share)
+ * gtype: Globus transfer type (1 = dsrqst, 2 = dataset share, 3 = custom file list)
  * ridx: dsrqst request index (required for gtype = 1)
  * dsid: Dataset ID (dsnnn.n, required for gtype = 2)
  *
@@ -19,7 +19,7 @@
 function requestGlobusInvite(gtype, ridx, dsid) {
    var errmsg = "An error has occurred. Please send this message to rdahelp@ucar.edu for " + 
                 "assistance. (gtype: " + gtype + " ridx: " + ridx + " dsid: " + dsid + ")";
-   if(typeof gtype === 'undefined' || gtype < 1 || gtype > 2) {
+   if(typeof gtype === 'undefined' || gtype < 1 || gtype > 3) {
      alert(errmsg);
    }
    if((typeof ridx !== 'undefined') && (typeof dsid !== 'undefined')){
@@ -33,7 +33,7 @@ function requestGlobusInvite(gtype, ridx, dsid) {
    win = window.open("", "Globus data transfer request", "width=500,height=400,scrollbars=yes,resizable=yes");
    doc = win.document;
    doc.write("<html><head><title>Globus data transfer</title></head><body>\n");
-   if(gtype == 1) {
+   if(gtype == 1 || gtype == 3) {
      var msg = "transfer your data files";
    }
    if(gtype == 2) {
