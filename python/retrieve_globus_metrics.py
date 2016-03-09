@@ -413,6 +413,7 @@ def parse_opts(argv):
 	import getopt
 	from datetime import timedelta
 	global doprint
+	global my_debug
 
 	my_logger.info('[parse_opts] Parsing command line arguments')
 	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
@@ -429,7 +430,7 @@ def parse_opts(argv):
 	doprint = bool(False)
 	rem = ''
 	
-	opts, rem = getopt.getopt(argv, 'n:u:s:e:p', ['endpoint=','user=','startdate=','enddate=','print'])
+	opts, rem = getopt.getopt(argv, 'n:u:s:e:p:b', ['endpoint=','user=','startdate=','enddate=','print','debug'])
 	
 	for opt, arg in opts:
 		if opt in ('-n', '--endpoint'):
@@ -446,6 +447,8 @@ def parse_opts(argv):
 			my_logger.info('END       : {0}'.format(end_date))
 		elif opt in ('-p', '--print'):
 			doprint = bool(True)
+		elif opt in ('-b', '--debug'):
+			my_debug = mydbg(LOGPATH)
 		elif opt in ('-h', '--help'):
 			print usg
 	
@@ -527,6 +530,24 @@ def print_doc(data, keys):
 				print key, '\t', data['DATA'][i][key]
 			else:
 				continue
+
+#=========================================================================================
+# Open debug log file
+
+def mydbg(logpath):
+	logfile = 'retrieve_globus_metrics.dbg'
+	loglevel = 'DEBUG'
+	loggerName = 'GlobusMetricsDebug'
+
+	my_debug = logging.getLogger(loggerName)
+	num_level = getattr(logging, loglevel.upper())
+	my_debug.setLevel(num_level)
+	handler = logging.handlers.RotatingFileHandler(logpath+'/'+logfile,maxBytes=1000000000,backupCount=10)
+	handler.setLevel(num_level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	my_debug.addHandler(handler)
+	return my_debug
 
 #=========================================================================================
 
