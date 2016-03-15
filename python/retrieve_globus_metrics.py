@@ -23,6 +23,7 @@ import logging
 import logging.handlers
 import re
 import urllib
+import time
 
 LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
 LOGFILE = 'retrieve_globus_metrics.log'
@@ -129,13 +130,16 @@ def add_tasks(go_table, data):
 			myadd(go_table, records[i])
 
 #=========================================================================================
-# Get list of files transferred successfully
+# Get list of files transferred successfully under a single task ID
 
 def get_successful_transfers(task_id):
 	my_debug.debug("[get_successful_transfers] Processsing task_id: {0}".format(task_id))
 	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
-	r = requests.get(url+resource, headers=headers)
+	limit = 1000
+	params = {'limit':limit}
+	r = requests.get(url+resource, headers=headers, params=params)
 	data = r.json()
+	offset = data['next_marker'] - limit
 	data_transfers = {}
 	
 	if (r.status_code >= 400):
@@ -146,9 +150,13 @@ def get_successful_transfers(task_id):
 	
 	# Check for additional pages.  Append response to data_transfers.
 		while (data['next_marker']):
-			my_debug.debug("[get_successful_transfers] next_marker: {0}".format(data['next_marker']))
-			markers = {'limit':1000, 'marker':data['next_marker']}
-			r = requests.get(url+resource, headers=headers, params=markers)
+			next_marker = data['next_marker']
+			my_debug.debug("[get_successful_transfers] next_marker: {0}".format(next_marker))
+			if (next_marker % (limit*10) == offset):
+				my_debug.debug("[get_successful_transfers] One second sleep timer")
+				time.sleep(1)
+			params['marker'] = next_marker
+			r = requests.get(url+resource, headers=headers, params=params)
 			data = r.json()
 			if (r.status_code >= 400):
 				handle_error(r, data)
