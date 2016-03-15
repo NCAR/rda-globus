@@ -139,7 +139,6 @@ def get_successful_transfers(task_id):
 	params = {'limit':limit}
 	r = requests.get(url+resource, headers=headers, params=params)
 	data = r.json()
-	offset = data['next_marker'] - limit
 	data_transfers = {}
 	
 	if (r.status_code >= 400):
@@ -149,6 +148,8 @@ def get_successful_transfers(task_id):
 		data_transfers.update(data)
 	
 	# Check for additional pages.  Append response to data_transfers.
+		if (data['next_marker']):
+			offset = data['next_marker'] - limit
 		while (data['next_marker']):
 			marker = data['marker']
 			next_marker = data['next_marker']
