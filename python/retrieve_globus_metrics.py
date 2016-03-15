@@ -150,10 +150,12 @@ def get_successful_transfers(task_id):
 	
 	# Check for additional pages.  Append response to data_transfers.
 		while (data['next_marker']):
+			marker = data['marker']
 			next_marker = data['next_marker']
+			my_debug.debug("[get_successful_transfers] marker: {0}".format(marker))
 			my_debug.debug("[get_successful_transfers] next_marker: {0}".format(next_marker))
 			if (next_marker % (limit*10) == offset):
-				my_debug.debug("[get_successful_transfers] One second sleep timer")
+				my_debug.debug("[get_successful_transfers] One-second sleep timer")
 				time.sleep(1)
 			params['marker'] = next_marker
 			r = requests.get(url+resource, headers=headers, params=params)
