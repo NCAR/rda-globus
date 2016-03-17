@@ -401,6 +401,7 @@ def parse_opts(argv):
 	end_date = datetime.now(tz=pytz.utc).isoformat()
 	doprint = bool(False)
 	rem = ''
+	dbglevel = 'INFO'
 	
 	opts, rem = getopt.getopt(argv, 'n:u:s:e:p:b', ['endpoint=','user=','startdate=','enddate=','print','debug'])
 	
@@ -420,9 +421,11 @@ def parse_opts(argv):
 		elif opt in ('-p', '--print'):
 			doprint = bool(True)
 		elif opt in ('-b', '--debug'):
-			my_debug = mydbg(LOGPATH, DBGLOG)
+			dbglevel = 'DEBUG'
 		elif opt in ('-h', '--help'):
 			print usg
+	
+	my_debug = mydbg(LOGPATH, DBGLOG, dbglevel)
 	
 	print 'ENDPOINT  :', endpoint
 	print 'USER      :', user
@@ -563,8 +566,7 @@ def myerr(logpath, errlog):
 #=========================================================================================
 # Open debug log file
 
-def mydbg(logpath, dbglog):
-	loglevel = 'DEBUG'
+def mydbg(logpath, dbglog, loglevel):
 	loggerName = 'GlobusMetricsDebug'
 	my_debug = logging.getLogger(loggerName)
 	num_level = getattr(logging, loglevel.upper())
