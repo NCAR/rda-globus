@@ -39,9 +39,9 @@ handler.setFormatter(formatter)
 my_logger.addHandler(handler)
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
-token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/goauth-token', 'r')
-gotoken = token_file.read().rstrip('\\n')
-headers = {'Authorization':'Globus-Goauthtoken '+gotoken}
+token_file = open('/glade/u/home/tcram/tmp/.globus/globus.transfer-token', 'r')
+gotoken = token_file.read().rstrip()
+headers = {'Authorization':'Bearer '+gotoken}
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
