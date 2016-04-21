@@ -424,18 +424,22 @@ def parse_opts(argv):
 	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
 	endpoint = 'rda#data_request'
+	endpointID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
 	user = ''
 	start_date = thirtyDaysAgo.isoformat()
 	end_date = datetime.now(tz=pytz.utc).isoformat()
 	doprint = bool(False)
 	rem = ''
-	
+
 	opts, rem = getopt.getopt(argv, 'n:u:s:e:p:b', ['endpoint=','user=','startdate=','enddate=','print','debug'])
 	
 	for opt, arg in opts:
 		if opt in ('-n', '--endpoint'):
-			endpoint = arg
+			if(arg == 'rda#datashare'):
+				endpoint = arg
+				endpointID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
 			my_logger.info('ENDPOINT  : {0}'.format(endpoint))
+			my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
 		elif opt in ('-u', '--user'):
 			user = arg
 			my_logger.info('USER      : {0}'.format(user))
@@ -452,14 +456,15 @@ def parse_opts(argv):
 		elif opt in ('-h', '--help'):
 			print usg
 	
-	print 'ENDPOINT  :', endpoint
-	print 'USER      :', user
-	print 'START     :', start_date
-	print 'END       :', end_date
-	print 'PRINT     :', doprint
-	print 'REMAINING :', rem
+	print 'ENDPOINT   :', endpoint
+	print 'ENDPOINT ID:', endpoint
+	print 'USER       :', user
+	print 'START      :', start_date
+	print 'END        :', end_date
+	print 'PRINT      :', doprint
+	print 'REMAINING  :', rem
 
-	return {'endpoint': endpoint, \
+	return {'endpoint': endpointID, \
             'user': user, \
             'start': start_date, \
             'end': end_date, \
