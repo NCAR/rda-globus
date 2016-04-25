@@ -53,6 +53,10 @@ task_keys = ['status','bytes_transferred','task_id','username',\
 
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
+
+# Endpoint UUIDs
+data_requestID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
+datashareID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
                  
 #=========================================================================================
 def main(filters):
@@ -204,7 +208,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		data_type = data['DATA'][i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
-		if (endpoint == 'rda#datashare'):
+		if (endpoint == datashareID):
 		    # Query file size from wfile.data_size
 			dsid = pathsplit[1]
 			wfile = urllib.unquote("/".join(pathsplit[2:]))
@@ -222,7 +226,8 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			                 unicode('size'):myrec['data_size'],
 			                 unicode('count'):1})
 		
-		if (endpoint == 'rda#data_request'):
+		# rda#data_request
+		if (endpoint == data_requestID):
 			searchObj = re.search(r'\d+$', pathsplit[2])
 			rindex = int(searchObj.group(0))
 			condition = " WHERE {0}='{1}'".format("rindex", rindex)
@@ -279,7 +284,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if searchObj:
 			continue
 		else:
-			if (endpoint == 'rda#datashare'):
+			if (endpoint == datashareID):
 				condition = " WHERE {0} = '{1}' AND {2}='{3}'".format("task_id", records[i]['task_id'], "source_path", records[i]['source_path'])
 				myrec = myget(go_table, keys, condition)
 				if (len(myrec) > 0):
@@ -289,17 +294,17 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
 				else:
 					myadd(go_table, records[i])
-			elif (endpoint == 'rda#data_request'):
+			elif (endpoint == data_requestID):
 				dsrqst_count += 1
 			else:
 				my_logger.warning('[add_successful_transfers] Endpoint {0} not found'.format(endpoint))
 				return
 
 	# Insert usage from rda#datashare into table allusage
-	if (endpoint == 'rda#datashare' and len(records) > 0):
+	if (endpoint == datashareID and len(records) > 0):
 		update_allusage(task_id)
 
-	if (endpoint == 'rda#data_request' and len(records) > 0):
+	if (endpoint == data_requestID and len(records) > 0):
 		dsrqst_rec = []
 		pathsplit = records[0]['source_path'].split("/")
 		file_name = pathsplit.pop()
@@ -389,7 +394,7 @@ def update_allusage(task_id):
 def set_filters(args):
 	my_logger.info('[set_filters] Defining Globus API filters')
 	filters = {}
-	if (args['endpoint']): filters['filter_endpoint'] = args['endpoint']		
+	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']		
 	if (args['user'] != ''): filters['filter_username'] = args['user']
 	if (args['start'] != ''):
 		if (args['end'] != ''):
@@ -457,14 +462,15 @@ def parse_opts(argv):
 			print usg
 	
 	print 'ENDPOINT   :', endpoint
-	print 'ENDPOINT ID:', endpoint
+	print 'ENDPOINT ID:', endpointID
 	print 'USER       :', user
 	print 'START      :', start_date
 	print 'END        :', end_date
 	print 'PRINT      :', doprint
 	print 'REMAINING  :', rem
 
-	return {'endpoint': endpointID, \
+	return {'endpoint': endpoint, \
+	        'endpointID': endpointID, \
             'user': user, \
             'start': start_date, \
             'end': end_date, \
