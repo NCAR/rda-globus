@@ -22,9 +22,9 @@ import logging.handlers
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
 
-token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/goauth-token', 'r')
+token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/globus.transfer-token', 'r')
 gotoken = token_file.read().rstrip('\\n')
-headers = {'Authorization':'Globus-Goauthtoken '+gotoken}
+headers = {'Authorization':'Bearer '+gotoken}
 
 # headers = {'Authorization':'Globus-Goauthtoken ' + os.environ['GOTOKENRDA']}
 go_table = 'gouser'
