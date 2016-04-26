@@ -40,21 +40,15 @@ client_secret_file.close()
 transfer_refresh_token_file.close()
 auth_refresh_token_file.close()
 
-transfer_headers = 
-{
-'client_id':client_id, 
-'client_secret': client_secret, 
-'refresh_token': transfer_refresh_token,
-'grant_type': 'refresh_token'
-}
+transfer_headers = {'client_id':client_id, \
+                    'client_secret': client_secret, \
+                    'refresh_token': transfer_refresh_token, \
+                    'grant_type': 'refresh_token'}
 
-auth_headers = 
-{
-'client_id':client_id, 
-'client_secret': client_secret, 
-'refresh_token': auth_refresh_token,
-'grant_type': 'refresh_token'
-}
+auth_headers = {'client_id':client_id, \
+                'client_secret': client_secret, \
+                'refresh_token': auth_refresh_token, \
+                'grant_type': 'refresh_token'}
 
 # Need to add error checking in API calls
 r = requests.post(url, transfer_headers)
