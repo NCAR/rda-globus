@@ -19,7 +19,7 @@
 
 import requests
 import subprocess
-import os
+import os, stat
 
 url = 'https://auth.globus.org/v2/oauth2/token'
 tmpdir = '/glade/u/home/tcram/tmp/.globus'
@@ -70,13 +70,18 @@ transfer_token_file = tmpdir+'/globus.transfer-token-tmp'
 transfer_token_output = open(transfer_token_file, 'w')
 transfer_token_output.write(transfer_token)
 transfer_token_output.close()
-os.fchmod(transfer_token_file, 0440)
 
 auth_token_file = tmpdir+'/globus.auth-token-tmp'
 auth_token_output = open(auth_token_file, 'w')
 auth_token_output.write(auth_token)
 auth_token_output.close()
-os.fchmod(auth_token_file, 0440)
+
+transfer_token_fd = os.open(transfer_token_file, os.O_RDONLY)
+auth_token_fd = os.open(auth_token_file, os.O_RDONLY)
+os.fchmod(transfer_token_fd, stat.S_IRUSR | stat.S_IRGRP)
+os.fchmod(auth_token_fd, stat.S_IRUSR | stat.S_IRGRP)
+os.close(transfer_token_fd)
+os.close(auth_token_fd)
 
 subprocess.call(['rdacp', '-f', transfer_token_file, '-t', odir+'globus.transfer-token', '-F', '0440'])
 subprocess.call(['rdacp', '-f', auth_token_file, '-t', odir+'/globus.auth-token', '-F', '0440'])
