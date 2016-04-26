@@ -19,6 +19,7 @@
 
 import requests
 import subprocess
+import os
 
 url = 'https://auth.globus.org/v2/oauth2/token'
 idir = '/glade/u/home/tcram/tmp/.globus'
@@ -71,16 +72,20 @@ else:
 	auth_token = data_auth['access_token']
 
 # Write new tokens to output files
-transfer_token_output = open(idir+'/globus.transfer-token-tmp', 'w')
+transfer_token_file = idir+'/globus.transfer-token-tmp'
+transfer_token_output = open(transfer_token_file, 'w')
 transfer_token_output.write(transfer_token)
 transfer_token_output.close()
+os.fchmod(transfer_token_file, 0440)
 
-auth_token_output = open(idir+'/globus.auth-token-tmp', 'w')
+auth_token_file = idir+'/globus.auth-token-tmp'
+auth_token_output = open(auth_token_file, 'w')
 auth_token_output.write(auth_token)
 auth_token_output.close()
+os.fchmod(auth_token_file, 0440)
 
-subprocess.call(['rdacp', '-f', idir+'/globus.transfer-token-tmp', '-t', odir+'globus.transfer-token', '-F', '0440'])
-subprocess.call(['rdacp', '-f', idir+'/globus.auth-token-tmp', '-t', odir+'/globus.auth-token', '-F', '0440'])
+subprocess.call(['rdacp', '-f', transfer_token_file, '-t', odir+'globus.transfer-token', '-F', '0440'])
+subprocess.call(['rdacp', '-f', auth_token_file, '-t', odir+'/globus.auth-token', '-F', '0440'])
 
 #=========================================================================================
 def handle_error(r, data):
