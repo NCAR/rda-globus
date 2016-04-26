@@ -78,13 +78,16 @@ auth_token_output.close()
 
 transfer_token_fd = os.open(transfer_token_file, os.O_RDONLY)
 auth_token_fd = os.open(auth_token_file, os.O_RDONLY)
-os.fchmod(transfer_token_fd, stat.S_IRUSR | stat.S_IRGRP)
-os.fchmod(auth_token_fd, stat.S_IRUSR | stat.S_IRGRP)
+os.fchmod(transfer_token_fd, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)
+os.fchmod(auth_token_fd, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)
 os.close(transfer_token_fd)
 os.close(auth_token_fd)
 
 subprocess.call(['rdacp', '-f', transfer_token_file, '-t', odir+'globus.transfer-token', '-F', '0440'])
 subprocess.call(['rdacp', '-f', auth_token_file, '-t', odir+'/globus.auth-token', '-F', '0440'])
+
+# os.remove(transfer_token_file)
+# os.remove(auth_token_file)
 
 #=========================================================================================
 def handle_error(r, data):
