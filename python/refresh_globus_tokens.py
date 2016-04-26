@@ -22,13 +22,13 @@ import subprocess
 import os
 
 url = 'https://auth.globus.org/v2/oauth2/token'
-idir = '/glade/u/home/tcram/tmp/.globus'
+tmpdir = '/glade/u/home/tcram/tmp/.globus'
 odir = '/glade/u/home/rdadata/dssdb/tmp/.globus'
 
-client_id_file = open(idir+'/globus.client-id', 'r')
-client_secret_file = open(idir+'/globus.client-secret', 'r')
-transfer_refresh_token_file = open(idir+'/globus.transfer-refresh-token', 'r')
-auth_refresh_token_file = open(idir+'/globus.auth-refresh-token', 'r')
+client_id_file = open(odir+'/globus.client-id', 'r')
+client_secret_file = open(odir+'/globus.client-secret', 'r')
+transfer_refresh_token_file = open(odir+'/globus.transfer-refresh-token', 'r')
+auth_refresh_token_file = open(odir+'/globus.auth-refresh-token', 'r')
 
 client_id = client_id_file.read().rstrip()
 client_secret = client_secret_file.read().rstrip()
@@ -72,13 +72,13 @@ else:
 	auth_token = data_auth['access_token']
 
 # Write new tokens to output files
-transfer_token_file = idir+'/globus.transfer-token-tmp'
+transfer_token_file = tmpdir+'/globus.transfer-token-tmp'
 transfer_token_output = open(transfer_token_file, 'w')
 transfer_token_output.write(transfer_token)
 transfer_token_output.close()
 os.fchmod(transfer_token_file, 0440)
 
-auth_token_file = idir+'/globus.auth-token-tmp'
+auth_token_file = tmpdir+'/globus.auth-token-tmp'
 auth_token_output = open(auth_token_file, 'w')
 auth_token_output.write(auth_token)
 auth_token_output.close()
