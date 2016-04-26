@@ -49,7 +49,7 @@ my_logger.addHandler(handler)
 #=========================================================================================
 def main(args):
 	my_logger.info('Getting ACL list')
-	resource = 'endpoint/' + args['endpoint'] + '/access_list'
+	resource = 'endpoint/' + args['endpointID'] + '/access_list'
 	r = requests.get(url+resource, headers=headers)
 	data = r.json()
 
@@ -140,11 +140,23 @@ def parse_opts(argv):
 		elif opt in ('-h', '--help'):
 			print usg
 	
-	print 'ENDPOINT  :', endpoint
-	print 'PRINT     :', doprint
-	print 'REMAINING :', rem
+	if (endpoint == 'rda%23data_request'):
+		endpointID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
+	elif (endpoint == 'rda%23datashare'):
+		endpointID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
+	else:
+		msg = 'Globus endpoint {0} not found.'.format(endpoint)
+		print msg
+		my_logger.warning(msg)
+		sys.exit()
+
+	print 'ENDPOINT   :', endpoint
+	print 'ENDPOINT ID:', endpointID
+	print 'PRINT      :', doprint
+	print 'REMAINING  :', rem
 
 	return {'endpoint': endpoint, \
+	        'endpointID': endpointID, \
             'rem': rem}
 
 #=========================================================================================
