@@ -39,7 +39,7 @@ handler.setFormatter(formatter)
 my_logger.addHandler(handler)
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
-token_file = open('/glade/u/home/tcram/tmp/.globus/globus.transfer-token', 'r')
+token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/globus.transfer-token', 'r')
 gotoken = token_file.read().rstrip()
 headers = {'Authorization':'Bearer '+gotoken}
 
