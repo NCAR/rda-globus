@@ -146,8 +146,8 @@ function acl_datacart($msg, $gtype, $email) {
    $nidx = new_datacart_id();
    $mycart["orderid"] = $unames["rid"] . $nidx;
    $mycart["email"] = $email;
-   $mycart["size_cart"] = ;
-   $mycart["fcount"] = ;
+/**   $mycart["size_cart"] = ; */
+/**   $mycart["fcount"] = ; */
    $mycart["date_order"] = curdate();
    $mycart["time_order"] = curtime();
    $mycart["date_purge"] = adddate($mycart["date_order"], 5);
@@ -159,6 +159,9 @@ function acl_datacart($msg, $gtype, $email) {
       $mycart["orderid"] = $record["orderid"] = $unames["rid"] . $cidx;
       myupdt("dscart", $record, "cartindex = $cidx");
    }
+
+# Create hard links to data files.  Update size_cart and fcount in dscart table when ready.
+# Store as hidden input?
 
    $cmd = escapeshellcmd('dsglobus -ap -ci ' . $cidx);
    $info = globus_cli_cmd($cmd);
