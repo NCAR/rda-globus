@@ -385,7 +385,7 @@ sub parse_input {
   if ($ridx) {
     $options{ridx} = $ridx;
     $options{endpoint} = $MYGLOBUS{rqstendpoint};
-    $options{endpointID} = $MYGLOBUS{rqstendpointID}
+    $options{endpointID} = $MYGLOBUS{rqstendpointID};
     $action = 1;
   } elsif ($dsid) {
     return mylog("Please specify the dataset id as dsnnn.n or nnn.n", LGEREX, __FILE__, __LINE__) if($dsid !~ /^(ds){0,1}\d+\.\d+$/i);
@@ -394,7 +394,7 @@ sub parse_input {
     $options{dsid} = $dsid;
     $options{email} = $email;
     $options{endpoint} = $MYGLOBUS{fileendpoint};
-    $options{endpointID} = $MYGLOBUS{fileendpointID}
+    $options{endpointID} = $MYGLOBUS{fileendpointID};
     $action = 2;
   } else {
     $errmsg = "Please specify either the dsrqst index (-ri) for a subset request, or 
