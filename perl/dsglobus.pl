@@ -135,7 +135,7 @@ sub add_endpoint_permission{
      $path = $options{path};
    }
    
-   $options{user_identity} = get_user_identity($options{email} . "\@rda.ucar.edu");
+   $options{user_identity} = get_user_identity($options{email} . "@rda.ucar.edu");
    
    $ssh_id =  " -i $MYGLOBUS{sshkey}";
    $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityid $options{user_identity}";
@@ -251,7 +251,7 @@ sub construct_endpoint_url {
   my $urlslash = "%2F";
   my ($identity, $add_identity);
   
-  if ($options{user_identity} != "") {
+  if ($options{user_identity} ne "") {
     $add_identity = "&add_identity=$options{user_identity}";
   } else {
     $add_identity = "";
@@ -274,8 +274,8 @@ sub construct_endpoint_url {
 }
 
 #
-# Get a user's identity (UUID) assigned by the Globus Auth API.  Identity type can be one
-# of the following:
+# Get a user's identity (UUID) assigned by the Globus Auth API.  Input argument $user can 
+# be one of the following:
 #		GlobusID (Globus primary identity): in the form of user@globusid.org
 #		NCAR RDA alternate identity       : in the form of user@domain.com@rda.ucar.edu, where user@domain.com is the user's RDA e-mail login
 #		E-mail identity                   : in the form of user@domain.com
@@ -289,7 +289,7 @@ sub get_user_identity {
   $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
   if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
     $identity_details = parse_json($stdout);
-    $identity = $identity->{id};
+    $identity = $identity_details->{id};
   } else {
      $identity = "";
   }
