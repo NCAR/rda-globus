@@ -32,8 +32,8 @@ my %MYGLOBUS = (
    hostdir     => undef,                          # identical to request output directory $rdir
    rqstendpoint => 'rda#data_request',            # Globus shared endpoint for dsrqst transfers
    fileendpoint => 'rda#datashare',               # Globus shared endpoint for general dataset file transfers
-   rqstendpointUUID => 'd20e610e-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for dsrqst transfers
-   fileendpointUUID => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
+   rqstendpointID => 'd20e610e-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for dsrqst transfers
+   fileendpointID => 'db57de42-6d04-11e5-ba46-22000b92c6ec', # UUID of Globus shared endpoint for general dataset file transfers
    datacartendpoint => 'rda#datacart',            # Globus shared endpoint for data cart transfers
    sshkey      => '/.ssh/id_rsa_yslogin1',        # public ssh key linked to rda Globus account
    endpointURL => 'https://www.globus.org/app/'  # URL for shared Globus endpoints
@@ -41,6 +41,7 @@ my %MYGLOBUS = (
 
 my %options = (
    endpoint       => undef,    # Globus shared endpoint
+   endpointID     => undef,    # Globus shared endpoint UUID
    addperm        => undef,    # If set, add permission to a shared endpoint
    removeperm     => undef,    # If set, remove permission from a shared endpoint
    resend         => undef,    # If set, re-send Globus share invitation
@@ -48,6 +49,7 @@ my %options = (
    ridx           => undef,    # dsrqst ID
    dsid           => undef,    # dataset ID
    email          => undef,    # user e-mail address
+   user_identity  => undef,    # user identity (UUID) associated with the user's Globus Auth NCAR RDA alternate identity
    donotnotify    => undef,    # If set, do not send e-mail notification to user when new share is created (default behavior sends notification)
    globus_rid     => undef,    # Globus rule ID for data share permission
    globus_url     => undef     # URL for shared data endpoint
@@ -133,8 +135,10 @@ sub add_endpoint_permission{
      $path = $options{path};
    }
    
+   $options{user_identity} = get_user_identity($options{email} . "\@rda.ucar.edu");
+   
    $ssh_id =  " -i $MYGLOBUS{sshkey}";
-   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityusername $options{email}";
+   $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityid $options{user_identity}";
    $cmd .= " --notify-email $options{email}" if(!$options{donotnotify});
 
    print "$cmd\n";   
@@ -247,31 +251,49 @@ sub construct_endpoint_url {
   my $urlslash = "%2F";
   my ($identity, $add_identity);
   
-# Get user's e-mail identity UUID
-  $ssh_id =  " -i $MYGLOBUS{sshkey}";
-  $cmd = $MYGLOBUS{ssh} . $ssh_id . " identity-details $options{email}";
-  $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
-  if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
-    $identity = parse_json($stdout);
-    $add_identity = "&add_identity=$identity->{id}";
+  if ($options{user_identity} != "") {
+    $add_identity = "&add_identity=$options{user_identity}";
   } else {
-     $add_identity = "";
+    $add_identity = "";
   }
   
   if($action == 1) {
-    $origin_id = $MYGLOBUS{rqstendpointUUID};
+    $origin_id = $MYGLOBUS{rqstendpointID};
     $ridx = $options{ridx};
     $myrqst = myget("dsrqst", "*", "rindex = $ridx", LOGWRN, __FILE__, __LINE__);   
     return mylog("$ridx: Request Index not on file", LGWNEX) if(!$myrqst);
     return mylog("$ridx: Request ID is missing", LGWNEX) if(!$myrqst->{rqstid});   
     $origin_path = $urlslash . "download.auto" . $urlslash . $myrqst->{rqstid} . $urlslash;
   } elsif ($action == 2) {
-    $origin_id = $MYGLOBUS{fileendpointUUID};
+    $origin_id = $MYGLOBUS{fileendpointID};
     $dsid = $options{dsid};
     $origin_path = $urlslash . $dsid . $urlslash;
   }  
   $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path . $add_identity;
   return $endpointURL;
+}
+
+#
+# Get a user's identity (UUID) assigned by the Globus Auth API.  Identity type can be one
+# of the following:
+#		GlobusID (Globus primary identity): in the form of user@globusid.org
+#		NCAR RDA alternate identity       : in the form of user@domain.com@rda.ucar.edu, where user@domain.com is the user's RDA e-mail login
+#		E-mail identity                   : in the form of user@domain.com
+# 
+sub get_user_identity {
+  my ($user) = @_;
+  my ($ssh_id, $cmd, $stdout, $identity_details, $identity);
+  
+  $ssh_id =  " -i $MYGLOBUS{sshkey}";
+  $cmd = $MYGLOBUS{ssh} . $ssh_id . " identity-details $user";
+  $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
+  if($stdout && $stdout =~ /([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/) {
+    $identity_details = parse_json($stdout);
+    $identity = $identity->{id};
+  } else {
+     $identity = "";
+  }
+  return $identity;
 }
 
 #
@@ -363,6 +385,7 @@ sub parse_input {
   if ($ridx) {
     $options{ridx} = $ridx;
     $options{endpoint} = $MYGLOBUS{rqstendpoint};
+    $options{endpointID} = $MYGLOBUS{rqstendpointID}
     $action = 1;
   } elsif ($dsid) {
     return mylog("Please specify the dataset id as dsnnn.n or nnn.n", LGEREX, __FILE__, __LINE__) if($dsid !~ /^(ds){0,1}\d+\.\d+$/i);
@@ -371,6 +394,7 @@ sub parse_input {
     $options{dsid} = $dsid;
     $options{email} = $email;
     $options{endpoint} = $MYGLOBUS{fileendpoint};
+    $options{endpointID} = $MYGLOBUS{fileendpointID}
     $action = 2;
   } else {
     $errmsg = "Please specify either the dsrqst index (-ri) for a subset request, or 
