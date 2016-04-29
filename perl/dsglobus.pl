@@ -135,13 +135,14 @@ sub add_endpoint_permission{
      $path = $options{path};
    }
    
-   $options{user_identity} = get_user_identity($options{email} . "@rda.ucar.edu");
+   $options{user_identity} = get_user_identity($options{email} . "\@rda.ucar.edu");
    
    $ssh_id =  " -i $MYGLOBUS{sshkey}";
    $cmd = $MYGLOBUS{ssh} . $ssh_id . " acl-add $options{endpoint}$path --perm r --identityid $options{user_identity}";
    $cmd .= " --notify-email $options{email}" if(!$options{donotnotify});
 
-   print "$cmd\n";   
+   print "$cmd\n";
+   mylog("[add_endpoint_permission] $cmd");
    $stdout = mysystem($cmd, undef, 16, __FILE__, __LINE__);
    print "$stdout\n";
 
