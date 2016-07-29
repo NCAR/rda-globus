@@ -121,12 +121,16 @@ function acl_dataset($msg, $gtype, $email) {
    }
    $info = globus_cli_cmd($cmd);
    $datashare = dataset_share_record($msg, $email, $dsid, $mfunc);
-   bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
-            $datashare["globus_url"] . "\">" . $datashare["globus_url"] . "</a>.<br /> From the Globus " .
-            "website, please select 'NCAR RDA' from the list of organizational logins " .
-            "and then enter your RDA e-mail address " .
-            "<span style=\"font-weight: bold\">(" . $email . ")</span> and " .
-            "password to log in.");
+   bmessage("You may now transfer your data using Globus at the URL ".
+            "<p><a href=\"" . $datashare["globus_url"] . "\">" . 
+            $datashare["globus_url"] . "</a>.</p>" .
+            "<p>From the Globus website, please select 'NCAR RDA' from the list of " .
+            "organizational logins and then enter your RDA e-mail address " .
+            "<span style=\"font-weight: bold\">(" . $email . ")</span> and password to " .
+            "log in.</p>" .
+            "<p><span style=\"font-style: italic\">Note:</span> this Globus data share " .
+            "will remain active for six months, and will be then be deleted unless you " .
+            "initiate a data transfer within the most recent six months.</p>");
 }
 
 /**
