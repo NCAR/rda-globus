@@ -31,7 +31,7 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
      alert(errmsg);
      return;
    }
-   openGlobusWindow(grpcnt, gtype);
+   openGlobusWindow(grpcnt, gtype, ridx, dsid);
 }
 
 /**
@@ -45,10 +45,8 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
    var ftype;
    var action;
    var fname;
-   var count;
    var ridx;
-
-   if(count == 0) return;
+   var count;
    
    ftype = document.form.ftype.value;
    if(typeof dsid === 'undefined') {
@@ -64,50 +62,64 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
       action = 'Globus dataset share';
       fname += dsid;
    } else {
+      action = 'Globus file transfer';
       count = checkFileSelection(grpcnt);
-      showGlobusList(gtype, dsid, wpath, grpcnt, count, ftype);
-      return;
+      if(count == 0) return;
    }
 
-   filewin = window.open("", action, "width=750,height=600,scrollbars=yes,resizable=yes");
-   filewin.document.write("<html><head><title>" + fname + "</title></head><body>\n");
+   filewin = window.open("", "_blank");
+   filewin.document.write("<html><head><title>" + fname + "</title>" +
+         "<meta charset=\"utf-8\">\n" + 
+         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
+         "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">\n" +
+          "</head>\n<body>\n");
 
    if(gtype == 1) {
      var msg = "transfer your data files";
+     showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
    }
-   if(gtype == 2 || gtype == 3) {
+   if(gtype == 2) {
      var msg = "transfer the data files from this dataset (" + dsid + ")";
+     showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
+   }
+   if(gtype == 3) {
+     var msg = "transfer the selected data files";
+     showGlobusList(filewin, msg, gtype, dsid, wpath, grpcnt, count, ftype)
    }
 
-   filewin.document.write("<div id=\"load\">\n");
-   filewin.document.write("<p>Click the button labeled 'Request Globus transfer' to \n");
-   filewin.document.write( msg + " via the Globus data transfer service. A Globus user \n");
-   filewin.document.write("account is not required. You may sign into Globus with your RDA \n");
-   filewin.document.write("user e-mail and password by selecting 'NCAR RDA' organizational \n");
-   filewin.document.write("login on the Globus login page, and then enter your RDA e-mail \n");
-   filewin.document.write("login and password.</p>\n");      
-   filewin.document.write("</div>\n");
-
-   filewin.document.write("<form name=\"globusForm\" action=\"/php/dsglobus.php\" method=\"post\" onsubmit=\"showLoading()\">\n");
-   filewin.document.write("<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n");
-   if(gtype == 1 && typeof ridx !== 'undefined') {
-      filewin.document.write("<input type=\"hidden\" name=\"ridx\" value=\"" + ridx + "\">\n");
-   }
-   if(gtype == 2 && typeof dsid !== 'undefined') {
-      filewin.document.write("<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n");
-   }
-   filewin.document.write("<p><input type=\"submit\" value=\"Request Globus transfer\">");
-   filewin.document.write("&nbsp<input type=\"button\" onClick=\"self.close()\" value=\"Cancel\"></p>\n");
-   filewin.document.write("</form>\n");   
    filewin.document.write("</body></html>\n");
    filewin.document.close();
    filewin.focus();
 }
 
+function showGlobusInstructions(win, msg, gtype, ridx, dsid) 
+{
+   win.document.write("<div id=\"load\">\n");
+   win.document.write("<p>Click the button labeled 'Request Globus transfer' to \n");
+   win.document.write( msg + " via the Globus data transfer service. A Globus user \n");
+   win.document.write("account is not required. You may sign into Globus with your RDA \n");
+   win.document.write("user e-mail and password by selecting 'NCAR RDA' organizational \n");
+   win.document.write("login on the Globus login page, and then enter your RDA e-mail \n");
+   win.document.write("login and password.</p>\n");
+
+   win.document.write("<form name=\"globusForm\" action=\"/php/dsglobus.php\" method=\"post\" onsubmit=\"showLoading()\">\n");
+   win.document.write("<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n");
+   if(gtype == 1 && typeof ridx !== 'undefined') {
+      win.document.write("<input type=\"hidden\" name=\"ridx\" value=\"" + ridx + "\">\n");
+   }
+   if(gtype == 2 && typeof dsid !== 'undefined') {
+      win.document.write("<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n");
+   }
+   win.document.write("<p><button type=\"submit\" class=\"btn btn-primary\">Request Globus transfer</button>");
+   win.document.write("&nbsp<button type=\"button\" class=\"btn btn-link\" onClick=\"self.close()\">Cancel</button></p>\n");
+   win.document.write("</form>\n");
+   win.document.write("</div>\n");
+}
+
 /** Open form and build array of files selected by user as input parameters to 
     dsglobus.php **/
 
-function showGlobusList(gtype, dsid, wpath, grpcnt, count, ftype)
+function showGlobusList(win, gtype, dsid, wpath, grpcnt, count, ftype)
 {
    var i, j, k, fidx;
    var files, checks;
@@ -127,18 +139,29 @@ function showGlobusList(gtype, dsid, wpath, grpcnt, count, ftype)
    var gindex = document.form.gindex ? document.form.gindex.value : 0;
    var rstat = document.form.rstat ? document.form.rstat.value : null;
    var dfmt = document.form.dfmt ? document.form.dfmt.value : null;
-   var globusFiles = [];
    var parameters = '';
+   
+// Open form
+   win.document.write("<form name=\"globusForm\" action=\"/php/dsglobus.php\" method=\"POST\" onsubmit=\"showLoading()\">\n");
+   win.document.write("<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n");
+   win.document.write("<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n");
+   wpath = document.form.wpath.value;
+   win.document.write("<input type=\"hidden\" name=\"directory\" value=\"" + wpath + "/\">\n");
 
-/** Build array of files selected by user and submit post request to dsglobus.php *//
-   globusFiles = [val1, val2, val3, ...];
+   win.document.write("<div id=\"load\">\n");
+   win.document.write("<p><h2>File" + s + " selected for RDA dataset " + dsid + "</h2>" +
+            "</p>\n<p>You have selected " + count + " file" + s + " (" +
+            total + ").\n");
 
-   if (parameters.length > 0) parameters+='&';
-   parameters+='gtype='+gtype;
-   if (parameters.length > 0) parameters+='&';
-   parameters+='dsid='+dsid;
-   if (parameters.length > 0) parameters+='&';
-   parameters+='wpath='+wpath;
+   win.document.write("<p>To transfer these files using the Globus data transfer service, " +
+      "select the button labeled <strong>'Globus transfer'</strong> below.  You will be redirected to the " +
+      "Globus web app where you will be prompted to select a target endpoint to receive " +
+      "the data transfer. Once you have defined a target endpoint, you will returned back " +
+      "to the RDA website and your data transfer will be submitted.</p>\n" +
+      "<p>A Globus user account is not required to use this service. If necessary, you " +
+      "may sign into Globus with your RDA user e-mail and password by selecting the " +
+      "'NCAR RDA' organizational login on the Globus login page, and then enter your RDA " +
+      "e-mail login and password.</p>\n");      
 
    if(document.form.specialist) {
       specialist = document.form.specialist.value;
@@ -147,8 +170,11 @@ function showGlobusList(gtype, dsid, wpath, grpcnt, count, ftype)
       specialist = "tcram";
       name = "Thomas Cram";
    }
-   if (parameters.length > 0) parameters+='&';
-   parameters+='specialist='+specialist+'&name='+name;
+   win.document.write("<p>Contact <strong>" + specialist + "@ucar.edu (" + name + ")</strong> for further assistance.</p>\n");
+   win.document.write("<p><button type=\"submit\" class=\"btn btn-primary\">Globus download</button>" +
+      "&nbsp;<button type=\"button\" class=\"btn btn-link\">Cancel</button></p>\n");
+
+// Write selected files to hidden input
 
    // check if show local file names / group ids
    for(i = 1; i <= grpcnt; i++) {
@@ -168,14 +194,12 @@ function showGlobusList(gtype, dsid, wpath, grpcnt, count, ftype)
       }
       if(showgroup && shownote) break;
    }
-   win.document.write("<p>File" + s + " selected" + are + " listed below:\n");
-   win.document.write("<p><table class=\"filelist\" cellspacing=0 cellpadding=2 bgcolor=\"#e1eaff\">\n");
-   win.document.write("<th class=\"thick-border\">Index</th>\n");
-   win.document.write("<tr class=\"flcolor0\"><th class=\"thick-border\">File Name</th>\n");
-   win.document.write("<th class=\"thick-border\">Size</th>\n");
-   if(showgroup) win.document.write("<th class=\"thick-border\">Group ID</th>\n");
-   if(shownote) win.document.write("<th class=\"thick-border\">Description</th>\n");
-   win.document.write("</tr>\n");
+   win.document.write("<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
+      "<table class=\"table table-striped table-hover\">\n" +
+      "<thead>\n<tr>\n<th>Index</th>\n<th>File name</th>\n<th>Size</th>\n" +
+   if(showgroup) win.document.write("<th>Group ID</th>\n");
+   if(shownote)  win.document.write("<th>Description</th>\n");
+   win.document.write("</tr>\n</thead>\n<tbody>\n");
    k = 1;
    for(i = 1; i <= grpcnt; i++) {
       checks = document.form.elements["GRP" + i];
@@ -189,21 +213,17 @@ function showGlobusList(gtype, dsid, wpath, grpcnt, count, ftype)
       for(j = 0; j < checks.length; j++) {
          if(!checks[j].checked || checks[j].value == -1) continue;
          fidx = parseInt(checks[j].value);
-         win.document.write("<td class=\"thin-border\" align=\"right\">" + k++ + "</td>\n");
-         win.document.write("<tr><td class=\"thin-border\">" + files[fidx].value + "</td>\n");
-         win.document.write("<td class=\"thin-border\" align=\"right\">" + totalSize(sizes[fidx].value) + "</td>\n");
-         if(showgroup) win.document.write("<td class=\"thin-border\">" + str_value(gname) + "</td>\n");
-         if(shownote) {
-            win.document.write("<td class=\"thin-border\">" + str_value(notes[fidx]) + "</td>\n");
-         }
+         win.document.write("<tr>\n<td>" + k++ + "</td>\n");
+         win.document.write("<td>" + files[fidx].value + "</td>\n");
+         win.document.write("<td>" + totalSize(sizes[fidx].value) + "</td>\n");
+         if(showgroup) win.document.write("<td>" + str_value(gname) + "</td>\n");
+         if(shownote)  win.document.write("<td>" + str_value(notes[fidx]) + "</td>\n");
          win.document.write("</tr>\n");
-         if(stat == 2) {
-            win.document.write("<input type=\"hidden\" name=\"file\" value=\"" + 
-                               files[fidx].value + "\">\n");
-         }
+         win.document.write("<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n");
       }
    }
-   win.document.write("</table></p>\n");
+   win.document.write("</tbody>\n</table>\n");
+   win.document.write("</div>\n");
 }
 
 function showLoading() {

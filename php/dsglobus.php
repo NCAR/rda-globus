@@ -13,6 +13,7 @@
 
 session_start();
 include_once("MyRqst.inc");
+include_once("MyGlobus.inc");
 
 manage_acl();
 
@@ -26,16 +27,30 @@ function manage_acl() {
    $email = cookie_email($msg, true, $mfunc);
    if(empty($email)) return;
 
-   if(empty($_POST["gtype"])) return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share, 3=custom file list)", true);
-   $gtype = escape_input_string($_POST["gtype"]);
+   if(empty($_POST["gtype"]) && empty($_POST["endpoint_id"])) {
+     return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share, 3=custom file list)", true);
+   } 
+   elseif (!empty($_POST["endpoint_id"])) {
+     $gtype = 4;
+   } 
+   else {
+     $gtype = escape_input_string($_POST["gtype"]);
+   }
+   
    if($gtype == 1) {
      acl_dsrqst($msg, $gtype, $email);
-   } elseif ($gtype == 2) {
+   } 
+   elseif ($gtype == 2) {
      acl_dataset($msg, $gtype, $email);
-   } elseif ($gtype == 3) {
-     acl_datacart($msg, $gtype, $email);
-   } else {
-     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share)", true);
+   } 
+   elseif ($gtype == 3) {
+     globus_browseEndpoint($msg, $gtype, $email);
+   } 
+   elseif ($gtype == 4) {
+     submit_transfer();
+   } 
+   else {
+     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share, 3=custom file list)", true);
    }
 
 }
@@ -133,7 +148,87 @@ function acl_dataset($msg, $gtype, $email) {
 }
 
 /**
- * Manage ACLs for custom file lists, and also for a prototype data cart.
+ * Redirect user to Globus browse_endpoint helper API.  For users who generate custom
+ * file lists.  See https://docs.globus.org/api/helper-pages/browse-endpoint/
+ */
+
+function globus_browseEndpoint($msg, $gtype, $email) {
+
+   $mfunc = "bmessage";
+
+   $unames = get_ruser_names($email, 5);
+   $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
+
+# Save path, selected files, and other hidden input to session
+   $_SESSION['gtype'] = $gtype;
+   if(empty($_POST['dsid'])) return pmessage("Missing dataset ID (dsnnn.n)", true);
+   $_SESSION['dsid'] = $_POST['dsid'];
+   if(empty($_POST['directory'])) return pmessage("Missing path to web files", true);
+   $_SESSION['directory'] = $_POST['directory'];
+   if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
+   $_SESSION['files'] = $_POST['globusFile'];
+   if(!empty($_POST['dsid'])) {
+      $cancelurl = $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
+      $label = "NCAR RDA " . $_POST['dsid'] . " Globus transfer";
+   } else {
+      $cancelurl = $_SERVER['HTTP_HOST'];
+      $label = "NCAR RDA Globus transfer";
+   }
+
+# Build http query
+   $params = array(
+      "method" => "POST",
+      "action" => $_SERVER['HTTP_HOST'] . "/php/dsglobus.php",
+      "filelimit" => 0,
+      "folderlimit" => 1,
+      "cancelurl" => $cancelurl,
+      "label" => $label
+   );
+   
+   $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);
+   
+# Redirect user to browse endpoint
+   header('Location: ' . $browse_endpoint);
+   exit();
+}
+
+/**
+ * Take the data returned by the Browse Endpoint helper page and submit a Globus transfer
+ * request.
+ * Send the user to the transfer status page with the task id from the transfer.
+ */
+ 
+function submit_transfer() {
+
+# Get session data
+   $selected = $_SESSION["files"];
+
+   echo $selected;
+# Activate source and destination endpoints
+
+   $token = $MYGLOBUS["TOKEN"];
+   $source_endpoint_id = $MYGLOBUS["DATASHARE_ENDPOINT_ID"];
+   $source_endpoint_base = $MYGLOBUS["DATASHARE_ENDPOINT_BASE"];
+   $destination_endpoint_id = $_POST["endpoint_id"];
+   $destination_folder = $_POST["folder[0]"];
+   $label = $_POST["label"];
+   
+#   $source_path = $source_endpoint_base . $selected;
+   $dest_path = $_POST["path"];
+
+# Test: display listing of files selected
+
+# Get submission ID (GET /submission_id)
+
+# Submit transfer (POST /transfer)
+
+# Display transfer status and details
+
+}
+
+
+/**
+ * Manage ACLs for a prototype data cart.
  */
 
 function acl_datacart($msg, $gtype, $email) {
@@ -298,110 +393,4 @@ function globus_cli_cmd($cmd) {
    if($err) return pmessage($err, true);   
 
    return true;
-}
-
-/**
- * Function to display a list of files selected by a user and initiate POST request
- * to Globus Browse Endpoint API to select a target endpoint.
-
- *** CODE BELOW NEEDS TO BE CONVERTED FROM JAVASCRIPT ***
-
- */
-
-function showDataCartList {
-
-   if(ftype == "Web") {
-      win.document.write("<form name=\"form\" action=\"/dsglobus.php\" method=\"post\" onsubmit=\"showLoading()\">\n");
-   } else {
-      win.document.write("A Globus transfer can only be requested for web-downloadable files.\n");
-   }
- 
-     filewin.document.write("<p>Click the button labeled 'Request Globus transfer' to \n");
-     filewin.document.write( msg + " via the Globus data transfer service. You will \n");
-     filewin.document.write("redirected to the Globus web app where you will be prompted \n");
-     filewin.document.write("to select the destination endpoint of your data transfer.  \n");
-     filewin.document.write("A Globus user account is not required to use this service. \n");
-     filewin.document.write("You may sign into Globus with your RDA user e-mail and password \n");
-     filewin.document.write("by selecting the 'NCAR RDA' organizational login on the Globus \n");
-     filewin.document.write("login page.</p>\n");   
-
-   win.document.write("<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n");
-   win.document.write("<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n");
-   win.document.write("<p><h2>" + ftype + " File" + s + " Selected For '" + dsid +
-            "'</h2></p>\n<p>" + count + " file" + s + ", total " +
-            total + ", " + are + " selected.\n");
-
-   wpath = document.form.wpath.value;
-   win.document.write("<input type=\"hidden\" name=\"directory\" value=\"" + wpath + "/\">\n");
-   win.document.write("Click the <b>'Download Selected'</b> button to " +
-                      "directly download the selected files as a single tar file.</p>\n");
-   win.document.write("<p><input type=\"submit\" value=" +
-                      "\"Download Selected Files As A Tar File\"></p>\n");
-   stat = 2;
-   win.document.write("</p>\n");         
-
-   if(document.form.specialist) {
-      specialist = document.form.specialist.value;
-      name = document.form.fstname.value + " " + document.form.lstname.value;
-   } else {
-      specialist = "tcram";
-      name = "Thomas Cram";
-   }
-   win.document.write("<p>Contact " + specialist + "@ucar.edu (" + name + ") for further assistance.</p>\n");
-
-   // check if show local file names / group ids
-   for(i = 1; i <= grpcnt; i++) {
-      checks = document.form.elements["GRP" + i];
-      if(checks == null) continue;
-      gname = eval("document.form.GNAME" + i);
-      notes = document.form.elements["NOTE" + i];
-      if(gname || notes) {
-         for(j = 0; j < checks.length; j++) {
-            if(checks[j].checked && checks[j].value >= 0) {
-               fidx = parseInt(checks[j].value);
-               if(notes && !shownote && notes[fidx].value) shownote = true;
-               if(gname && !showgroup && i != ogidx) showgroup = true;
-               ogidx = i;
-            }
-         }
-      }
-      if(showgroup && shownote) break;
-   }
-   win.document.write("<p>File" + s + " selected" + are + " listed below:\n");
-   win.document.write("<p><table class=\"filelist\" cellspacing=0 cellpadding=2 bgcolor=\"#e1eaff\">\n");
-   win.document.write("<tr class=\"flcolor0\"><th class=\"thick-border\">File Name</th>\n");
-   win.document.write("<th class=\"thick-border\">Size</th>\n");
-   if(showgroup) win.document.write("<th class=\"thick-border\">GROUP ID</th>\n");
-   win.document.write("<th class=\"thick-border\">INDEX</th>\n");
-   if(shownote) win.document.write("<th class=\"thick-border\">Description</th>\n");
-   win.document.write("</tr>\n");
-   k = 1;
-   for(i = 1; i <= grpcnt; i++) {
-      checks = document.form.elements["GRP" + i];
-      if(checks == null) continue; // should not happen
-      files = document.form.elements["FIL" + i];
-      sizes = document.form.elements["SIZ" + i];
-      gname = eval("document.form.GNAME" + i);
-      sizes = document.form.elements["SIZ" + i];
-      if(shownote) {
-         notes = document.form.elements["NOTE" + i];
-      }
-      for(j = 0; j < checks.length; j++) {
-         if(!checks[j].checked || checks[j].value == -1) continue;
-         fidx = parseInt(checks[j].value);
-         win.document.write("<tr><td class=\"thin-border\">" + files[fidx].value + "</td>\n");
-         win.document.write("<td class=\"thin-border\" align=\"right\">" + totalSize(sizes[fidx].value) + "</td>\n");
-         if(showgroup) win.document.write("<td class=\"thin-border\">" + str_value(gname) + "</td>\n");
-         win.document.write("<td class=\"thin-border\" align=\"right\">" + k++ + "</td>\n");
-         if(shownote) {
-            win.document.write("<td class=\"thin-border\">" + str_value(notes[fidx]) + "</td>\n");
-         }
-         win.document.write("</tr>\n");
-         if(stat == 2) {
-            win.document.write("<input type=\"hidden\" name=\"file\" value=\"" + 
-                               files[fidx].value + "\">\n");
-         }
-      }
-   }
-   win.document.write("</table></p>\n");
 }
