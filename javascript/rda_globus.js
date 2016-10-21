@@ -196,7 +196,7 @@ function showGlobusList(win, gtype, dsid, wpath, grpcnt, count, ftype)
    }
    win.document.write("<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
       "<table class=\"table table-striped table-hover\">\n" +
-      "<thead>\n<tr>\n<th>Index</th>\n<th>File name</th>\n<th>Size</th>\n";
+      "<thead>\n<tr>\n<th>Index</th>\n<th>File name</th>\n<th>Size</th>\n");
    if(showgroup) win.document.write("<th>Group ID</th>\n");
    if(shownote)  win.document.write("<th>Description</th>\n");
    win.document.write("</tr>\n</thead>\n<tbody>\n");
