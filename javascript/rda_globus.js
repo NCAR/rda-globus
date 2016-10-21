@@ -31,6 +31,10 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
      alert(errmsg);
      return;
    }
+   if(gtype == 3) {
+     count = checkFileSelection(grpcnt);
+     if(count == 0) return;
+   }
    openGlobusWindow(grpcnt, gtype, ridx, dsid);
 }
 
@@ -63,8 +67,6 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
       fname += dsid;
    } else {
       action = 'Globus file transfer';
-      count = checkFileSelection(grpcnt);
-      if(count == 0) return;
    }
 
    filewin = window.open("", "_blank");
