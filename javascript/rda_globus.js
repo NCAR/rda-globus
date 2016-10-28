@@ -32,7 +32,7 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
      return;
    }
    if(gtype == 3) {
-     count = checkFileSelection(grpcnt);
+     var count = checkFileSelection(grpcnt);
      if(count === 0) return;
    }
    openGlobusWindow(grpcnt, gtype, ridx, dsid);
@@ -86,7 +86,7 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
    }
    if(gtype == 3) {
      var msg = "transfer the selected data files";
-     showGlobusList(filewin, msg, gtype, dsid, wpath, grpcnt, count, ftype);
+     showGlobusList(filewin, msg, gtype, dsid, grpcnt, count, ftype);
    }
 
    filewin.document.write("</body></html>\n");
@@ -121,7 +121,7 @@ function showGlobusInstructions(win, msg, gtype, ridx, dsid)
 /** Open form and build array of files selected by user as input parameters to 
     dsglobus.php **/
 
-function showGlobusList(win, gtype, dsid, wpath, grpcnt, count, ftype)
+function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
 {
    var i, j, k, fidx;
    var files, checks;
