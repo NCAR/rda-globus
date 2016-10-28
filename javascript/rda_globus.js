@@ -18,22 +18,24 @@
  *
  */
 function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
-   var errmsg = "An error has occurred. Please send this message to rdahelp@ucar.edu for " + 
+   var errmsg = "An error has occurred. Please send this message to rdahelp@ucar.edu for " +
                 "assistance. (gtype: " + gtype + " ridx: " + ridx + " dsid: " + dsid + ")";
-   if(typeof gtype === 'undefined' || gtype < 1 || gtype > 3) {
+   if(typeof gtype === "undefined" || gtype < 1 || gtype > 3) {
      alert(errmsg);
    }
-   if((typeof ridx !== 'undefined') && (typeof dsid !== 'undefined')){
+   if((typeof ridx !== "undefined") && (typeof dsid !== "undefined")){
      alert(errmsg);
      return;
    }
-   if((typeof ridx === 'undefined' && typeof dsid === 'undefined')){
+   if(typeof ridx === "undefined" && typeof dsid === "undefined"){
      alert(errmsg);
      return;
    }
    if(gtype == 3) {
      var count = checkFileSelection(grpcnt);
-     if(count === 0) return;
+     if(count === 0) {
+       return;
+     }
    }
    openGlobusWindow(grpcnt, gtype, ridx, dsid);
 }
@@ -49,43 +51,42 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
    var ftype;
    var action;
    var fname;
-   var ridx;
-   var count;
-   
+   var msg;
+
    ftype = document.form.ftype.value;
-   if(typeof dsid === 'undefined') {
+   if(typeof dsid === "undefined") {
      dsid = document.form.dsid.value;
    }
    fname = "Globus data transfer: ";
-   
+
    if(gtype == 1) {
-      action = 'Globus dsrqst';
+      action = "Globus dsrqst";
       ridx = document.form.ridx.value;
-      fname += 'request ID ' + ridx;
+      fname += "request ID " + ridx;
    } else if(gtype == 2){
-      action = 'Globus dataset share';
+      action = "Globus dataset share";
       fname += dsid;
    } else {
-      action = 'Globus file transfer';
+      action = "Globus file transfer";
    }
 
    filewin = window.open("", "_blank");
    filewin.document.write("<html><head><title>" + fname + "</title>" +
-         "<meta charset=\"utf-8\">\n" + 
+         "<meta charset=\"utf-8\">\n" +
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
          "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">\n" +
           "</head>\n<body>\n");
 
    if(gtype == 1) {
-     var msg = "transfer your data files";
+     msg = "transfer your data files";
      showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
    }
    if(gtype == 2) {
-     var msg = "transfer the data files from this dataset (" + dsid + ")";
+     msg = "transfer the data files from this dataset (" + dsid + ")";
      showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
    }
    if(gtype == 3) {
-     var msg = "transfer the selected data files";
+     msg = "transfer the selected data files";
      showGlobusList(filewin, msg, gtype, dsid, grpcnt, count, ftype);
    }
 
@@ -94,7 +95,7 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
    filewin.focus();
 }
 
-function showGlobusInstructions(win, msg, gtype, ridx, dsid) 
+function showGlobusInstructions(win, msg, gtype, ridx, dsid)
 {
    win.document.write("<div id=\"load\">\n");
    win.document.write("<p>Click the button labeled 'Request Globus transfer' to \n");
@@ -106,10 +107,10 @@ function showGlobusInstructions(win, msg, gtype, ridx, dsid)
 
    win.document.write("<form name=\"globusForm\" action=\"/php/dsglobus.php\" method=\"post\" onsubmit=\"showLoading()\">\n");
    win.document.write("<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n");
-   if(gtype == 1 && typeof ridx !== 'undefined') {
+   if(gtype == 1 && typeof ridx !== "undefined") {
       win.document.write("<input type=\"hidden\" name=\"ridx\" value=\"" + ridx + "\">\n");
    }
-   if(gtype == 2 && typeof dsid !== 'undefined') {
+   if(gtype == 2 && typeof dsid !== "undefined") {
       win.document.write("<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n");
    }
    win.document.write("<p><button type=\"submit\" class=\"btn btn-primary\">Request Globus transfer</button>");
@@ -118,7 +119,7 @@ function showGlobusInstructions(win, msg, gtype, ridx, dsid)
    win.document.write("</div>\n");
 }
 
-/** Open form and build array of files selected by user as input parameters to 
+/** Open form and build array of files selected by user as input parameters to
     dsglobus.php **/
 
 function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
@@ -141,8 +142,7 @@ function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
    var gindex = document.form.gindex ? document.form.gindex.value : 0;
    var rstat = document.form.rstat ? document.form.rstat.value : null;
    var dfmt = document.form.dfmt ? document.form.dfmt.value : null;
-   var parameters = '';
-   
+
 // Open form
    win.document.write("<form name=\"globusForm\" action=\"/php/dsglobus.php\" method=\"POST\" onsubmit=\"showLoading()\">\n");
    win.document.write("<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n");
@@ -163,7 +163,7 @@ function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
       "<p>A Globus user account is not required to use this service. If necessary, you " +
       "may sign into Globus with your RDA user e-mail and password by selecting the " +
       "'NCAR RDA' organizational login on the Globus login page, and then enter your RDA " +
-      "e-mail login and password.</p>\n");      
+      "e-mail login and password.</p>\n");
 
    if(document.form.specialist) {
       specialist = document.form.specialist.value;
@@ -181,7 +181,9 @@ function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
    // check if show local file names / group ids
    for(i = 1; i <= grpcnt; i++) {
       checks = document.form.elements["GRP" + i];
-      if(checks === null) continue;
+      if(checks === null) {
+        continue;
+      }
       gname = eval("document.form.GNAME" + i);
       notes = document.form.elements["NOTE" + i];
       if(gname || notes) {
