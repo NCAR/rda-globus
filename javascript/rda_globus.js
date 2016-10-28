@@ -233,3 +233,34 @@ function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
 function showLoading() {
    getElementById("load").innerHTML = "<img src=\"images/loader.gif\"></img>";
 }
+
+function checkFileSelection(grpcnt)
+{
+   var i, j, fidx;
+   var checks;
+   var sizes;
+   var size = 0;
+   var count = 0;
+   var gidx, idx1, idx2;
+   
+   CHKCNT = 0;
+
+   for(i = 1; i <= grpcnt; i++) {
+      checks = document.form.elements['GRP' + i];
+      sizes = document.form.elements['SIZ' + i];
+      if(checks == null) continue;
+      CHKCNT += checks.length - 1;
+      for(j = 0; j < checks.length; j++) {
+         if(checks[j].checked && checks[j].value >= 0) {
+            count++;
+            fidx = parseInt(checks[j].value);
+            size = size + parseInt(sizes[fidx].value);
+         }
+      }
+   }
+   if(count == 0) {
+      alert("Select at least one file to continue!");
+   }
+   document.form.total.value = size;
+   return count;
+}
