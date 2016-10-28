@@ -33,7 +33,7 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
    }
    if(gtype == 3) {
      count = checkFileSelection(grpcnt);
-     if(count == 0) return;
+     if(count === 0) return;
    }
    openGlobusWindow(grpcnt, gtype, ridx, dsid);
 }
@@ -86,7 +86,7 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid)
    }
    if(gtype == 3) {
      var msg = "transfer the selected data files";
-     showGlobusList(filewin, msg, gtype, dsid, wpath, grpcnt, count, ftype)
+     showGlobusList(filewin, msg, gtype, dsid, wpath, grpcnt, count, ftype);
    }
 
    filewin.document.write("</body></html>\n");
@@ -181,7 +181,7 @@ function showGlobusList(win, gtype, dsid, wpath, grpcnt, count, ftype)
    // check if show local file names / group ids
    for(i = 1; i <= grpcnt; i++) {
       checks = document.form.elements["GRP" + i];
-      if(checks == null) continue;
+      if(checks === null) continue;
       gname = eval("document.form.GNAME" + i);
       notes = document.form.elements["NOTE" + i];
       if(gname || notes) {
@@ -205,7 +205,7 @@ function showGlobusList(win, gtype, dsid, wpath, grpcnt, count, ftype)
    k = 1;
    for(i = 1; i <= grpcnt; i++) {
       checks = document.form.elements["GRP" + i];
-      if(checks == null) continue; // should not happen
+      if(checks === null) continue; // should not happen
       files = document.form.elements["FIL" + i];
       sizes = document.form.elements["SIZ" + i];
       gname = eval("document.form.GNAME" + i);
