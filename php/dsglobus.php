@@ -169,6 +169,11 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    $_SESSION['directory'] = $_POST['directory'];
    if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
    $_SESSION['files'] = $_POST['globusFile'];
+   if(empty($_POST['cancelurl'])) {
+     $cancelurl = $protocol . $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
+   } else {
+     $cancelurl = $_POST['cancelurl'];
+   }
 
 # Build http query
    $params = array(
@@ -176,7 +181,7 @@ function globus_browseEndpoint($msg, $gtype, $email) {
       "action" => $protocol . $_SERVER['HTTP_HOST'] . "/php/dsglobus.php",
       "filelimit" => 0,
       "folderlimit" => 1,
-      "cancelurl" => $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
+      "cancelurl" => $cancelurl,
       "label" => "NCAR RDA Globus transfer"
    );
    

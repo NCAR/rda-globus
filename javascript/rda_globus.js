@@ -149,6 +149,7 @@ function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
    win.document.write("<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n");
    wpath = document.form.wpath.value;
    win.document.write("<input type=\"hidden\" name=\"directory\" value=\"" + wpath + "/\">\n");
+   win.document.write("<input type=\"hidden\" name=\"cancelurl\" value=\"" + document.location.href + "\">\n");
 
    win.document.write("<div id=\"load\">\n");
    win.document.write("<p><h2>File" + s + " selected for RDA dataset " + dsid + "</h2>" +
