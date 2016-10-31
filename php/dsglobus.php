@@ -158,6 +158,8 @@ function globus_browseEndpoint($msg, $gtype, $email) {
 
    $unames = get_ruser_names($email, 5);
    $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
+   
+   $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 
 # Save path, selected files, and other hidden input to session
    $_SESSION['gtype'] = $gtype;
@@ -168,17 +170,17 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
    $_SESSION['files'] = $_POST['globusFile'];
    if(!empty($_POST['dsid'])) {
-      $cancelurl = $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
+      $cancelurl = $protocol . $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
       $label = "NCAR RDA " . $_POST['dsid'] . " Globus transfer";
    } else {
-      $cancelurl = $_SERVER['HTTP_HOST'];
+      $cancelurl = $protocol . $_SERVER['HTTP_HOST'];
       $label = "NCAR RDA Globus transfer";
    }
 
 # Build http query
    $params = array(
       "method" => "POST",
-      "action" => $_SERVER['HTTP_HOST'] . "/php/dsglobus.php",
+      "action" => $protocol . $_SERVER['HTTP_HOST'] . "/php/dsglobus.php",
       "filelimit" => 0,
       "folderlimit" => 1,
       "cancelurl" => $cancelurl,
