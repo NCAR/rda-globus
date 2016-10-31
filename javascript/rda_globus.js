@@ -37,7 +37,7 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
        return;
      }
    }
-   openGlobusWindow(grpcnt, gtype, ridx, dsid);
+   openGlobusWindow(grpcnt, gtype, ridx, dsid, count);
 }
 
 /**
@@ -45,7 +45,7 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
  * gtype: 1 = dsrqst, 2 = dataset share, 3 = custom file list
  */
 
-function openGlobusWindow(grpcnt, gtype, ridx, dsid)
+function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
 {
    var filewin;
    var ftype;
