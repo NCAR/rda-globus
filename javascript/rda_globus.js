@@ -87,7 +87,7 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
    }
    if(gtype == 3) {
      msg = "transfer the selected data files";
-     showGlobusList(filewin, msg, gtype, dsid, grpcnt, count, ftype);
+     showGlobusList(filewin, gtype, dsid, grpcnt, count, ftype);
    }
 
    filewin.document.write("</body></html>\n");
