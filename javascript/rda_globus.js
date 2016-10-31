@@ -174,7 +174,7 @@ function showGlobusList(win, gtype, dsid, grpcnt, count, ftype)
    }
    win.document.write("<p>Contact <strong>" + specialist + "@ucar.edu (" + name + ")</strong> for further assistance.</p>\n");
    win.document.write("<p><button type=\"submit\" class=\"btn btn-primary\">Globus download</button>" +
-      "&nbsp;<button type=\"button\" class=\"btn btn-link\">Cancel</button></p>\n");
+      "&nbsp;<button type=\"button\" class=\"btn btn-link\" onClick=\"self.close()\">Cancel</button></p>\n");
 
 // Write selected files to hidden input
 
