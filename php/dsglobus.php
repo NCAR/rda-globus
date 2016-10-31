@@ -203,7 +203,10 @@ function submit_transfer() {
 # Get session data
    $selected = $_SESSION["files"];
 
+   echo $_SESSION['gtype'];
+   echo "<br>" . $_SESSION['$dsid'] . "<br>" . $_SESSION['directory'];
    echo $selected;
+
 # Activate source and destination endpoints
 
    $token = $MYGLOBUS["TOKEN"];
