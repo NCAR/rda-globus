@@ -199,13 +199,15 @@ function globus_browseEndpoint($msg, $gtype, $email) {
  */
  
 function submit_transfer() {
-
+   
+   global $MYGLOBUS;
+   
 # Get session data
    $selected = $_SESSION["files"];
 
    echo $_SESSION['gtype'];
-   echo "<br>" . $_SESSION['$dsid'] . "<br>" . $_SESSION['directory'];
-   echo $selected;
+   echo "<br>dsid: " . $_SESSION['$dsid'] . "<br>directory: " . $_SESSION['directory'];
+   echo "<br>selected files: <br>" . $selected;
 
 # Activate source and destination endpoints
 
