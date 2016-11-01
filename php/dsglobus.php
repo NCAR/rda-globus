@@ -206,8 +206,9 @@ function submit_transfer() {
    $selected = $_SESSION["files"];
 
    echo $_SESSION['gtype'];
-   echo "<br>dsid: " . $_SESSION['$dsid'] . "<br>directory: " . $_SESSION['directory'];
-   echo "<br>selected files: <br>" . $selected;
+   echo "<br>dsid: " . $_SESSION['dsid'] . "<br>directory: " . $_SESSION['directory'];
+   echo "<br>selected files: <br>";
+   print_r(array_values($selected));
 
 # Activate source and destination endpoints
 
