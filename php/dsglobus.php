@@ -190,9 +190,9 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    
 # Close window, open new window/tab, and redirect user to browse endpoint
    echo "<script>window.close()</script>";
-   echo $browse_endpoint;
+#   echo $browse_endpoint;
 
-#   header('Location: ' . $browse_endpoint);
+   header('Location: ' . $browse_endpoint);
    exit();
 }
 
