@@ -229,7 +229,7 @@ function submit_transfer() {
         "<br>destination_folder: " . $destination_folder .
         "<br>transfer label: " . $label .
         "<br>destination_path: " . $dest_path .
-        "<br><br>destination folders: " . print_r(array_values($_POST['folder']));
+        "<br><br>destination folders: " . $_POST['folder'];
 
 # Get submission ID (GET /submission_id)
 
