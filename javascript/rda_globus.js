@@ -70,7 +70,8 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
       action = "Globus file transfer";
    }
 
-   filewin = window.open("", "_blank");
+//   filewin = window.open("", "_blank");
+   filewin = window.open("", action, "width=750,height=750,scrollbars=yes,resizable=yes");
    filewin.document.write("<html><head><title>" + fname + "</title>" +
          "<meta charset=\"utf-8\">\n" +
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
