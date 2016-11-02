@@ -228,7 +228,8 @@ function submit_transfer() {
         "<br>destination_endpoint_id: " . $destination_endpoint_id . 
         "<br>destination_folder: " . $destination_folder .
         "<br>transfer label: " . $label .
-        "<br>destination_path: " . $dest_path;
+        "<br>destination_path: " . $dest_path .
+        "<br><br>destination folders: " . print_r(array_values($_POST['folder']));
 
 # Get submission ID (GET /submission_id)
 
