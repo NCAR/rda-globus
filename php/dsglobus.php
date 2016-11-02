@@ -205,11 +205,6 @@ function submit_transfer() {
 # Get session data
    $selected = $_SESSION["files"];
 
-   echo $_SESSION['gtype'];
-   echo "<br>dsid: " . $_SESSION['dsid'] . "<br>directory: " . $_SESSION['directory'];
-   echo "<br>selected files: <br>";
-   print_r(array_values($selected));
-
 # Activate source and destination endpoints
 
    $token = $MYGLOBUS["TOKEN"];
@@ -222,7 +217,18 @@ function submit_transfer() {
 #   $source_path = $source_endpoint_base . $selected;
    $dest_path = $_POST["path"];
 
-# Test: display listing of files selected
+# Test: print session data and endpoint IDs
+   echo $_SESSION['gtype'];
+   echo "<br>dsid: " . $_SESSION['dsid'] . "<br>directory: " . $_SESSION['directory'];
+   echo "<br>selected files: <br>";
+   print_r(array_values($selected));
+
+   echo "<br>source_endpoint_id: " . $source_endpoint_id .
+        "<br>source_endpoint_base: " . $source_endpoint_base . 
+        "<br>destination_endpoint_id: " . $destination_endpoint_id . 
+        "<br>destination_folder: " . $destination_folder .
+        "<br>transfer label: " . $label .
+        "<br>destination_path: " . $dest_path;
 
 # Get submission ID (GET /submission_id)
 
