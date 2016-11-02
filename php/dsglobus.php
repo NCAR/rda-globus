@@ -185,10 +185,14 @@ function globus_browseEndpoint($msg, $gtype, $email) {
       "label" => "NCAR RDA Globus transfer"
    );
    
-   $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);
+   $browse_endpoint = "<script>window.open('https://www.globus.org/app/browse-endpoint?" . 
+        http_build_query($params) . "', '_blank')</script>";
    
-# Redirect user to browse endpoint
-   header('Location: ' . $browse_endpoint);
+# Close window, open new window/tab, and redirect user to browse endpoint
+   echo "<script>window.close()</script>";
+   echo $browse_endpoint;
+
+#   header('Location: ' . $browse_endpoint);
    exit();
 }
 

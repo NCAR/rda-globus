@@ -71,7 +71,7 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
    }
 
 //   filewin = window.open("", "_blank");
-   filewin = window.open("", action, "width=750,height=750,scrollbars=yes,resizable=yes");
+   filewin = window.open("", action, "width=1100,height=750,scrollbars=yes,resizable=yes");
    filewin.document.write("<html><head><title>" + fname + "</title>" +
          "<meta charset=\"utf-8\">\n" +
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
