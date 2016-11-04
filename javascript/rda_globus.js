@@ -234,7 +234,3 @@ function showGlobusList(gtype, dsid, grpcnt, count)
 function showLoading() {
    getElementById("load").innerHTML = "<img src=\"images/loader.gif\"></img>";
 }
-
-function newDoc(doc) {
-   document.location.assign(doc);
-}
