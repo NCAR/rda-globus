@@ -175,7 +175,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    }
    html += "<p>Contact <strong>" + specialist + "@ucar.edu (" + name + ")</strong> for further assistance.</p>\n" +
            "<p><button type=\"submit\" class=\"btn btn-primary\">Globus transfer</button>" +
-           "&nbsp;<button type=\"button\" class=\"btn btn-link\" onClick=\"newDoc(" + cancelurl +")\">Cancel</button></p>\n";
+           "&nbsp;<button type=\"button\" class=\"btn btn-link\" onClick=\"newDoc('" + cancelurl +"')\">Cancel</button></p>\n";
 
 // Write selected files to hidden input
 
