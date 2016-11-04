@@ -141,6 +141,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    var gindex = document.form.gindex ? document.form.gindex.value : 0;
    var rstat = document.form.rstat ? document.form.rstat.value : null;
    var dfmt = document.form.dfmt ? document.form.dfmt.value : null;
+   var cancelurl = document.location.href;
 
 // Open form
    wpath = document.form.wpath.value;
@@ -148,7 +149,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
           "<input type=\"hidden\" name=\"gtype\" value=\"" + gtype + "\">\n" + 
           "<input type=\"hidden\" name=\"dsid\" value=\"" + dsid + "\">\n" +
           "<input type=\"hidden\" name=\"directory\" value=\"" + wpath + "/\">\n" +
-          "<input type=\"hidden\" name=\"cancelurl\" value=\"" + document.location.href + "\">\n";
+          "<input type=\"hidden\" name=\"cancelurl\" value=\"" + cancelurl + "\">\n";
 
    html += "<div id=\"load\">\n";
    html += "<p><h2>File" + s + " selected for RDA dataset " + dsid + "</h2>" +
@@ -174,7 +175,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    }
    html += "<p>Contact <strong>" + specialist + "@ucar.edu (" + name + ")</strong> for further assistance.</p>\n" +
            "<p><button type=\"submit\" class=\"btn btn-primary\">Globus transfer</button>" +
-           "&nbsp;<button type=\"button\" class=\"btn btn-link\" onClick=\"self.close()\">Cancel</button></p>\n";
+           "&nbsp;<button type=\"button\" class=\"btn btn-link\" onClick=\"newDoc(" + cancelurl +")\">Cancel</button></p>\n";
 
 // Write selected files to hidden input
 
@@ -232,4 +233,8 @@ function showGlobusList(gtype, dsid, grpcnt, count)
 
 function showLoading() {
    getElementById("load").innerHTML = "<img src=\"images/loader.gif\"></img>";
+}
+
+function newDoc(doc) {
+   document.location.assign(doc);
 }
