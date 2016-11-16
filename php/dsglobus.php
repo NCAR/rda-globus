@@ -197,7 +197,7 @@ function globus_cli_cmd($cmd) {
    if(strpos($cmd, '/') === false) {
       $path = getenv('PATH');
       if(strpos($path, $MYLOG['DSSHOME']) === false) {
-         $path .= ":$MYLOG['DSSHOME']/bin";
+         $path .= ":$MYLOG[DSSHOME]/bin";
          putenv("PATH=$path");
       }
    }
