@@ -10,46 +10,56 @@
 # Test File : rda-web-dev.ucar.edu:/data/web/cgi-bin/rdaGlobusTransfer_test*
 ##################################################################################
 
-#from __future__ import print_function
 import os, sys
+
+sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
+sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.append("/glade/u/home/tcram/lib/python")
+
 import cgi, cgitb
-#import MyGlobus
-#from globus_sdk import TransferClient
+from Cookie import SimpleCookie
+import MyGlobus
+from globus_sdk import TransferClient
+from PyDBI import myget
 
-print "Content-type: text/html\r\n\r\n"
+def main():
+    print "Content-type: text/html\r\n\r\n"
+#    content = list_environ()
 
-content = list_environ()
-
-#task_id = submit_transfer()
-#content = transfer_status(task_id)
-
-# Render html
-print content
+    task_id = submit_transfer()
+    #content = transfer_status(task_id)
 
 def list_environ():
-
     content = "<p>\n<strong>Environment:</strong>\n</p>\n"
     for param in os.environ.keys():
-      content += "<b>%20s</b>: %s</ br>" % (param, os.environ[param])
+      content += "<b>{0}</b>: {1}<br />"format.(param, os.environ[param])
     
     return content
 
-"""
+
 def submit_transfer():
-"""
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
     - Send the user to the transfer status page with the task id
       from the transfer.
     """
-"""
     # Get session ID and session data from database
+    
+    sid = SimpleCooke(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    keys = ['id','access','data']
+    condition = " WHERE {0} = '{1}'".format("id", sid)
+	myrec = myget('sessions', keys, condition)
+
+    print "<p>\n<strong>Session data:</strong>\n</p>\n"
+    print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
+    
+    """    
     gtype = session['gtype']
     selected = session['files']
     dsid = session['dsid']
     directory = session['directory']
-    
+
     tc = TransferClient()
 
     # Define endpoint IDs and paths
@@ -72,9 +82,11 @@ def submit_transfer():
     destination_folder = form.getvalue("folder[0]", "(destination folder missing)")
     
     return(task_id)
-
+    """
+    
+    return
+    
 def transfer_status(task_id):
-"""
     """
     Call Globus to get status/details of transfer with
     task_id.
@@ -84,11 +96,14 @@ def transfer_status(task_id):
 
     'task_id' is passed to the route in the URL as 'task_id'.
     """
-"""
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
         session['tokens']['transfer.api.globus.org']['refresh_token'],
         load_portal_client()))
     task = transfer.get_task(task_id)
 
     return render_template('transfer_status.jinja2', task=task)
-"""
+
+#=========================================================================================
+
+if __name__ == "__main__":
+    main()
