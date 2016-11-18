@@ -18,20 +18,33 @@ from globus_sdk import TransferClient
 
 print "Content-Type: text/html\n\n"
 
-task_id = submit_transfer()
-content = transfer_status(task_id)
+content = list_environ()
+
+#task_id = submit_transfer()
+#content = transfer_status(task_id)
 
 # Render html
 print content
 
+def list_environ():
+
+    content = "<p>\n<strong>Environment:</strong>\n</p>\n"
+    for param in os.environ.keys():
+      content += "<b>%20s</b>: %s</ br>" % (param, os.environ[param])
+    
+    return content
+
+"""
 def submit_transfer():
+"""
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
     - Send the user to the transfer status page with the task id
       from the transfer.
     """
-    # Get session data
+"""
+    # Get session ID and session data from database
     gtype = session['gtype']
     selected = session['files']
     dsid = session['dsid']
@@ -61,6 +74,7 @@ def submit_transfer():
     return(task_id)
 
 def transfer_status(task_id):
+"""
     """
     Call Globus to get status/details of transfer with
     task_id.
@@ -70,10 +84,11 @@ def transfer_status(task_id):
 
     'task_id' is passed to the route in the URL as 'task_id'.
     """
+"""
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
         session['tokens']['transfer.api.globus.org']['refresh_token'],
         load_portal_client()))
     task = transfer.get_task(task_id)
 
     return render_template('transfer_status.jinja2', task=task)
-
+"""
