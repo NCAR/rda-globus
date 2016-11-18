@@ -11,9 +11,9 @@
 #
 ################################################################################
 
-session_start();
 include_once("MyRqst.inc");
 include_once("MyGlobus.inc");
+include("PDO/MySession.inc");
 
 manage_acl();
 
@@ -154,8 +154,9 @@ function acl_dataset($msg, $gtype, $email) {
 
 function globus_browseEndpoint($msg, $gtype, $email) {
 
-   $mfunc = "bmessage";
+   $session = new Session;
 
+   $mfunc = "bmessage";
    $unames = get_ruser_names($email, 5);
    $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
    
@@ -169,6 +170,8 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    $_SESSION['directory'] = $_POST['directory'];
    if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
    $_SESSION['files'] = $_POST['globusFile'];
+
+# URL if user cancels endpoint selection on the Globus Browse Endpoint web app
    if(empty($_POST['cancelurl'])) {
      $cancelurl = $protocol . $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
    } else {
