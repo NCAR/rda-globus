@@ -46,7 +46,7 @@ def submit_transfer():
     """
     # Get session ID and session data from database
     
-    sid = SimpleCooke(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
     myrec = myget('sessions', keys, condition)
