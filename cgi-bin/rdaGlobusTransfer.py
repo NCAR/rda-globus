@@ -84,7 +84,8 @@ def submit_transfer():
     return(task_id)
     """
     
-    return
+    task_id = 'task_id'
+    return task_id
     
 def transfer_status(task_id):
     """
