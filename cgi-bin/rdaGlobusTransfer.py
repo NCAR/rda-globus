@@ -24,7 +24,7 @@ from PyDBI import myget
 
 def main():
     print "Content-type: text/html\r\n\r\n"
-#    content = list_environ()
+    print list_environ()
 
     task_id = submit_transfer()
     #content = transfer_status(task_id)
