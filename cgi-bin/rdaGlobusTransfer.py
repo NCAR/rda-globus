@@ -52,15 +52,20 @@ def submit_transfer():
     myrec = myget('sessions', keys, condition)
 
     print "<p>\n<strong>Session data:</strong>\n</p>\n"
+    print "<p>\n"
     print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
-    
+    print "</p>\n"
+
+    gtype = 3
+        
     """    
     gtype = session['gtype']
     selected = session['files']
     dsid = session['dsid']
     directory = session['directory']
-
+    
     tc = TransferClient()
+    """
 
     # Define endpoint IDs and paths
     if(gtype == 3):
@@ -81,8 +86,10 @@ def submit_transfer():
     destination_endpoint_id = form.getvalue("endpoint_id","(endpoint ID missing)")
     destination_folder = form.getvalue("folder[0]", "(destination folder missing)")
     
-    return(task_id)
-    """
+    print "<p><strong>POST data:</strong></p>\n"
+    print "<p>\n"
+    print "Endpoint ID: {0}<br />\nDestination folder: {1}\n".format(destination_endpoint_id, destination_folder)
+    print "</p>\n"
     
     task_id = 'task_id'
     return task_id
