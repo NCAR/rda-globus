@@ -16,15 +16,16 @@ import cgi, cgitb
 import MyGlobus
 from globus_sdk import TransferClient
 
-print "Content-Type: text/html\n\n"
+print "Content-Type: text/html\r\n\r\n"
+print "<strong>Hello world</strong>"
 
-content = list_environ()
+#content = list_environ()
 
 #task_id = submit_transfer()
 #content = transfer_status(task_id)
 
 # Render html
-print content
+#print content
 
 def list_environ():
 
