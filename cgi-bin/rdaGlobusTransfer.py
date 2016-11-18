@@ -32,7 +32,7 @@ def main():
 def list_environ():
     content = "<p>\n<strong>Environment:</strong>\n</p>\n"
     for param in os.environ.keys():
-      content += "<b>{0}</b>: {1}<br />"format.(param, os.environ[param])
+      content += "<b>{0}</b>: {1}<br />".format(param, os.environ[param])
     
     return content
 
