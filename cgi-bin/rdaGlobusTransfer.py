@@ -10,22 +10,21 @@
 # Test File : rda-web-dev.ucar.edu:/data/web/cgi-bin/rdaGlobusTransfer_test*
 ##################################################################################
 
-from __future__ import print_function
+#from __future__ import print_function
 import os, sys
 import cgi, cgitb
-import MyGlobus
-from globus_sdk import TransferClient
+#import MyGlobus
+#from globus_sdk import TransferClient
 
-print "Content-Type: text/html\r\n\r\n"
-print "<strong>Hello world</strong>"
+print "Content-type: text/html\r\n\r\n"
 
-#content = list_environ()
+content = list_environ()
 
 #task_id = submit_transfer()
 #content = transfer_status(task_id)
 
 # Render html
-#print content
+print content
 
 def list_environ():
 
