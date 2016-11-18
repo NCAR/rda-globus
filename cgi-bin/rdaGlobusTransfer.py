@@ -49,7 +49,7 @@ def submit_transfer():
     sid = SimpleCooke(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
-	myrec = myget('sessions', keys, condition)
+    myrec = myget('sessions', keys, condition)
 
     print "<p>\n<strong>Session data:</strong>\n</p>\n"
     print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
