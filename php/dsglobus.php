@@ -181,7 +181,7 @@ function globus_browseEndpoint($msg, $gtype, $email) {
 # Build http query
    $params = array(
       "method" => "POST",
-      "action" => $protocol . $_SERVER['HTTP_HOST'] . "/php/dsglobus.php",
+      "action" => $protocol . $_SERVER['HTTP_HOST'] . "/#!cgi-bin/rdaGlobusTransfer",
       "filelimit" => 0,
       "folderlimit" => 1,
       "cancelurl" => $cancelurl,
