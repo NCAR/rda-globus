@@ -77,22 +77,22 @@ def submit_transfer():
        source_endpoint_base = MyGlobus['data_request_ep_base']
     
     # Read POST data
-    form = cgi.FieldStorage(environ={'REQUEST_METHOD':'POST'})
+    form = cgi.FieldStorage(fp=self.rfile,headers=self.headers,environ={'REQUEST_METHOD':'POST'})
     
     print "<p><strong>Keys: </strong></p>\n"
     print "<p>{0}</p>\n".format(form.keys())
 
-    if "endpoint_id" not in form or "folder[0]" not in form:
+    if "endpoint_id" not in form or "path" not in form:
        print "<strong>Error</strong>:"
        print "Endpoint ID and/or destination folder missing from submitted form."
        return
 
     destination_endpoint_id = form.getvalue("endpoint_id","(endpoint ID missing)")
-    destination_folder = form.getvalue("folder[0]", "(destination folder missing)")
+    destination_path = form.getvalue("path", "(destination path missing)")
     
     print "<p><strong>POST data:</strong></p>\n"
     print "<p>\n"
-    print "Endpoint ID: {0}<br />\nDestination folder: {1}\n".format(destination_endpoint_id, destination_folder)
+    print "Endpoint ID: {0}<br />\nDestination path: {1}\n".format(destination_endpoint_id, destination_path)
     print "</p>\n"
     
     task_id = 'task_id'
