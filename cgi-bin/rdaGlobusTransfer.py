@@ -18,7 +18,7 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
 from Cookie import SimpleCookie
-import MyGlobus
+from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
 from PyDBI import myget
 
