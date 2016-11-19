@@ -78,6 +78,8 @@ def submit_transfer(form):
     
     # Read POST data
 #    form = cgi.FieldStorage(fp=self.rfile,headers=self.headers,environ={'REQUEST_METHOD':'POST'})
+    form.getfirst('endpoint_id', 'empty')
+    form.getfirst('path', 'empty')
     
     print "<p><strong>Keys: </strong></p>\n"
     print "<p>{0}</p>\n".format(form.keys())
