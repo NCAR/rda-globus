@@ -22,11 +22,12 @@ from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
 from PyDBI import myget
 
-def main(form):
+def main():
+    print "Content-type: text/html\r\n\r\n"
     content = list_environ()
     print content
 
-    task_id = submit_transfer(form)
+    task_id = submit_transfer()
     #content = transfer_status(task_id)
 
 def list_environ():
@@ -37,7 +38,7 @@ def list_environ():
     return content
 
 
-def submit_transfer(form):
+def submit_transfer():
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
@@ -77,8 +78,6 @@ def submit_transfer(form):
     
     # Read POST data
 #    form = cgi.FieldStorage(fp=self.rfile,headers=self.headers,environ={'REQUEST_METHOD':'POST'})
-    form.getfirst('endpoint_id', 'empty')
-    form.getfirst('path', 'empty')
     
     print "<p><strong>Keys: </strong></p>\n"
     print "<p>{0}</p>\n".format(form.keys())
@@ -119,8 +118,7 @@ def transfer_status(task_id):
 #=========================================================================================
 
 if __name__ == "__main__":
-    print "Content-type: text/html\r\n\r\n"
-    print "<p>Request method: {0}<br />\n".format(os.environ['REQUEST_METHOD'])
+    os.environ['REQUEST_METHOD'] = 'POST'
     cgitb.enable()
     form = cgi.FieldStorage()
-    main(form)
+    main()
