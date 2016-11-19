@@ -23,7 +23,6 @@ from globus_sdk import TransferClient
 from PyDBI import myget
 
 def main(form):
-    print "Content-type: text/html\r\n\r\n"
     content = list_environ()
     print content
 
@@ -120,6 +119,8 @@ def transfer_status(task_id):
 #=========================================================================================
 
 if __name__ == "__main__":
+    print "Content-type: text/html\r\n\r\n"
+    print "<p>Request method: {0}<br />\n".format(os.environ['REQUEST_METHOD'])
     cgitb.enable()
     form = cgi.FieldStorage()
     main(form)
