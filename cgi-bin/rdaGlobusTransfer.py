@@ -118,5 +118,6 @@ def transfer_status(task_id):
 #=========================================================================================
 
 if __name__ == "__main__":
+    cgitb.enable()
     form = cgi.FieldStorage()
     main()
