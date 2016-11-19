@@ -22,12 +22,12 @@ from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
 from PyDBI import myget
 
-def main():
+def main(form):
     print "Content-type: text/html\r\n\r\n"
     content = list_environ()
     print content
 
-    task_id = submit_transfer()
+    task_id = submit_transfer(form)
     #content = transfer_status(task_id)
 
 def list_environ():
@@ -38,7 +38,7 @@ def list_environ():
     return content
 
 
-def submit_transfer():
+def submit_transfer(form):
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
@@ -120,4 +120,4 @@ def transfer_status(task_id):
 if __name__ == "__main__":
     cgitb.enable()
     form = cgi.FieldStorage()
-    main()
+    main(form)
