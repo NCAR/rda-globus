@@ -79,6 +79,11 @@ def submit_transfer():
     # Read POST data
     form = cgi.FieldStorage()
 
+    print "<p><strong>POST data:</strong></p>\n"
+    print "<p>\n"
+    for key in form.keys():
+        print "<b>{0}:</b> {1}<br />\n".format(key,form[key].value)
+    
     if "endpoint_id" not in form or "folder[0]" not in form:
        print "<strong>Error</strong>:"
        print "Endpoint ID and/or destination folder missing from form."
