@@ -82,10 +82,10 @@ def submit_transfer():
     print "<p><strong>Keys: </strong></p>\n"
     print "<p>{0}</p>\n".format(form.keys())
 
-    if "endpoint_id" not in form or "path" not in form:
-       print "<strong>Error</strong>:"
-       print "Endpoint ID and/or destination folder missing from submitted form."
-       return
+#    if "endpoint_id" not in form or "path" not in form:
+#       print "<strong>Error</strong>:"
+#       print "Endpoint ID and/or destination folder missing from submitted form."
+#       return
 
     destination_endpoint_id = form.getvalue("endpoint_id","(endpoint ID missing)")
     destination_path = form.getvalue("path", "(destination path missing)")
