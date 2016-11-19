@@ -77,7 +77,7 @@ def submit_transfer():
        source_endpoint_base = MyGlobus['data_request_ep_base']
     
     # Read POST data
-    form = cgi.FieldStorage(fp=self.rfile,headers=self.headers,environ={'REQUEST_METHOD':'POST'})
+#    form = cgi.FieldStorage(fp=self.rfile,headers=self.headers,environ={'REQUEST_METHOD':'POST'})
     
     print "<p><strong>Keys: </strong></p>\n"
     print "<p>{0}</p>\n".format(form.keys())
@@ -118,4 +118,5 @@ def transfer_status(task_id):
 #=========================================================================================
 
 if __name__ == "__main__":
+    form = cgi.FieldStorage()
     main()
