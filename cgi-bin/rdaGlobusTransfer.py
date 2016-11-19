@@ -78,6 +78,9 @@ def submit_transfer():
     
     # Read POST data
     form = cgi.FieldStorage()
+    
+    print "<p><strong>Keys: </strong></p>\n"
+    print "<p>{0}</p>\n".format(form.keys())
 
     print "<p><strong>POST data:</strong></p>\n"
     print "<p>\n"
