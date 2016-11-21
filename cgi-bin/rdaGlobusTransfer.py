@@ -16,7 +16,7 @@ sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
-from cgi import test
+import cgi
 import cgitb
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
@@ -24,14 +24,14 @@ from globus_sdk import TransferClient
 from PyDBI import myget
 
 def main():
-#    print "Content-type: text/html\r\n\r\n"
-#    content = list_environ()
-#    print content
+    print "Content-type: text/html\r\n\r\n"
+    content = list_environ()
+    print content
 
 # Print HTML headers and environment using the 'test' function in the cgi module
     print test(environ=os.environ)
 
-#    task_id = submit_transfer()
+    task_id = submit_transfer()
     #content = transfer_status(task_id)
 
 def list_environ():
@@ -123,6 +123,5 @@ def transfer_status(task_id):
 
 if __name__ == "__main__":
     cgitb.enable()
-    os.environ['REQUEST_METHOD'] = 'POST'
-#    form = cgi.FieldStorage()
+    form = cgi.FieldStorage()
     main()
