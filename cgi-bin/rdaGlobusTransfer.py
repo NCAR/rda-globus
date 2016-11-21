@@ -123,5 +123,6 @@ def transfer_status(task_id):
 
 if __name__ == "__main__":
     cgitb.enable()
+    os.environ['REQUEST_METHOD'] = 'POST'
 #    form = cgi.FieldStorage()
     main()
