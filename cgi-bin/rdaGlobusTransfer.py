@@ -16,7 +16,8 @@ sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
-import cgi, cgitb
+from cgi import test
+import cgitb
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
