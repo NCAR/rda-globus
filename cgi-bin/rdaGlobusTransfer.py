@@ -30,7 +30,7 @@ def main():
 
 # Print HTML headers and environment using the 'test' function in the cgi module
 #    print test(environ=os.environ)
-    print sys.stdin.read()
+    print "{0}".format(sys.stdin.read())
 
 #    task_id = submit_transfer()
     #content = transfer_status(task_id)
