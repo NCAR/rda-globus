@@ -11,13 +11,12 @@
 ##################################################################################
 
 import os, sys
+from urllib import unquote
 
 sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
-import cgi
-import cgitb
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
@@ -38,7 +37,6 @@ def list_environ():
     
     return content
 
-
 def submit_transfer():
     """
     - Take the data returned by the Browse Endpoint helper page
@@ -52,6 +50,19 @@ def submit_transfer():
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
     myrec = myget('sessions', keys, condition)
+    
+    # check if myrec is nonempty
+    
+    # extract query parameters from HTTP_REFERER
+    GET = {}
+    ref = os.getenv['HTTP_REFERER']
+    query_idx = ref.index('?')
+    query_args = ref[query_idx+1:].split('&')
+    for arg in query_args:
+        t = arg.split('=')
+        if len(t) > 1:
+            key,val = arg.split('=')
+            GET[key] = urllib.unquote(val)
 
     print "<p>\n<strong>Session data:</strong>\n</p>\n"
     print "<p>\n"
@@ -77,21 +88,15 @@ def submit_transfer():
        source_endpoint_id = MyGlobus['data_request_ep']
        source_endpoint_base = MyGlobus['data_request_ep_base']
     
-    # Read POST data
-#    form = cgi.FieldStorage(fp=self.rfile,headers=self.headers,environ={'REQUEST_METHOD':'POST'})
-    
-    print "<p><strong>Keys: </strong></p>\n"
-    print "<p>{0}</p>\n".format(form.keys())
-
 #    if "endpoint_id" not in form or "path" not in form:
 #       print "<strong>Error</strong>:"
 #       print "Endpoint ID and/or destination folder missing from submitted form."
 #       return
 
-    destination_endpoint_id = form.getvalue("endpoint_id","(endpoint ID missing)")
-    destination_path = form.getvalue("path", "(destination path missing)")
+    destination_endpoint_id = GET['endpoint_id']
+    destination_path = GET['path']
     
-    print "<p><strong>POST data:</strong></p>\n"
+    print "<p><strong>GET data:</strong></p>\n"
     print "<p>\n"
     print "Endpoint ID: {0}<br />\nDestination path: {1}\n".format(destination_endpoint_id, destination_path)
     print "</p>\n"
@@ -119,6 +124,4 @@ def transfer_status(task_id):
 #=========================================================================================
 
 if __name__ == "__main__":
-    cgitb.enable()
-    form = cgi.FieldStorage()
     main()
