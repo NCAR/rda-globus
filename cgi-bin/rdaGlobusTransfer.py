@@ -11,12 +11,12 @@
 ##################################################################################
 
 import os, sys
-from urllib import unquote
 
 sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
+import urllib
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
@@ -53,21 +53,23 @@ def submit_transfer():
     
     # check if myrec is nonempty
     
+    print "<p>\n<strong>Session data:</strong>\n</p>\n"
+    print "<p>\n"
+    print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
+    print "</p>\n"
+
     # extract query parameters from HTTP_REFERER
     GET = {}
     ref = os.getenv['HTTP_REFERER']
     query_idx = ref.index('?')
     query_args = ref[query_idx+1:].split('&')
+    print "<p>\n"
     for arg in query_args:
         t = arg.split('=')
         if len(t) > 1:
             key,val = arg.split('=')
             GET[key] = urllib.unquote(val)
-
-    print "<p>\n<strong>Session data:</strong>\n</p>\n"
-    print "<p>\n"
-    print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
-    print "</p>\n"
+            print "{0}: {1}<br />".format(key,GET[key])
 
     gtype = 3
         
