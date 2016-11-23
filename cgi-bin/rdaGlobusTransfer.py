@@ -60,7 +60,7 @@ def submit_transfer():
 
     # extract query parameters from HTTP_REFERER
     GET = {}
-    ref = os.getenv['HTTP_REFERER']
+    ref = os.environ['HTTP_REFERER']
     query_idx = ref.index('?')
     query_args = ref[query_idx+1:].split('&')
     print "<p>\n"
