@@ -16,6 +16,7 @@ sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
+import cgi, cgitb
 import urllib
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
@@ -24,20 +25,17 @@ from PyDBI import myget
 
 def main():
     print "Content-type: text/html\r\n\r\n"
-    content = list_environ()
-    print content
+    form = cgi.FieldStorage()
 
-    task_id = submit_transfer()
+    print_directory()
+    print_arguments()
+    print_form(form)
+    print_environ()
+
+    #task_id = submit_transfer(form)
     #content = transfer_status(task_id)
 
-def list_environ():
-    content = "<p>\n<strong>Environment:</strong>\n</p>\n"
-    for param in os.environ.keys():
-      content += "<b>{0}</b>: {1}<br />".format(param, os.environ[param])
-    
-    return content
-
-def submit_transfer():
+def submit_transfer(form):
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
@@ -58,6 +56,7 @@ def submit_transfer():
     print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
     print "</p>\n"
 
+    """
     # extract query parameters from HTTP_REFERER
     GET = {}
     ref = os.environ['HTTP_REFERER']
@@ -72,7 +71,7 @@ def submit_transfer():
             print "{0}: {1}<br />".format(key,GET[key])
 
     gtype = 3
-        
+    """ 
     """    
     gtype = session['gtype']
     selected = session['files']
@@ -95,10 +94,10 @@ def submit_transfer():
 #       print "Endpoint ID and/or destination folder missing from submitted form."
 #       return
 
-    destination_endpoint_id = GET['endpoint_id']
-    destination_path = GET['path']
+#    destination_endpoint_id = GET['endpoint_id']
+#    destination_path = GET['path']
     
-    print "<p><strong>GET data:</strong></p>\n"
+    print "<p><strong>Form contents:</strong></p>\n"
     print "<p>\n"
     print "Endpoint ID: {0}<br />\nDestination path: {1}\n".format(destination_endpoint_id, destination_path)
     print "</p>\n"
@@ -123,7 +122,66 @@ def transfer_status(task_id):
 
     return render_template('transfer_status.jinja2', task=task)
 
+def print_environ(environ=os.environ):
+    """Dump the shell environment as HTML."""
+    keys = environ.keys()
+    keys.sort()
+    print
+    print "<H3>Shell Environment:</H3>"
+    print "<DL>"
+    for key in keys:
+        print "<DT>", escape(key), "<DD>", escape(environ[key])
+    print "</DL>"
+    print
+
+def print_form(form):
+    keys = form.keys()
+    keys.sort()
+    print
+    print "<H3>Form Contents:</H3>"
+    if not keys:
+        print "<P>No form fields."
+    print "<DL>"
+    for key in keys:
+        print "<DT>" + escape(key) + ":",
+        value = form[key]
+        print "<i>" + escape(repr(type(value))) + "</i>"
+        print "<DD>" + escape(repr(value))
+    print "</DL>"
+    print
+
+def print_directory():
+    """Dump the current directory as HTML."""
+    print
+    print "<H3>Current Working Directory:</H3>"
+    try:
+        pwd = os.getcwd()
+    except os.error, msg:
+        print "os.error:", escape(str(msg))
+    else:
+        print escape(pwd)
+    print
+
+def print_arguments():
+    print
+    print "<H3>Command Line Arguments:</H3>"
+    print
+    print sys.argv
+    print
+
+def escape(s, quote=None):
+    '''Replace special characters "&", "<" and ">" to HTML-safe sequences.
+    If the optional flag quote is true, the quotation mark character (")
+    is also translated.'''
+    s = s.replace("&", "&amp;") # Must be done first!
+    s = s.replace("<", "&lt;")
+    s = s.replace(">", "&gt;")
+    if quote:
+        s = s.replace('"', "&quot;")
+    return s
+
 #=========================================================================================
 
 if __name__ == "__main__":
+    os.environ['REQUEST_METHOD'] = 'POST'
     main()
