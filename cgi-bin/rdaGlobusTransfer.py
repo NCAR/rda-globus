@@ -22,17 +22,22 @@ from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
 from PyDBI import myget
+from phpserialize import *
 
 def main():
     print "Content-type: text/html\r\n\r\n"
     form = cgi.FieldStorage()
 
+    """
+    Print HTTP headers and debug info
+    
     print_directory()
     print_arguments()
     print_form(form)
     print_environ()
-
-    #task_id = submit_transfer(form)
+    """
+    
+    task_id = submit_transfer(form)
     #content = transfer_status(task_id)
 
 def submit_transfer(form):
@@ -50,34 +55,25 @@ def submit_transfer(form):
     myrec = myget('sessions', keys, condition)
     
     # check if myrec is nonempty
+
+    """    
+    Unserialize session data
+    """
+    session = unserialize(myrec['data'])
     
     print "<p>\n<strong>Session data:</strong>\n</p>\n"
     print "<p>\n"
-    print "ID: {0}<br />\nAccess: {1}<br />\nData: {2}<br />\n".format(myrec['id'],myrec['access'],myrec['data'])
+    print_dict(session)
     print "</p>\n"
-
+    
     """
-    # extract query parameters from HTTP_REFERER
-    GET = {}
-    ref = os.environ['HTTP_REFERER']
-    query_idx = ref.index('?')
-    query_args = ref[query_idx+1:].split('&')
-    print "<p>\n"
-    for arg in query_args:
-        t = arg.split('=')
-        if len(t) > 1:
-            key,val = arg.split('=')
-            GET[key] = urllib.unquote(val)
-            print "{0}: {1}<br />".format(key,GET[key])
-
-    gtype = 3
-    """ 
-    """    
     gtype = session['gtype']
-    selected = session['files']
     dsid = session['dsid']
     directory = session['directory']
+    selected = session['files']
+    """
     
+    """
     tc = TransferClient()
     """
 
@@ -93,14 +89,6 @@ def submit_transfer(form):
 #       print "<strong>Error</strong>:"
 #       print "Endpoint ID and/or destination folder missing from submitted form."
 #       return
-
-#    destination_endpoint_id = GET['endpoint_id']
-#    destination_path = GET['path']
-    
-    print "<p><strong>Form contents:</strong></p>\n"
-    print "<p>\n"
-    print "Endpoint ID: {0}<br />\nDestination path: {1}\n".format(destination_endpoint_id, destination_path)
-    print "</p>\n"
     
     task_id = 'task_id'
     return task_id
@@ -121,6 +109,9 @@ def transfer_status(task_id):
     task = transfer.get_task(task_id)
 
     return render_template('transfer_status.jinja2', task=task)
+
+# Test/debug code
+# ===============
 
 def print_environ(environ=os.environ):
     """Dump the shell environment as HTML."""
@@ -179,6 +170,18 @@ def escape(s, quote=None):
     if quote:
         s = s.replace('"', "&quot;")
     return s
+
+def print_dict(dict):
+    """Print contents of a dictionary."""
+    keys = dict.keys()
+    keys.sort()
+    print
+    print "<DL>"
+    for key in keys:
+        print "<DT>", escape(key), "<DD>", escape(dict[key])
+    print "</DL>"
+    print
+
 
 #=========================================================================================
 
