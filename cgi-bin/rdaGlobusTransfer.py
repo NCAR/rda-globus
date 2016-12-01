@@ -56,10 +56,10 @@ def submit_transfer(form):
         directory = directory[1:]
     
     """ Define source endpoint ID and paths """
-    if(gtype == 1):
+    if(gtype == '1'):
        source_endpoint_id = MyGlobus['data_request_ep']
        source_endpoint_base = MyGlobus['data_request_ep_base']
-    if(gtype == 3):
+    if(gtype == '3'):
        source_endpoint_id = MyGlobus['datashare_ep']
        source_endpoint_base = MyGlobus['datashare_ep_base']
 
