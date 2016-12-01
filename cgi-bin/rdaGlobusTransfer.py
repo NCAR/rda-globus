@@ -190,10 +190,10 @@ def print_dict(mydict):
     print "</p>\n"
     """
     for key, val in mydict.iteritems():
-    if isinstance(val, dict):
-      print_dict(val)
-    else:
-      print "{0} : {1}".format(key, val)
+        if isinstance(val, dict):
+            print_dict(val)
+        else:
+            print "{0} : {1}".format(key, val)
       
 #=========================================================================================
 
