@@ -30,7 +30,7 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    print_info(form)
+    #print_info(form)
     
     task_id = submit_transfer(form)
     #content = transfer_status(task_id)
@@ -42,7 +42,8 @@ def submit_transfer(form):
     - Send the user to the transfer status page with the task id
       from the transfer.
     """
-    # Get session data from database
+
+    """ Get session data from database """
     session = get_session_data()
     
     gtype = session['gtype']
@@ -50,25 +51,57 @@ def submit_transfer(form):
     directory = session['directory']
     selected = session['files']
     
-    """
-    tc = TransferClient()
-    """
-
-    # Define endpoint IDs and paths
-    if(gtype == 3):
-       source_endpoint_id = MyGlobus['datashare_ep']
-       source_endpoint_base = MyGlobus['datashare_ep_base']
+    """ Trim leading '/' from directory """
+    if(directory.find('/',0,1) == 0):
+        directory = directory[1:]
+    
+    """ Define source endpoint ID and paths """
     if(gtype == 1):
        source_endpoint_id = MyGlobus['data_request_ep']
        source_endpoint_base = MyGlobus['data_request_ep_base']
-    
+    if(gtype == 3):
+       source_endpoint_id = MyGlobus['datashare_ep']
+       source_endpoint_base = MyGlobus['datashare_ep_base']
+
     """
-     if "endpoint_id" not in form or "path" not in form:
-        print "<strong>Error</strong>:"
-        print "Endpoint ID and/or destination folder missing from submitted form."
-        return
+    transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
+        session['tokens']['transfer.api.globus.org']['refresh_token'],
+        load_portal_client()))
     """
     
+    destination_endpoint_id = form['endpoint_id'].value
+    destination_folder = form['folder[0]']
+    source_path = source_endpoint_base + directory
+        
+    """
+    transfer_data = TransferData(transfer_client=transfer,
+                                 source_endpoint=source_endpoint_id,
+                                 destination_endpoint=destination_endpoint_id,
+                                 label=form['label'])
+    """
+
+    print "<p><strong>Selected files: </strong></p>\n"
+    
+    for file in selected:
+        dest_path = form['path']
+        if destination_folder:
+            dest_path += destination_folder + '/'
+        
+        dest_path += file + '/'
+        
+        """
+        transfer_data.add_item(source_path=source_path,
+                               destination_path=dest_path,
+                               recursive=True)
+    
+    transfer.endpoint_autoactivate(source_endpoint_id)
+    transfer.endpoint_autoactivate(destination_endpoint_id)
+    task_id = transfer.submit_transfer(transfer_data)['task_id']
+        """
+    
+        print "<br />\n"
+        print dest_path
+
     task_id = 'task_id'
     return task_id
     
@@ -98,7 +131,7 @@ def get_session_data():
     
     """ Raise exception if myrec is nonempty """
 
-    """ Unserialize session data """
+    """ Return unserialized session data """
     return unserialize(myrec['data'])
 
 # Test/debug code
