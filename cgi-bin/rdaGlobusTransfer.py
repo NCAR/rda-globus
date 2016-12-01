@@ -70,7 +70,7 @@ def submit_transfer(form):
     """
     
     destination_endpoint_id = form['endpoint_id'].value
-    destination_folder = form['folder[0]']
+    #destination_folder = form['folder[0]']
     source_path = source_endpoint_base + directory
         
     """
@@ -84,10 +84,10 @@ def submit_transfer(form):
     
     for file in selected:
         dest_path = form['path']
-        if destination_folder:
-            dest_path += destination_folder + '/'
+        #if destination_folder:
+        #    dest_path += destination_folder + '/'
         
-        dest_path += file + '/'
+        dest_path += selected[file] + '/'
         
         """
         transfer_data.add_item(source_path=source_path,
