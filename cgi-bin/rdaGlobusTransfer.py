@@ -23,6 +23,7 @@ from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
 from PyDBI import myget
 from phpserialize import *
+import json
 
 def main():
     print "Content-type: text/html\r\n\r\n"
@@ -171,17 +172,21 @@ def escape(s, quote=None):
         s = s.replace('"', "&quot;")
     return s
 
-def print_dict(dict):
+def print_dict(mydict):
     """Print contents of a dictionary."""
+    """
     keys = dict.keys()
     keys.sort()
     print
-    print "<DL>"
+    print "<dl>"
     for key in keys:
-        print "<DT>", escape(key), "<DD>", escape(dict[key])
-    print "</DL>"
+        print "<dt>", escape(key), "<DD>", escape(dict[key])
+    print "</dl>"
     print
-
+    """
+    print "<p>\n"
+    print json.dumps(mydict, indent=1)
+    print "</p>\n"
 
 #=========================================================================================
 
