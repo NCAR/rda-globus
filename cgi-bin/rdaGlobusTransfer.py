@@ -80,6 +80,9 @@ def submit_transfer(form):
                                  label=form['label'])
     """
 
+    print "<p><strong>Destination endpoint ID: {0}</strong>".format(destination_endpoint_id)
+    print "<br /><strong>Source path: {0}</strong>".format(source_path)
+    print "</p>\n"
     print "<p><strong>Selected files: </strong></p>\n"
     
     for file in selected:
