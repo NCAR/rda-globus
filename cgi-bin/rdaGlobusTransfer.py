@@ -192,6 +192,7 @@ def print_dict(mydict):
     print "<dl>\n"
     for key, val in mydict.iteritems():
         if isinstance(val, dict):
+            print "<dt>{0} : <dd>".format(key)
             print_dict(val)
         else:
             print "<dt>{0} : <dd>{1}".format(key, val)
