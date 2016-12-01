@@ -184,10 +184,17 @@ def print_dict(mydict):
     print "</dl>"
     print
     """
+    """
     print "<p>\n"
-    print json.dumps(mydict, indent=1)
+    print json.dumps(mydict, indent=5)
     print "</p>\n"
-
+    """
+    for key, val in mydict.iteritems():
+    if isinstance(val, dict):
+      myprint(val)
+    else:
+      print "{0} : {1}".format(key, val)
+      
 #=========================================================================================
 
 if __name__ == "__main__":
