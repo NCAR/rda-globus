@@ -109,33 +109,33 @@ def print_environ(environ=os.environ):
     keys = environ.keys()
     keys.sort()
     print
-    print "<H3>Shell Environment:</H3>"
-    print "<DL>"
+    print "<h3>Shell Environment:</h3>"
+    print "<dl>"
     for key in keys:
-        print "<DT>", escape(key), "<DD>", escape(environ[key])
-    print "</DL>"
+        print "<dt>", escape(key), "<dd>", escape(environ[key])
+    print "</dl>"
     print
 
 def print_form(form):
     keys = form.keys()
     keys.sort()
     print
-    print "<H3>Form Contents:</H3>"
+    print "<h3>Form Contents:</h3>"
     if not keys:
-        print "<P>No form fields."
-    print "<DL>"
+        print "<p>No form fields."
+    print "<dl>"
     for key in keys:
-        print "<DT>" + escape(key) + ":",
+        print "<dt>" + escape(key) + ":",
         value = form[key]
         print "<i>" + escape(repr(type(value))) + "</i>"
-        print "<DD>" + escape(repr(value))
-    print "</DL>"
+        print "<dd>" + escape(repr(value))
+    print "</dl>"
     print
 
 def print_directory():
     """Dump the current directory as HTML."""
     print
-    print "<H3>Current Working Directory:</H3>"
+    print "<h3>Current Working Directory:</h3>"
     try:
         pwd = os.getcwd()
     except os.error, msg:
@@ -146,7 +146,7 @@ def print_directory():
 
 def print_arguments():
     print
-    print "<H3>Command Line Arguments:</H3>"
+    print "<h3>Command Line Arguments:</h3>"
     print
     print sys.argv
     print
@@ -165,7 +165,7 @@ def escape(s, quote=None):
 def print_session_data():
     """ Print session data """
     session = get_session_data()
-    print "<p>\n<strong>Session data:</strong>\n</p>\n"
+    print "<p>\n<h3>Session data:</h3>\n</p>\n"
     print "<p>\n"
     print_dict(session)
     print "</p>\n"
