@@ -30,7 +30,7 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    print_info()
+    print_info(form)
     
     task_id = submit_transfer(form)
     #content = transfer_status(task_id)
@@ -162,14 +162,6 @@ def escape(s, quote=None):
         s = s.replace('"', "&quot;")
     return s
 
-def print_info():
-    """ Print debug info """
-    print_directory()
-    print_arguments()
-    print_form(form)
-    print_session_data()
-    print_environ()
-
 def print_session_data():
     """ Print session data """
     session = get_session_data()
@@ -188,6 +180,14 @@ def print_dict(mydict):
         else:
             print "<dt><strong>{0} :</strong> <dd>{1}".format(key, val)
     print "</dl>\n"
+
+def print_info(form):
+    """ Print debug info """
+    print_directory()
+    print_arguments()
+    print_form(form)
+    print_session_data()
+    print_environ()
       
 #=========================================================================================
 
