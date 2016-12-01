@@ -180,7 +180,7 @@ def print_dict(mydict):
     print
     print "<dl>"
     for key in keys:
-        print "<dt>", escape(key), "<DD>", escape(dict[key])
+        print "<dt>", escape(key), "<dd>", escape(dict[key])
     print "</dl>"
     print
     """
@@ -189,11 +189,13 @@ def print_dict(mydict):
     print json.dumps(mydict, indent=5)
     print "</p>\n"
     """
+    print "<dl>\n"
     for key, val in mydict.iteritems():
         if isinstance(val, dict):
             print_dict(val)
         else:
-            print "{0} : {1}".format(key, val)
+            print "<dt>{0} : <dd>{1}".format(key, val)
+    print "</dl>\n"
       
 #=========================================================================================
 
