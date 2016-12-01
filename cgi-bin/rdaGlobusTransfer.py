@@ -100,7 +100,7 @@ def submit_transfer(form):
         """
     
         print "<br />\n"
-        print dest_path
+        print "{0}".format(dest_path)
 
     task_id = 'task_id'
     return task_id
