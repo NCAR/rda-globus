@@ -191,7 +191,7 @@ def print_dict(mydict):
     """
     for key, val in mydict.iteritems():
     if isinstance(val, dict):
-      myprint(val)
+      print_dict(val)
     else:
       print "{0} : {1}".format(key, val)
       
