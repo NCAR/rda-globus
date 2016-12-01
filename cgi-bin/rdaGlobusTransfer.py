@@ -29,14 +29,8 @@ def main():
     print "Content-type: text/html\r\n\r\n"
     form = cgi.FieldStorage()
 
-    """
-    Print HTTP headers and debug info
-    
-    print_directory()
-    print_arguments()
-    print_form(form)
-    print_environ()
-    """
+    """ Print HTTP headers and debug info """
+    print_info()
     
     task_id = submit_transfer(form)
     #content = transfer_status(task_id)
@@ -48,31 +42,13 @@ def submit_transfer(form):
     - Send the user to the transfer status page with the task id
       from the transfer.
     """
-    # Get session ID and session data from database
+    # Get session data from database
+    session = get_session_data()
     
-    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
-    keys = ['id','access','data']
-    condition = " WHERE {0} = '{1}'".format("id", sid)
-    myrec = myget('sessions', keys, condition)
-    
-    # check if myrec is nonempty
-
-    """    
-    Unserialize session data
-    """
-    session = unserialize(myrec['data'])
-    
-    print "<p>\n<strong>Session data:</strong>\n</p>\n"
-    print "<p>\n"
-    print_dict(session)
-    print "</p>\n"
-    
-    """
     gtype = session['gtype']
     dsid = session['dsid']
     directory = session['directory']
     selected = session['files']
-    """
     
     """
     tc = TransferClient()
@@ -86,10 +62,12 @@ def submit_transfer(form):
        source_endpoint_id = MyGlobus['data_request_ep']
        source_endpoint_base = MyGlobus['data_request_ep_base']
     
-#    if "endpoint_id" not in form or "path" not in form:
-#       print "<strong>Error</strong>:"
-#       print "Endpoint ID and/or destination folder missing from submitted form."
-#       return
+    """
+     if "endpoint_id" not in form or "path" not in form:
+        print "<strong>Error</strong>:"
+        print "Endpoint ID and/or destination folder missing from submitted form."
+        return
+    """
     
     task_id = 'task_id'
     return task_id
@@ -110,6 +88,18 @@ def transfer_status(task_id):
     task = transfer.get_task(task_id)
 
     return render_template('transfer_status.jinja2', task=task)
+
+def get_session_data():
+    """ Retrieve session data from RDADB """
+    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    keys = ['id','access','data']
+    condition = " WHERE {0} = '{1}'".format("id", sid)
+    myrec = myget('sessions', keys, condition)
+    
+    """ Raise exception if myrec is nonempty """
+
+    """ Unserialize session data """
+    return unserialize(myrec['data'])
 
 # Test/debug code
 # ===============
@@ -172,30 +162,31 @@ def escape(s, quote=None):
         s = s.replace('"', "&quot;")
     return s
 
+def print_info():
+    """ Print debug info """
+    print_directory()
+    print_arguments()
+    print_form(form)
+    print_session_data()
+    print_environ()
+
+def print_session_data():
+    """ Print session data """
+    session = get_session_data()
+    print "<p>\n<strong>Session data:</strong>\n</p>\n"
+    print "<p>\n"
+    print_dict(session)
+    print "</p>\n"
+
 def print_dict(mydict):
     """Print contents of a dictionary."""
-    """
-    keys = dict.keys()
-    keys.sort()
-    print
-    print "<dl>"
-    for key in keys:
-        print "<dt>", escape(key), "<dd>", escape(dict[key])
-    print "</dl>"
-    print
-    """
-    """
-    print "<p>\n"
-    print json.dumps(mydict, indent=5)
-    print "</p>\n"
-    """
     print "<dl>\n"
     for key, val in mydict.iteritems():
         if isinstance(val, dict):
-            print "<dt>{0} : <dd>".format(key)
+            print "<dt><strong>{0} :</strong> <dd>".format(key)
             print_dict(val)
         else:
-            print "<dt>{0} : <dd>{1}".format(key, val)
+            print "<dt><strong>{0} :</strong> <dd>{1}".format(key, val)
     print "</dl>\n"
       
 #=========================================================================================
