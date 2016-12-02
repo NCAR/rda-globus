@@ -20,11 +20,11 @@ from MyGlobus import headers, MyGlobus
 from globus_sdk import TransferClient
 
 def main():
-    task_id = submit_transfer(form)
+    task_id = submit_transfer()
     print "Transfer submitted.  Task ID: {0}\n".format(task_id)
     #content = transfer_status(task_id)
 
-def submit_transfer(form):
+def submit_transfer():
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
@@ -32,6 +32,7 @@ def submit_transfer(form):
       from the transfer.
     """
 
+    """ Define list of files to transfer """
     selected = {
         0: "RCPP/2020_2030/qfx/qfx_RCPP_2020_01.nc",
         1: "RCPP/2020_2030/qfx/qfx_RCPP_2020_02.nc",
