@@ -17,7 +17,7 @@ sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 from MyGlobus import headers, MyGlobus
-from globus_sdk import TransferClient
+from globus_sdk import TransferClient, TransferData
 
 def main():
     task_id = submit_transfer()
