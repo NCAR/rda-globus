@@ -61,6 +61,9 @@ def submit_transfer():
         source_path = source_endpoint_base + dsid + '/' + selected[file]
         dest_path = '/glade/p/rda/work/tcram/globus/browse_endpoint_test/' + selected[file]
         
+        print "Source path: {0}\n".format(source_path)
+        print "Dest path: {0}\n".format(dest_path)
+        
         transfer_data.add_item(source_path=source_path,
                                destination_path=dest_path)
 
