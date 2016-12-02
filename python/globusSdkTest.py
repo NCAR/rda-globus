@@ -33,6 +33,7 @@ def submit_transfer():
     """
 
     """ Define list of files to transfer """
+    dsid = 'ds601.0'
     selected = {
         0: "RCPP/2020_2030/qfx/qfx_RCPP_2020_01.nc",
         1: "RCPP/2020_2030/qfx/qfx_RCPP_2020_02.nc",
@@ -49,7 +50,6 @@ def submit_transfer():
     transfer = TransferClient()
     
     destination_endpoint_id = 'd33b3614-6d04-11e5-ba46-22000b92c6ec'
-    source_path = source_endpoint_base + '/ds601.0/'
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -58,18 +58,16 @@ def submit_transfer():
                                  label='Globus SDK test transfer')
 
     for file in selected:
+        source_path = source_endpoint_base + dsid + '/' + selected[file]
         dest_path = '/glade/p/rda/work/tcram/globus/browse_endpoint_test/' + selected[file]
         
         transfer_data.add_item(source_path=source_path,
-                               destination_path=dest_path,
-                               recursive=True)
-    """
+                               destination_path=dest_path)
+
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
     task_id = transfer.submit_transfer(transfer_data)['task_id']
-    """
     
-    task_id = 'None (test)'
     return task_id
     
 def transfer_status(task_id):
