@@ -49,7 +49,7 @@ def submit_transfer():
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient()
     
-    destination_endpoint_id = 'd33b3614-6d04-11e5-ba46-22000b92c6ec'
+    destination_endpoint_id = 'dabdcd87-6d04-11e5-ba46-22000b92c6ec'
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -59,9 +59,9 @@ def submit_transfer():
 
     for file in selected:
         source_path = source_endpoint_base + dsid + '/' + selected[file]
-        dest_path = '/glade/p/rda/work/tcram/globus/browse_endpoint_test/' + selected[file]
+        dest_path = '/Users/tcram/globus/browse_endpoint_test/' + selected[file]
         
-        print "Source path: {0}\n".format(source_path)
+        print "Source path: {0}".format(source_path)
         print "Dest path: {0}\n".format(dest_path)
         
         transfer_data.add_item(source_path=source_path,
