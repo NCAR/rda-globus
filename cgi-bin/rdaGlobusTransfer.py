@@ -51,9 +51,9 @@ def submit_transfer(form):
     directory = session['directory']
     selected = session['files']
     
-    """ Trim leading '/' from directory """
-    if(directory.find('/',0,1) == 0):
-        directory = directory[1:]
+    """ Trim leading '/data/' from web directory. """
+    if(directory.find('/data/',0,6) == 0):
+        directory = directory.replace('/data/','',1)
     
     """ Define source endpoint ID and paths """
     if(gtype == '1'):
