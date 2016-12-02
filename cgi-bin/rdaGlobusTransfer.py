@@ -20,7 +20,7 @@ import cgi, cgitb
 import urllib
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
-from globus_sdk import TransferClient
+from globus_sdk import TransferClient, TransferData
 from PyDBI import myget
 from phpserialize import *
 import json
