@@ -63,22 +63,18 @@ def submit_transfer(form):
        source_endpoint_id = MyGlobus['datashare_ep']
        source_endpoint_base = MyGlobus['datashare_ep_base']
 
-    """
-    transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['tokens']['transfer.api.globus.org']['refresh_token'],
-        load_portal_client()))
-    """
+    """ Instantiate the Globus SDK transfer client """
+    transfer = TransferClient()
     
     destination_endpoint_id = form['endpoint_id'].value
     #destination_folder = form['folder[0]']
     source_path = source_endpoint_base + directory
         
-    """
+    """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
                                  source_endpoint=source_endpoint_id,
                                  destination_endpoint=destination_endpoint_id,
                                  label=form['label'])
-    """
 
     print "<p><strong>Destination endpoint ID: {0}</strong>".format(destination_endpoint_id)
     print "<br /><strong>Source path: {0}</strong>".format(source_path)
@@ -90,23 +86,20 @@ def submit_transfer(form):
         #if destination_folder:
         #    dest_path += destination_folder + '/'
         
+        # Do we need trailing '/' at the end of the file name?
         dest_path += selected[file] + '/'
         
         print "<br />\n"
         print "{0}".format(dest_path)
 
-        """
         transfer_data.add_item(source_path=source_path,
                                destination_path=dest_path,
                                recursive=True)
-        """
-    """    
+
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
     task_id = transfer.submit_transfer(transfer_data)['task_id']
-    """
     
-    task_id = 'task_id'
     return task_id
     
 def transfer_status(task_id):
@@ -137,6 +130,14 @@ def get_session_data():
 
     """ Return unserialized session data """
     return unserialize(myrec['data'])
+
+def set_environ():
+    """ Define environment variables required by this script """
+    os.environ['REQUEST_METHOD'] = 'POST'
+    os.environ['GLOBUS_SDK_TRANSFER_TOKEN'] = MyGlobus['transfer_token']
+    os.environ['GLOBUS_SDK_AUTH_TOKEN'] = MyGlobus['auth_token']
+    
+    return
 
 # Test/debug code
 # ===============
@@ -229,5 +230,5 @@ def print_info(form):
 #=========================================================================================
 
 if __name__ == "__main__":
-    os.environ['REQUEST_METHOD'] = 'POST'
+    set_environ()
     main()
