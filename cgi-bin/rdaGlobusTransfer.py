@@ -33,7 +33,7 @@ def main():
     #print_info(form)
     
     task_id = submit_transfer(form)
-    #content = transfer_status(task_id)
+    transfer_status(task_id)
 
 def submit_transfer(form):
     """
@@ -74,14 +74,10 @@ def submit_transfer(form):
     transfer_data = TransferData(transfer_client=transfer,
                                  source_endpoint=source_endpoint_id,
                                  destination_endpoint=destination_endpoint_id,
-                                 label=form['label'])
+                                 label=form['label'].value)
 
-    print "<p><strong>Destination endpoint ID: {0}</strong>".format(destination_endpoint_id)
-    print "<br /><strong>Source path: {0}</strong>".format(source_path)
-    print "</p>\n"
-    print "<p><strong>Selected files: </strong></p>\n"
-    
     for file in selected:
+        source_path = source_endpoint_base + directory + '/' + selected[file]
         dest_path = form['path'].value
         #if destination_folder:
         #    dest_path += destination_folder + '/'
@@ -89,12 +85,8 @@ def submit_transfer(form):
         # Do we need trailing '/' at the end of the file name?
         dest_path += selected[file] + '/'
         
-        print "<br />\n"
-        print "{0}".format(dest_path)
-
         transfer_data.add_item(source_path=source_path,
-                               destination_path=dest_path,
-                               recursive=True)
+                               destination_path=dest_path)
 
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
@@ -112,12 +104,16 @@ def transfer_status(task_id):
 
     'task_id' is passed to the route in the URL as 'task_id'.
     """
+    print "<p><strong>Transfer submitted.  Task ID: </strong>{0}</p>\n".format(task_id)
+
+    """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
         session['tokens']['transfer.api.globus.org']['refresh_token'],
         load_portal_client()))
     task = transfer.get_task(task_id)
-
-    return render_template('transfer_status.jinja2', task=task)
+    """
+    
+    return
 
 def get_session_data():
     """ Retrieve session data from RDADB """
