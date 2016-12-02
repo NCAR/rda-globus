@@ -69,7 +69,7 @@ def submit_transfer(form):
         load_portal_client()))
     """
     
-    destination_endpoint_id = str(form['endpoint_id'].value)
+    destination_endpoint_id = form['endpoint_id'].value
     #destination_folder = form['folder[0]']
     source_path = source_endpoint_base + directory
         
@@ -86,25 +86,26 @@ def submit_transfer(form):
     print "<p><strong>Selected files: </strong></p>\n"
     
     for file in selected:
-        dest_path = str(form['path'])
+        dest_path = form['path'].value
         #if destination_folder:
         #    dest_path += destination_folder + '/'
         
-        dest_path += str(selected[file]) + '/'
+        dest_path += selected[file] + '/'
         
+        print "<br />\n"
+        print "{0}".format(dest_path)
+
         """
         transfer_data.add_item(source_path=source_path,
                                destination_path=dest_path,
                                recursive=True)
-    
+        """
+    """    
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
     task_id = transfer.submit_transfer(transfer_data)['task_id']
-        """
+    """
     
-        print "<br />\n"
-        print "{0}".format(dest_path)
-
     task_id = 'task_id'
     return task_id
     
