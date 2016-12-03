@@ -63,11 +63,10 @@ def submit_transfer(form):
        source_endpoint_id = MyGlobus['datashare_ep']
        source_endpoint_base = MyGlobus['datashare_ep_base']
 
+    destination_endpoint_id = form['endpoint_id'].value
+
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient()
-    
-    destination_endpoint_id = form['endpoint_id'].value
-    #destination_folder = form['folder[0]']
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -75,25 +74,10 @@ def submit_transfer(form):
                                  destination_endpoint=destination_endpoint_id,
                                  label=form['label'].value)
 
-    print "<p><strong>Stat results:</strong></p>\n"
-    
     for file in selected:
         source_path = source_endpoint_base + directory + selected[file]
-        dest_path = form['path'].value
-        
-        #if destination_folder:
-        #    dest_path += destination_folder + '/'
-        
-        dest_path += selected[file]
-        
-        """
-        print "Source path: {0}<br />\n".format(source_path)
-        print "{0}<br />\n".format(os.stat(source_path))
-        print "Dest path: {0}<br /><br />\n".format(dest_path)
-        """
-        
-        transfer_data.add_item(source_path=source_path,
-                               destination_path=dest_path)
+        dest_path = form['path'].value + selected[file]
+        transfer_data.add_item(source_path, dest_path)
 
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
@@ -103,7 +87,7 @@ def submit_transfer(form):
     
 def transfer_status(task_id):
     """
-    Call Globus to get status/details of transfer with
+    Call Globus API to get status/details of transfer with
     task_id.
 
     The target template (tranfer_status.jinja2) expects a Transfer API
@@ -114,9 +98,7 @@ def transfer_status(task_id):
     print "<p><strong>Transfer submitted.  Task ID: </strong>{0}</p>\n".format(task_id)
 
     """
-    transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['tokens']['transfer.api.globus.org']['refresh_token'],
-        load_portal_client()))
+    transfer = TransferClient()
     task = transfer.get_task(task_id)
     """
     
