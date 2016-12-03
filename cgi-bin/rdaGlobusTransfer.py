@@ -87,7 +87,7 @@ def submit_transfer(form):
         
         print "Source path: {0}<br />\n".format(source_path)
         print "{0}<br />\n".format(os.stat(source_path))
-        print "Dest path: {0}<br />\n".format(dest_path)
+        print "Dest path: {0}<br /><br />\n".format(dest_path)
 
         transfer_data.add_item(source_path=source_path,
                                destination_path=dest_path)
