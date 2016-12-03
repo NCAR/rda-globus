@@ -80,24 +80,24 @@ def submit_transfer(form):
     for file in selected:
         source_path = source_endpoint_base + directory + selected[file]
         dest_path = form['path'].value
+        
         #if destination_folder:
         #    dest_path += destination_folder + '/'
         
         dest_path += selected[file]
         
+        """
         print "Source path: {0}<br />\n".format(source_path)
         print "{0}<br />\n".format(os.stat(source_path))
         print "Dest path: {0}<br /><br />\n".format(dest_path)
-
+        """
+        
         transfer_data.add_item(source_path=source_path,
                                destination_path=dest_path)
 
-    """
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
-    task_id = transfer.submit_transfer(transfer_data)['task_id']
-    """
-    task_id = 'None (test)'
+    task_id = transfer.submit_transfer(transfer_data)
     
     return task_id
     
