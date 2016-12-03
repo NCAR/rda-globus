@@ -75,6 +75,8 @@ def submit_transfer(form):
                                  destination_endpoint=destination_endpoint_id,
                                  label=form['label'].value)
 
+    print "<p><strong>Stat results:</strong></p>\n"
+    
     for file in selected:
         source_path = source_endpoint_base + directory + selected[file]
         dest_path = form['path'].value
@@ -83,12 +85,20 @@ def submit_transfer(form):
         
         dest_path += selected[file]
         
+        print "Source path: {0}".format(source_path)
+        print "{0}".format(os.stat(source_path))
+        print "Dest path: {0}".format(dest_path)
+        print "{0}\n".format(os.stat(dest_path))
+
         transfer_data.add_item(source_path=source_path,
                                destination_path=dest_path)
 
+    """
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
     task_id = transfer.submit_transfer(transfer_data)['task_id']
+    """
+    task_id = 'None (test)'
     
     return task_id
     
