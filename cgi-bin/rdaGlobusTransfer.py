@@ -68,7 +68,6 @@ def submit_transfer(form):
     
     destination_endpoint_id = form['endpoint_id'].value
     #destination_folder = form['folder[0]']
-    source_path = source_endpoint_base + directory
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -77,7 +76,7 @@ def submit_transfer(form):
                                  label=form['label'].value)
 
     for file in selected:
-        source_path = source_endpoint_base + directory + '/' + selected[file]
+        source_path = source_endpoint_base + directory + selected[file]
         dest_path = form['path'].value
         #if destination_folder:
         #    dest_path += destination_folder + '/'
