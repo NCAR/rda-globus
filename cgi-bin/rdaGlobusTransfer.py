@@ -64,11 +64,6 @@ def submit_transfer(form):
        source_endpoint_base = MyGlobus['datashare_ep_base']
 
     destination_endpoint_id = form['endpoint_id'].value
-    dpath = form['path'].value
-    transfer_label = form['label'].value
-    print "<p><strong>Destination endpoint: </strong>{0}<br />\n".format(destination_endpoint_id)
-    print "<p><strong>Destination path: </strong>{0}<br />\n".format(dpath)
-    print "<p><strong>Transfer label: </strong>{0}</p>\n".format(transfer_label)
 
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient()
@@ -87,9 +82,7 @@ def submit_transfer(form):
 
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
-#    task_id = transfer.submit_transfer(transfer_data)
-    
-    task_id = "[None]"
+    task_id = transfer.submit_transfer(transfer_data)
     
     return task_id
     
