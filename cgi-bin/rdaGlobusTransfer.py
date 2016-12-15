@@ -75,7 +75,8 @@ def submit_transfer(form):
                                  label=form['label'].value)
 
     for file in selected:
-        source_path = source_endpoint_base + directory + selected[file]
+       # source_path = source_endpoint_base + directory + selected[file]
+        source_path = directory + selected[file]
         dest_path = form['path'].value + selected[file]
         transfer_data.add_item(source_path, dest_path)
 
