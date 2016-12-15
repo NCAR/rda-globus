@@ -58,10 +58,8 @@ def submit_transfer(form):
     """ Define source endpoint ID and paths """
     if(gtype == '1'):
        source_endpoint_id = MyGlobus['data_request_ep']
-       source_endpoint_base = MyGlobus['data_request_ep_base']
     if(gtype == '3'):
        source_endpoint_id = MyGlobus['datashare_ep']
-       source_endpoint_base = MyGlobus['datashare_ep_base']
 
     destination_endpoint_id = form['endpoint_id'].value
 
@@ -74,8 +72,9 @@ def submit_transfer(form):
                                  destination_endpoint=destination_endpoint_id,
                                  label=form['label'].value)
 
+    """ Add files to be transferred.  Note source_path is relative to the source
+        endpoint base path. """
     for file in selected:
-       # source_path = source_endpoint_base + directory + selected[file]
         source_path = directory + selected[file]
         dest_path = form['path'].value + selected[file]
         transfer_data.add_item(source_path, dest_path)
@@ -96,12 +95,18 @@ def transfer_status(task_id):
 
     'task_id' is passed to the route in the URL as 'task_id'.
     """
-    print "<p><strong>Transfer submitted.  Task ID: </strong>{0}</p>\n".format(task_id)
-
-    """
     transfer = TransferClient()
     task = transfer.get_task(task_id)
-    """
+    
+    """ Display transfer status """
+    print "<div id=\"transferStatusHeader\">\n<h1>Transfer status</h1>\n</div>"
+    print "<p><strong>Task ID</strong>: {0}</p>".format(task["task_id"])
+    print "<p><strong>Source endpoint</strong>: {0}</p>".format(task["source_endpoint_display_name"])
+    print "<p><strong>Destination Endpoint</strong>: {0}</p>".format(task["destination_endpoint_display_name"])
+    print "<p><strong>Request Time</strong>: {0}</p>".format(task["request_time"])
+    print "<p><strong>Status</strong>: {0}</p>".format(task["status"])
+    print "<p><strong>Files transferred</strong>: {0}</p>".format(task["files_transferred"])
+    print "<p><strong>Faults</strong>: {0}</p>".format(task["faults"])
     
     return
 
