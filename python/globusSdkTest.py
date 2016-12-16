@@ -86,7 +86,7 @@ def transfer_status(task_id):
     'task_id' is passed to the route in the URL as 'task_id'.
     """
     
-    "[transfer_status] Task ID: {0}\n".format(task_id)
+    print "[transfer_status] Task ID: {0}\n".format(task_id)
     
     transfer = TransferClient()
     task = transfer.get_task(task_id)
