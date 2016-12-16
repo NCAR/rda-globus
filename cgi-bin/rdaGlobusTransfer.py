@@ -81,7 +81,7 @@ def submit_transfer(form):
 
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
-    task_id = transfer.submit_transfer(transfer_data)
+    task_id = transfer.submit_transfer(transfer_data)['task_id']
     
     return task_id
     

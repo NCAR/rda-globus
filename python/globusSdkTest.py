@@ -86,15 +86,10 @@ def transfer_status(task_id):
     'task_id' is passed to the route in the URL as 'task_id'.
     """
     
-    print "[transfer_status] Task ID: {0}\n".format(task_id)
-    
     transfer = TransferClient()
     task = transfer.get_task(task_id)
     
-    print "[transfer_status] Type(task): {0}\n".format(type(task))
-
     """ Display transfer status """
-    """
     print "[transfer_status] Transfer in progress ...\n"
     print "[transfer_status] Task ID: {0}\n".format(task["task_id"])
     print "[transfer_status] Source endpoint: {0}\n".format(task["source_endpoint_display_name"])
@@ -103,7 +98,6 @@ def transfer_status(task_id):
     print "[transfer_status] Status: {0}\n".format(task["status"])
     print "[transfer_status] Files transferred: {0}\n".format(task["files_transferred"])
     print "[transfer_status] Faults: {0}\n".format(task["faults"])
-    """
     
     return
 
