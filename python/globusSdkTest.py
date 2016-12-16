@@ -21,8 +21,8 @@ from globus_sdk import TransferClient, TransferData
 
 def main():
     task_id = submit_transfer()
-    print "Transfer submitted.  Task ID: {0}\n".format(task_id)
-    #content = transfer_status(task_id)
+    print "[main] Transfer submitted.  Task ID: {0}\n".format(task_id)
+    transfer_status(task_id)
 
 def submit_transfer():
     """
@@ -33,23 +33,25 @@ def submit_transfer():
     """
 
     """ Define list of files to transfer """
-    dsid = 'ds601.0'
+    dsid = 'ds132.1'
     selected = {
-        0: "RCPP/2020_2030/qfx/qfx_RCPP_2020_01.nc",
-        1: "RCPP/2020_2030/qfx/qfx_RCPP_2020_02.nc",
-        2: "RCPP/2020_2030/qfx/qfx_RCPP_2020_03.nc",
-        3: "RCPP/2020_2030/qfx/qfx_RCPP_2020_04.nc",
-        4: "RCPP/2020_2030/qfx/qfx_RCPP_2020_05.nc"
+        0: "ispdv3_tarfiles/1755_V329.tar.gz",
+        1: "ispdv3_tarfiles/1756_V329.tar.gz",
+        2: "ispdv3_tarfiles/1757_V329.tar.gz",
+        3: "ispdv3_tarfiles/1758_V329.tar.gz",
+        4: "ispdv3_tarfiles/1759_V329.tar.gz"
     }
     
     """ Define source endpoint ID and paths """
     source_endpoint_id = MyGlobus['datashare_ep']
-    source_endpoint_base = MyGlobus['datashare_ep_base']
 
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient()
     
-    destination_endpoint_id = 'dabdcd87-6d04-11e5-ba46-22000b92c6ec'
+    # cisl-toulon
+    #destination_endpoint_id = 'dabdcd87-6d04-11e5-ba46-22000b92c6ec'
+    # NCAR GLADE (ncar#gridftp)
+    destination_endpoint_id = 'd33b3614-6d04-11e5-ba46-22000b92c6ec'
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -58,18 +60,18 @@ def submit_transfer():
                                  label='Globus SDK test transfer')
 
     for file in selected:
-        source_path = source_endpoint_base + dsid + '/' + selected[file]
-        dest_path = '/Users/tcram/globus/browse_endpoint_test/' + selected[file]
+        source_path = dsid + '/' + selected[file]
+        #dest_path = '/Users/tcram/globus/browse_endpoint_test/' + selected[file]
+        dest_path = '/glade/p/rda/work/tcram/globus/browse_endpoint_test/' + selected[file]
         
-        print "Source path: {0}".format(source_path)
-        print "Dest path: {0}\n".format(dest_path)
+        print "[submit_transfer] Source path: {0}".format(source_path)
+        print "[submit_transfer] Dest path: {0}\n".format(dest_path)
         
-        transfer_data.add_item(source_path=source_path,
-                               destination_path=dest_path)
+        transfer_data.add_item(source_path, destination_path=dest_path)
 
-    transfer.endpoint_autoactivate(source_endpoint_id)
-    transfer.endpoint_autoactivate(destination_endpoint_id)
-    task_id = transfer.submit_transfer(transfer_data)['task_id']
+    #transfer.endpoint_autoactivate(source_endpoint_id)
+    #transfer.endpoint_autoactivate(destination_endpoint_id)
+    task_id = transfer.submit_transfer(transfer_data)
     
     return task_id
     
@@ -83,12 +85,20 @@ def transfer_status(task_id):
 
     'task_id' is passed to the route in the URL as 'task_id'.
     """
-    transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['tokens']['transfer.api.globus.org']['refresh_token'],
-        load_portal_client()))
+    transfer = TransferClient()
     task = transfer.get_task(task_id)
 
-    return render_template('transfer_status.jinja2', task=task)
+    """ Display transfer status """
+    print "[transfer_status] Transfer in progress ...\n"
+    print "[transfer_status] Task ID: {0}\n".format(task["task_id"])
+    print "[transfer_status] Source endpoint: {0}\n".format(task["source_endpoint_display_name"])
+    print "[transfer_status] Destination Endpoint: {0}\n".format(task["destination_endpoint_display_name"])
+    print "[transfer_status] Request Time: {0}\n".format(task["request_time"])
+    print "[transfer_status] Status: {0}\n".format(task["status"])
+    print "[transfer_status] Files transferred: {0}\n".format(task["files_transferred"])
+    print "[transfer_status] Faults: {0}\n".format(task["faults"])
+
+    return
 
 def set_environ():
     """ Define environment variables required by this script """
