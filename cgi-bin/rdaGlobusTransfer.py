@@ -138,7 +138,7 @@ def get_session_data():
 
 def set_environ():
     """ Define environment variables required by this script """
-    os.environ['REQUEST_METHOD'] = post
+    os.environ['REQUEST_METHOD'] = 'POST'
     os.environ['GLOBUS_SDK_TRANSFER_TOKEN'] = MyGlobus['transfer_token']
     os.environ['GLOBUS_SDK_AUTH_TOKEN'] = MyGlobus['auth_token']
     
