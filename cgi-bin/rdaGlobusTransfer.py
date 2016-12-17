@@ -32,10 +32,10 @@ def main():
     """ Print HTTP headers and debug info """
     #print_info(form)
     
-    if(action in form):
-    	if(form['action'] == 'display_status'):
+    if("action" in form):
+    	if(form["action"] == "display_status"):
     		try:
-    			task_id = form['task_id']
+    			task_id = form["task_id"]
     			transfer_status(task_id)
     		except:
     			print "<div id=\"error\">\n"
