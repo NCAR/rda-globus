@@ -32,8 +32,18 @@ def main():
     """ Print HTTP headers and debug info """
     #print_info(form)
     
-    task_id = submit_transfer(form)
-    transfer_status(task_id)
+    if(action in form):
+    	if(form['action'] == 'display_status'):
+    		try:
+    			task_id = form['task_id']
+    			transfer_status(task_id)
+    		except:
+    			print "<div id=\"error\">\n"
+    			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
+    			print "</div>\n"
+    	else:
+    		task_id = submit_transfer(form)
+    		transfer_status(task_id)
 
 def submit_transfer(form):
     """
@@ -88,31 +98,34 @@ def submit_transfer(form):
     
 def transfer_status(task_id):
     """
-    Call Globus API to get status/details of transfer with
+    Call the Globus Transfer API to get status/details of transfer with the given
     task_id.
-
-    The target template (tranfer_status.jinja2) expects a Transfer API
-    'task' object.
-
-    'task_id' is passed to the route in the URL as 'task_id'.
     """
     transfer = TransferClient()
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
     print "<div id=\"transferStatusHeader\">\n<h1>Transfer status</h1>\n</div>"
-    print "<p><strong>Task ID</strong>: {0}</p>".format(task["task_id"])
-    print "<p><strong>Source endpoint</strong>: {0}</p>".format(task["source_endpoint_display_name"])
-    print "<p><strong>Destination Endpoint</strong>: {0}</p>".format(task["destination_endpoint_display_name"])
-    print "<p><strong>Request Time</strong>: {0}</p>".format(task["request_time"])
-    print "<p><strong>Status</strong>: {0}</p>".format(task["status"])
-    print "<p><strong>Files transferred</strong>: {0}</p>".format(task["files_transferred"])
-    print "<p><strong>Faults</strong>: {0}</p>".format(task["faults"])
+    print "<p>\n<strong>Task ID</strong>: {0}<br />\n".format(task["task_id"])
+    print "<strong>Source endpoint</strong>: {0}<br />\n".format(task["source_endpoint_display_name"])
+    print "<strong>Destination Endpoint</strong>: {0}<br />\n".format(task["destination_endpoint_display_name"])
+    print "<strong>Request Time</strong>: {0}<br />\n".format(task["request_time"])
+    print "<strong>Status</strong>: {0}<br />\n".format(task["status"])
+    print "<strong>Files transferred</strong>: {0}<br />\n".format(task["files_transferred"])
+    print "<strong>Faults</strong>: {0}\n</p>\n".format(task["faults"])
     
+    print "<div>\n"
+    print "<a href=\"/#!cgi-bin/rdaGlobusTransfer?method=POST&action=display_status&task_id={0}\">\n".format(task["task_id"])
+    print "<button>Refresh</button>\n"
+    print "</a>\n"
+    print "</div>\n"
+
     return
 
 def get_session_data():
-    """ Retrieve session data from RDADB """
+    """ 
+    - Retrieve session data from RDADB
+    """
     sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
@@ -125,7 +138,7 @@ def get_session_data():
 
 def set_environ():
     """ Define environment variables required by this script """
-    os.environ['REQUEST_METHOD'] = 'POST'
+    os.environ['REQUEST_METHOD'] = post
     os.environ['GLOBUS_SDK_TRANSFER_TOKEN'] = MyGlobus['transfer_token']
     os.environ['GLOBUS_SDK_AUTH_TOKEN'] = MyGlobus['auth_token']
     
@@ -182,9 +195,11 @@ def print_arguments():
     print
 
 def escape(s, quote=None):
-    '''Replace special characters "&", "<" and ">" to HTML-safe sequences.
+    """
+    Replace special characters "&", "<" and ">" to HTML-safe sequences.
     If the optional flag quote is true, the quotation mark character (")
-    is also translated.'''
+    is also translated.
+    """
     s = s.replace("&", "&amp;") # Must be done first!
     s = s.replace("<", "&lt;")
     s = s.replace(">", "&gt;")
@@ -201,7 +216,7 @@ def print_session_data():
     print "</p>\n"
 
 def print_dict(mydict):
-    """Print contents of a dictionary."""
+    """ Print contents of a dictionary """
     print "<dl>\n"
     for key, val in mydict.iteritems():
         if isinstance(val, dict):
@@ -218,7 +233,7 @@ def print_info(form):
     print_form(form)
     print_session_data()
     print_environ()
-      
+
 #=========================================================================================
 
 if __name__ == "__main__":
