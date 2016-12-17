@@ -33,7 +33,7 @@ def main():
     #print_info(form)
     
     if("action" in form):
-    	if(form["action"] == "display_status"):
+    	if(form["action"].value == "display_status"):
     		try:
     			task_id = form["task_id"]
     			transfer_status(task_id)
