@@ -88,7 +88,7 @@ def submit_transfer(form):
         dest_path = form['path'].value + selected[file]
         transfer_data.add_item(source_path, dest_path)
 
-    #transfer.endpoint_autoactivate(source_endpoint_id)
+    transfer.endpoint_autoactivate(source_endpoint_id)
     #transfer.endpoint_autoactivate(destination_endpoint_id)
     
     task_id = transfer.submit_transfer(transfer_data)['task_id']
