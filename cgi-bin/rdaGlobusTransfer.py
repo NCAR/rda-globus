@@ -35,7 +35,7 @@ def main():
     if("action" in form):
     	if(form["action"].value == "display_status"):
     		try:
-    			task_id = form["task_id"]
+    			task_id = form["task_id"].value
     			transfer_status(task_id)
     		except:
     			print "<div id=\"error\">\n"
