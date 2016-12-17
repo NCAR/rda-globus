@@ -42,8 +42,7 @@ def main():
     			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
     			print "</div>\n"
     	else:
-    		task_id = submit_transfer(form)
-    		transfer_status(task_id)
+    		submit_transfer(form)
 
 def submit_transfer(form):
     """
@@ -93,8 +92,9 @@ def submit_transfer(form):
     #transfer.endpoint_autoactivate(destination_endpoint_id)
     
     task_id = transfer.submit_transfer(transfer_data)['task_id']
+    transfer_status(task_id)
     
-    return task_id
+    return
     
 def transfer_status(task_id):
     """
