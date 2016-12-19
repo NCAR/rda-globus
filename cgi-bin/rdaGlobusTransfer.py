@@ -105,7 +105,9 @@ def transfer_status(task_id):
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
-    print "<div id=\"transferStatusHeader\">\n<h1>Transfer status</h1>\n</div>"
+    print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
+    print "<h1>Transfer status</h1>\n</div>"
+    print "<hr style=\"height: 1px; color: #cccccc; background-color: #cccccc; border: none;\">"
     print "<p>\n<strong>Task ID</strong>: {0}<br />\n".format(task["task_id"])
     print "<strong>Source endpoint</strong>: {0}<br />\n".format(task["source_endpoint_display_name"])
     print "<strong>Destination Endpoint</strong>: {0}<br />\n".format(task["destination_endpoint_display_name"])
@@ -115,9 +117,9 @@ def transfer_status(task_id):
     print "<strong>Faults</strong>: {0}\n</p>\n".format(task["faults"])
     
     print "<div>\n"
-    print "<a href=\"/#!cgi-bin/rdaGlobusTransfer?method=POST&action=display_status&task_id={0}\">\n".format(task["task_id"])
+    print "<p><a href=\"/#!cgi-bin/rdaGlobusTransfer?method=POST&action=display_status&task_id={0}\">\n".format(task_id)
     print "<button>Refresh</button>\n"
-    print "</a>\n"
+    print "</a></p>\n"
     print "</div>\n"
 
     return
