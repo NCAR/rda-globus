@@ -65,6 +65,8 @@ def submit_transfer(form):
         directory = directory.replace('/data/','',1)
     
     """ Define source endpoint ID and paths """
+    host_endpoint = MyGlobus['host_endpoint_id']
+    
     if(gtype == '1'):
        source_endpoint_id = MyGlobus['data_request_ep']
     if(gtype == '3'):
@@ -88,7 +90,7 @@ def submit_transfer(form):
         dest_path = form['path'].value + selected[file]
         transfer_data.add_item(source_path, dest_path)
 
-    transfer.endpoint_autoactivate(source_endpoint_id)
+    transfer.endpoint_autoactivate(host_endpoint)
     #transfer.endpoint_autoactivate(destination_endpoint_id)
     
     task_id = transfer.submit_transfer(transfer_data)['task_id']

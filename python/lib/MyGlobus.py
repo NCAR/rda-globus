@@ -27,5 +27,6 @@ MyGlobus = {
    'datashare_ep': 'db57de42-6d04-11e5-ba46-22000b92c6ec',
    'data_request_ep' : 'd20e610e-6d04-11e5-ba46-22000b92c6ec',
    'datashare_ep_base' : '/glade/p/rda/data/',
-   'data_request_ep_base' : '/glade/p/rda/transfer/'
+   'data_request_ep_base' : '/glade/p/rda/transfer/',
+   'host_endpoint_id' : 'd33b3614-6d04-11e5-ba46-22000b92c6ec'
 }
