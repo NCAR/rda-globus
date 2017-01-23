@@ -22,14 +22,12 @@ from MyGlobus import headers, MyGlobus
 from PyDBI import myget
 from phpserialize import *
 import json
+import globus_sdk
 
 try:
     from urllib.parse import urlencode
 except:
     from urllib import urlencode
-
-from globus_sdk import (TransferClient, TransferAPIError,
-                        TransferData, RefreshTokenAuthorizer)
 
 def main():
     print "Content-type: text/html\r\n\r\n"
