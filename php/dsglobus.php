@@ -148,8 +148,8 @@ function acl_dataset($msg, $gtype, $email) {
 }
 
 /**
- * Redirect user to Globus browse_endpoint helper API.  For users who generate custom
- * file lists.  See https://docs.globus.org/api/helper-pages/browse-endpoint/
+ * Save session data and redirect user to Globus browse_endpoint helper API.  For users 
+ * who generate custom file lists.  See https://docs.globus.org/api/helper-pages/browse-endpoint/
  */
 
 function globus_browseEndpoint($msg, $gtype, $email) {
@@ -194,54 +194,6 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    header('Location: ' . $browse_endpoint);
    exit();
 }
-
-/**
- * Take the data returned by the Browse Endpoint helper page and submit a Globus transfer
- * request.
- * Send the user to the transfer status page with the task id from the transfer.
- */
- 
-function submit_transfer() {
-   
-   global $MYGLOBUS;
-   
-# Get session data
-   $selected = $_SESSION["files"];
-
-# Activate source and destination endpoints
-
-   $token = $MYGLOBUS["TOKEN"];
-   $source_endpoint_id = $MYGLOBUS["DATASHARE_ENDPOINT_ID"];
-   $source_endpoint_base = $MYGLOBUS["DATASHARE_ENDPOINT_BASE"];
-   $destination_endpoint_id = $_POST["endpoint_id"];
-   $destination_folder = $_POST["folder[0]"];
-   $label = $_POST["label"];
-   
-#   $source_path = $source_endpoint_base . $selected;
-   $dest_path = $_POST["path"];
-
-# Test: print session data and endpoint IDs
-   echo $_SESSION['gtype'];
-   echo "<br>dsid: " . $_SESSION['dsid'] . "<br>directory: " . $_SESSION['directory'];
-   echo "<br>selected files: <br>";
-   print_r(array_values($selected));
-
-   echo "<br>source_endpoint_id: " . $source_endpoint_id .
-        "<br>source_endpoint_base: " . $source_endpoint_base . 
-        "<br>destination_endpoint_id: " . $destination_endpoint_id . 
-        "<br>destination_folder: " . $destination_folder .
-        "<br>transfer label: " . $label .
-        "<br>destination_path: " . $dest_path .
-        "<br><br>destination folders: " . $_POST['folder'];
-
-# Get submission ID (GET /submission_id)
-
-# Submit transfer (POST /transfer)
-
-# Display transfer status and details
-
-}
-
 
 /**
  * Manage ACLs for a prototype data cart.

@@ -17,13 +17,19 @@ sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
-import urllib
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
-from globus_sdk import TransferClient, TransferData
 from PyDBI import myget
 from phpserialize import *
 import json
+
+try:
+    from urllib.parse import urlencode
+except:
+    from urllib import urlencode
+
+from globus_sdk import (TransferClient, TransferAPIError,
+                        TransferData, RefreshTokenAuthorizer)
 
 def main():
     print "Content-type: text/html\r\n\r\n"
@@ -33,7 +39,7 @@ def main():
     #print_info(form)
     
     if("action" in form):
-    	if(form["action"].value == "display_status"):
+    	if(form["action"].value == "transfer_status"):
     		try:
     			task_id = form["task_id"].value
     			transfer_status(task_id)
@@ -42,7 +48,66 @@ def main():
     			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
     			print "</div>\n"
     	else:
-    		submit_transfer(form)
+    		authcallback(form)
+
+def authcallback(form):
+    """Handles the interaction with Globus Auth."""
+
+    # If we're coming back from Globus Auth in an error state, the error
+    # will be in the "error" query string parameter.
+    if 'error' in form:
+        print "<p><strong>You could not be logged into the portal:</strong>{0} {1}\n".format(form['error_description'].value,form['error'].value)
+        return
+
+    # Set up our Globus Auth/OAuth2 state
+    redirect_uri = 'http://rda.ucar.edu/#!cgi-bin/rdaGlobusTransfer?action=authcallback'
+    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['CLIENT_ID'], MyGlobus['CLIENT_SECRET'])
+    client.oauth2_start_flow(redirect_uri, refresh_tokens=True)
+
+    # If there's no "code" query string parameter, we're in this route
+    # starting a Globus Auth login flow.
+    if 'code' not in form:
+        auth_uri = client.oauth2_get_authorize_url()
+        print "Location: {0}\r\n".format(auth_uri)
+    else:
+        # If we do have a "code" param, we're coming back from Globus Auth
+        # and can start the process of exchanging an auth code for a token.
+        code = form['code'].value
+        tokens = client.oauth2_exchange_code_for_tokens(code)
+
+        id_token = tokens.decode_id_token(client)
+        tokens=tokens.by_resource_server
+        update_session_data(tokens)
+
+        submit_transfer(form)
+
+def transfer(form):
+    """
+    - Send user to Globus to select a destination endpoint using the
+      Browse Endpoint helper page.
+    - Assumes the submitted form has been saved to the session.
+    """
+    protocol = get_protocol()    
+    dsid = ("",form['dsid'].value)['dsid' not in form]
+    
+    if('cancelurl' not in form):
+        cancelurl = protocol + os.environ['HTTP_HOST'] + "/datasets/" + dsid
+    else:
+        cancelurl = form['cancelurl'].value
+
+    params = {
+    	'method': 'POST',
+        'action': protocol + os.environ['HTTP_HOST'] + "/#!cgi-bin/rdaGlobusTransfer",
+        'filelimit': 0,
+        'folderlimit': 1,
+        'cancelurl': cancelurl,
+        'label': 'NCAR RDA Globus transfer'
+    }
+
+    browse_endpoint = 'https://www.globus.org/app/browse-endpoint?{}'.format(urlencode(params))
+    print "Location: {0}\r\n".format(browse_endpoint)
+
+    return
 
 def submit_transfer(form):
     """
@@ -75,7 +140,9 @@ def submit_transfer(form):
     destination_endpoint_id = form['endpoint_id'].value
 
     """ Instantiate the Globus SDK transfer client """
-    transfer = TransferClient()
+    transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
+    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['CLIENT_ID'], MyGlobus['CLIENT_SECRET'])
+    transfer = TransferClient(transfer_authorizer, client)
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -100,10 +167,16 @@ def submit_transfer(form):
     
 def transfer_status(task_id):
     """
-    Call the Globus Transfer API to get status/details of transfer with the given
-    task_id.
+    Call Globus to get status/details of transfer associated with the given task_id.
     """
-    transfer = TransferClient()
+
+    """ Get session data from database """
+    session = get_session_data()
+
+    """ Instantiate the transfer client & get transfer task details """
+    transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
+    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['CLIENT_ID'], MyGlobus['CLIENT_SECRET'])
+    transfer = TransferClient(transfer_authorizer, client)
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
@@ -121,7 +194,7 @@ def transfer_status(task_id):
     print "<strong>Faults</strong>: {0}\n</p>\n".format(task["faults"])
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><a href=\"/#!cgi-bin/rdaGlobusTransfer?method=POST&action=display_status&task_id={0}\">\n".format(task_id)
+    print "<p><a href=\"/#!cgi-bin/rdaGlobusTransfer?method=POST&action=transfer_status&task_id={0}\">\n".format(task_id)
     print "<button>Refresh</button>\n"
     print "</a></p>\n"
     print "</div>\n"
@@ -130,7 +203,7 @@ def transfer_status(task_id):
 
 def get_session_data():
     """ 
-    - Retrieve session data from RDADB
+    - Retrieve session data from RDADB.
     """
     sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
@@ -142,6 +215,23 @@ def get_session_data():
     """ Return unserialized session data """
     return unserialize(myrec['data'])
 
+def update_session_data(data):
+    """ 
+    - Update session data in RDADB
+    """
+    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    keys = ['id','access','data']
+    condition = " WHERE {0} = '{1}'".format("id", sid)
+    myrec = myget('sessions', keys, condition)
+    
+    session_data = unserialize(myrec['data'])
+    session_data.update(data)
+    
+    """ Update session """
+    myupdt('sessions', serialize(session_data), condition)
+    
+    return
+
 def set_environ():
     """ Define environment variables required by this script """
     os.environ['REQUEST_METHOD'] = 'POST'
@@ -149,6 +239,18 @@ def set_environ():
     os.environ['GLOBUS_SDK_AUTH_TOKEN'] = MyGlobus['auth_token']
     
     return
+
+def get_protocol():
+    """ Return the web server protocol """
+    server_protocol = os.environ['SERVER_PROTOCOL']
+    server_port = os.environ['SERVER_PORT']
+    
+    if(server_protocol.find('HTTPS') != -1 and server_protocol != 'off' or server_port == '443'):
+        protocol = 'https://'
+    else:
+    	protocol = 'http://'
+
+    return protocol
 
 # Test/debug code
 # ===============
