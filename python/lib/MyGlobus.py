@@ -31,7 +31,7 @@ auth_tokenf.close()
 client_idf.close()
 client_secretf.close()
 
-headers = {'Authorization':'Bearer '+transfer_token}
+headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
 
 MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
