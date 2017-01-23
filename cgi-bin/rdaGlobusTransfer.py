@@ -30,7 +30,6 @@ except:
     from urllib import urlencode
 
 def main():
-    print "Content-type: text/html\r\n\r\n"
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
@@ -54,6 +53,7 @@ def authcallback(form):
     # If we're coming back from Globus Auth in an error state, the error
     # will be in the "error" query string parameter.
     if 'error' in form:
+        print_header()
         print "<p><strong>You could not be logged into the portal:</strong>{0} {1}\n".format(form['error_description'].value,form['error'].value)
         return
 
@@ -178,6 +178,7 @@ def transfer_status(task_id):
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
+    print_header()
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Transfer status</h1>\n"
     print "</div>"
@@ -250,6 +251,10 @@ def get_protocol():
 
     return protocol
 
+def print_header():
+    print "Content-type: text/html\r\n\r\n"
+    return
+    
 # Test/debug code
 # ===============
 
@@ -334,6 +339,7 @@ def print_dict(mydict):
 
 def print_info(form):
     """ Print debug info """
+    print_header()
     print_directory()
     print_arguments()
     print_form(form)
