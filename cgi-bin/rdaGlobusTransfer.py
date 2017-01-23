@@ -59,7 +59,7 @@ def authcallback(form):
 
     # Set up our Globus Auth/OAuth2 state
     redirect_uri = 'http://rda.ucar.edu/#!cgi-bin/rdaGlobusTransfer?action=authcallback'
-    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['CLIENT_ID'], MyGlobus['CLIENT_SECRET'])
+    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
     client.oauth2_start_flow(redirect_uri, refresh_tokens=True)
 
     # If there's no "code" query string parameter, we're in this route
@@ -139,7 +139,7 @@ def submit_transfer(form):
 
     """ Instantiate the Globus SDK transfer client """
     transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
-    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['CLIENT_ID'], MyGlobus['CLIENT_SECRET'])
+    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
     transfer = TransferClient(transfer_authorizer, client)
         
     """ Instantiate TransferData object """
@@ -173,7 +173,7 @@ def transfer_status(task_id):
 
     """ Instantiate the transfer client & get transfer task details """
     transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
-    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['CLIENT_ID'], MyGlobus['CLIENT_SECRET'])
+    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
     transfer = TransferClient(transfer_authorizer, client)
     task = transfer.get_task(task_id)
     
