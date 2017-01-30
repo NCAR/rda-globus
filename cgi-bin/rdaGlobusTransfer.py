@@ -66,7 +66,6 @@ def authcallback(form):
     # starting a Globus Auth login flow.
     if 'code' not in form:
         auth_uri = client.oauth2_get_authorize_url()
-        print_header()
         print "Location: {0}\r\n".format(auth_uri)
     else:
         # If we do have a "code" param, we're coming back from Globus Auth
