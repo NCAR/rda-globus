@@ -58,7 +58,7 @@ def authcallback(form):
         return
 
     # Set up our Globus Auth/OAuth2 state
-    redirect_uri = 'http://rda.ucar.edu/#!cgi-bin/rdaGlobusTransfer?action=authcallback'
+    redirect_uri = 'http://rda.ucar.edu/#!cgi-bin/rdaGlobusTransfer'
     client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
     client.oauth2_start_flow(redirect_uri, refresh_tokens=True)
 
@@ -66,6 +66,7 @@ def authcallback(form):
     # starting a Globus Auth login flow.
     if 'code' not in form:
         auth_uri = client.oauth2_get_authorize_url()
+        print_header()
         print "Location: {0}\r\n".format(auth_uri)
     else:
         # If we do have a "code" param, we're coming back from Globus Auth
