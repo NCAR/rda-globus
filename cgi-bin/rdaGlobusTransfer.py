@@ -61,7 +61,7 @@ def authcallback(form):
         return
 
     # Set up our Globus Auth/OAuth2 state
-    redirect_uri = 'http://rda-web-dev.ucar.edu/cgi-bin/rdaGlobusTransfer'
+    redirect_uri = 'http://rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer'
     client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
     
     # Generate state parameter
