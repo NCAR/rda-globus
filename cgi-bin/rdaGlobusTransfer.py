@@ -23,6 +23,9 @@ from PyDBI import myget
 from phpserialize import *
 import json
 import globus_sdk
+import hmac
+from base64 import b64encode
+import hashlib
 
 try:
     from urllib.parse import urlencode
@@ -60,19 +63,24 @@ def authcallback(form):
     # Set up our Globus Auth/OAuth2 state
     redirect_uri = 'http://rda-web-dev.ucar.edu/cgi-bin/rdaGlobusTransfer'
     client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
-    client.oauth2_start_flow(redirect_uri, refresh_tokens=True)
+    
+    # Generate state parameter
+    state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
+    client.oauth2_start_flow(redirect_uri, state=state, refresh_tokens=True)
 
     # If there's no "code" query string parameter, we're in this route
     # starting a Globus Auth login flow.
     if 'code' not in form:
         auth_uri = client.oauth2_get_authorize_url()
-        print_header()
         print "Location: {0}\r\n".format(auth_uri)
     else:
         # If we do have a "code" param, we're coming back from Globus Auth
-        # and can start the process of exchanging an auth code for a token.
+        # and can start the process of exchanging an auth code for a token.        
         code = form['code'].value
         tokens = client.oauth2_exchange_code_for_tokens(code)
+
+        if not is_valid_state(tokens['state']):
+        	print_http_status("403 Forbidden")
 
         id_token = tokens.decode_id_token(client)
         tokens=tokens.by_resource_server
@@ -255,7 +263,27 @@ def get_protocol():
 def print_header():
     print "Content-type: text/html\r\n\r\n"
     return
-    
+
+def print_http_status(msg):
+    print "Status: " + msg + "\r\n\r\n"
+    return
+
+def generate_state_parameter(client_id, private_key):
+	""" Generate a state parameter for OAuth2 requests """
+    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	raw_state = sid + client_id
+	hashed = hmac.new(private_key, raw_state, hashlib.sha1)
+	state = b64encode(hashed.digest())
+	return (state)
+
+def is_valid_state(state):
+	""" Validate the OAuth2 state parameter """
+	recreated_state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
+	if state == recreated_state:
+		return True
+	else:
+		return False
+
 # Test/debug code
 # ===============
 
