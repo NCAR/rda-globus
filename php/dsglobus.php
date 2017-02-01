@@ -160,8 +160,9 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    $unames = get_ruser_names($email, 5);
    $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
    
-   $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-
+#   $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+   $protocol = "https://"
+   
 # Save path, selected files, and other hidden input to session
    $_SESSION['gtype'] = $gtype;
    if(empty($_POST['dsid'])) return pmessage("Missing dataset ID (dsnnn.n)", true);
