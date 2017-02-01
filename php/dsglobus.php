@@ -161,7 +161,7 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
    
 #   $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-   $protocol = "https://"
+   $protocol = "https://";
    
 # Save path, selected files, and other hidden input to session
    $_SESSION['gtype'] = $gtype;
