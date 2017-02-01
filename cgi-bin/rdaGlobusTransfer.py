@@ -270,7 +270,7 @@ def print_http_status(msg):
 
 def generate_state_parameter(client_id, private_key):
 	""" Generate a state parameter for OAuth2 requests """
-    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	raw_state = sid + client_id
 	hashed = hmac.new(private_key, raw_state, hashlib.sha1)
 	state = b64encode(hashed.digest())
