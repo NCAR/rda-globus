@@ -39,15 +39,18 @@ def main():
     """ Print HTTP headers and debug info """
     #print_info(form)
     
-    if ('action' in form and form['action'].value == 'transfer_status'):
-    	try:
-    		task_id = form["task_id"].value
-    		transfer_status(task_id)
-    	except:
-    		print_header()
-    		print "<div id=\"error\">\n"
-    		print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
-    		print "</div>\n"
+    if 'action' in form:
+    	if (form['action'].value == 'transfer_status'):
+    		try:
+    			task_id = form["task_id"].value
+    			transfer_status(task_id)
+    		except:
+    			print_header()
+    			print "<div id=\"error\">\n"
+    			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
+    			print "</div>\n"
+    	elif 'endpoint_id' in form:
+    		submit_transfer(form)
     else:
     	authcallback(form)
 
@@ -87,22 +90,20 @@ def authcallback(form):
         tokens=tokens.by_resource_server
         update_session_data(tokens)
 
-        submit_transfer(form)
+        transfer(form)
+        
+        return
 
 def transfer(form):
     """
     - Send user to Globus to select a destination endpoint using the
       Browse Endpoint helper page.
     - Assumes the submitted form has been saved to the session.
-    """
-    protocol = get_protocol()    
-    dsid = ("",form['dsid'].value)['dsid' not in form]
+    """    
+    protocol = 'https://'
+    session = get_session_data()
+    cancelurl = session['cancelurl']
     
-    if('cancelurl' not in form):
-        cancelurl = protocol + os.environ['HTTP_HOST'] + "/datasets/" + dsid
-    else:
-        cancelurl = form['cancelurl'].value
-
     params = {
     	'method': 'POST',
         'action': protocol + os.environ['HTTP_HOST'] + "/cgi-bin/rdaGlobusTransfer",
@@ -113,7 +114,7 @@ def transfer(form):
     }
 
     browse_endpoint = 'https://www.globus.org/app/browse-endpoint?{}'.format(urlencode(params))
-    print "Location: {0}\r\n".format(browse_endpoint)
+    print "Location: {0}\r\n\r\n".format(browse_endpoint)
 
     return
 
@@ -145,10 +146,6 @@ def submit_transfer(form):
     if(gtype == '3'):
        source_endpoint_id = MyGlobus['datashare_ep']
 
-    print_header()
-    print_form(form)
-    sys.exit()
-    
     destination_endpoint_id = form['endpoint_id'].value
 
     """ Instantiate the Globus SDK transfer client """

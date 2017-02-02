@@ -174,9 +174,9 @@ function globus_browseEndpoint($msg, $gtype, $email) {
 
 # URL if user cancels endpoint selection on the Globus Browse Endpoint web app
    if(empty($_POST['cancelurl'])) {
-     $cancelurl = $protocol . $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
+     $_SESSION['cancelurl'] = $protocol . $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
    } else {
-     $cancelurl = $_POST['cancelurl'];
+     $_SESSION['cancelurl'] = $_POST['cancelurl'];
    }
 
 # Build http query
@@ -189,10 +189,12 @@ function globus_browseEndpoint($msg, $gtype, $email) {
       "label" => "NCAR RDA Globus transfer"
    );
    
-   $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);
-   
-# Redirect user to browse endpoint
-   header('Location: ' . $browse_endpoint);
+   $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);   
+   $authcallback = '/cgi-bin/rdaGlobusTransfer'
+      
+# Redirect user to Globus Auth and Browse Endpoint
+#   header('Location: ' . $browse_endpoint);
+   header('Location: ' . $authcallback);
    exit();
 }
 
