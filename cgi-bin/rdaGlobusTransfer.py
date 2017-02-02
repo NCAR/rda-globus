@@ -20,7 +20,7 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 import cgi, cgitb
 from Cookie import SimpleCookie
 from MyGlobus import headers, MyGlobus
-from PyDBI import myget
+from PyDBI import myget, myupdt
 from phpserialize import *
 import json
 import globus_sdk
