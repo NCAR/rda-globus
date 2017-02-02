@@ -237,7 +237,7 @@ def update_session_data(data):
     session_data.update(data)
     
     """ Update session """
-    myupdt('sessions', serialize(session_data), condition)
+    myupdt('sessions', {'data': serialize(session_data)}, condition)
     
     return
 
