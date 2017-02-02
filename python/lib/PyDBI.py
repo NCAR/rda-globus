@@ -17,11 +17,8 @@ import os, sys
 import mysql.connector
 from mysql.connector import errorcode
 
-dbconfig = {'user': os.environ['DBUSER'], \
-            'password': os.environ['DBPWD'], \
-            'database': os.environ['DBUSER'], \
-            'host': os.environ['DBHOST'], \
-            'port': 3306}
+sys.path.append("/glade/u/home/tcram/lib/python")
+import dbconfig as cfg
 
 #=========================================================================================
 # Function dbconnect: Create database connection
