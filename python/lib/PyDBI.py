@@ -169,7 +169,7 @@ def myadd(tablename, record):
 #             record: dictionary with keys as field names and
 #                     values as field values
 #
-def myupdt(tablename, record, condition):
+def myupdt(tablename, record, condition, print=None):
 	try:
 		db = dbconnect()
 		c = db.cursor()
@@ -194,7 +194,8 @@ def myupdt(tablename, record, condition):
 		c.execute(sqlstr, values)
 		db.commit()
 		dbclose(db)
-		print "One record updated in table %s" % tablename
+		if print:
+			print "One record updated in table %s" % tablename
 	except mysql.connector.Error as err:
 		print record
 		print condition
