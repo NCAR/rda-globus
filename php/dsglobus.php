@@ -190,11 +190,11 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    );
    
    $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);   
-   $authcallback = $protocol . $_SERVER['HTTP_HOST'] . '/cgi-bin/rdaGlobusTransfer'
+   $authcallback = $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer"
       
 # Redirect user to Globus Auth and Browse Endpoint
 #   header('Location: ' . $browse_endpoint);
-   header('Location: ' . $authcallback);
+   header("Location: " . $authcallback);
    exit();
 }
 
