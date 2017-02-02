@@ -188,7 +188,7 @@ def transfer_status(task_id):
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
-    print_header()
+    print "Content-type: text/html\r\n\r\n"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Transfer status</h1>\n"
     print "</div>"
