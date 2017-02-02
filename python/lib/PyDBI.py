@@ -18,7 +18,7 @@ import mysql.connector
 from mysql.connector import errorcode
 
 sys.path.append("/glade/u/home/tcram/lib/python")
-import dbconfig as cfg
+from dbconfig import dbconfig
 
 #=========================================================================================
 # Function dbconnect: Create database connection
