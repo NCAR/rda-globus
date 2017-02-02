@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 ##################################################################################
 #     Title : rdaGlobusTransfer.py
@@ -261,7 +262,8 @@ def get_protocol():
     return protocol
 
 def print_header():
-    print "Content-type: text/html\r\n\r\n"
+    print "Content-type: text/html"
+    print
     return
 
 def print_http_status(msg):
