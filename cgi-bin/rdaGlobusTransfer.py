@@ -39,7 +39,7 @@ def main():
     """ Print HTTP headers and debug info """
     #print_info(form)
     
-    if ('action' in form & form['action'].value == 'transfer_status'):
+    if ('action' in form and form['action'].value == 'transfer_status'):
     	try:
     		task_id = form["task_id"].value
     		transfer_status(task_id)
