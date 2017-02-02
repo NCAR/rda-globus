@@ -194,8 +194,7 @@ function globus_browseEndpoint($msg, $gtype, $email) {
 **/
 
    $params = array(
-      "method" => "POST",
-      "action" => "authcallback"
+      "method" => "POST"
    );
    $authcallback = $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer?" . http_build_query($params);
    header("Location: " . $authcallback);
