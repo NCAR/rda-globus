@@ -83,7 +83,7 @@ def authcallback(form):
         if not is_valid_state(tokens['state']):
         	print_http_status("403 Forbidden")
 
-        id_token = tokens.decode_id_token(client)
+        #id_token = tokens.decode_id_token(client)
         tokens=tokens.by_resource_server
         update_session_data(tokens)
 
