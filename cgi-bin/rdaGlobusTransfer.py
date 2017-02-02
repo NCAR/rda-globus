@@ -39,16 +39,15 @@ def main():
     """ Print HTTP headers and debug info """
     #print_info(form)
     
-    if 'action' in form:
-    	if (form['action'].value == 'transfer_status'):
-    		try:
-    			task_id = form["task_id"].value
-    			transfer_status(task_id)
-    		except:
-    			print_header()
-    			print "<div id=\"error\">\n"
-    			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
-    			print "</div>\n"
+    if ('action' in form & form['action'].value == 'transfer_status'):
+    	try:
+    		task_id = form["task_id"].value
+    		transfer_status(task_id)
+    	except:
+    		print_header()
+    		print "<div id=\"error\">\n"
+    		print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
+    		print "</div>\n"
     else:
     	authcallback(form)
 
