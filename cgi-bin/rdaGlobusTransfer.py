@@ -39,17 +39,15 @@ def main():
     """ Print HTTP headers and debug info """
     #print_info(form)
     
-    if("action" in form):
-    	if(form["action"].value == "transfer_status"):
-    		try:
-    			task_id = form["task_id"].value
-    			transfer_status(task_id)
-    		except:
-    			print "<div id=\"error\">\n"
-    			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
-    			print "</div>\n"
-    	else:
-    		authcallback(form)
+    try:
+    	task_id = form["task_id"].value
+    	transfer_status(task_id)
+    except:
+    	print "<div id=\"error\">\n"
+    	print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
+    	print "</div>\n"
+    else:
+    	authcallback(form)
 
 def authcallback(form):
     """Handles the interaction with Globus Auth."""
@@ -188,8 +186,7 @@ def transfer_status(task_id):
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
-    print "Content-type: text/html\n\n"
-    print
+    print_header()
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Transfer status</h1>\n"
     print "</div>"
@@ -263,8 +260,7 @@ def get_protocol():
     return protocol
 
 def print_header():
-    print "Content-type: text/html\n\n"
-    print
+    print "Content-type: text/html\r\n\r\n"
     return
 
 def print_http_status(msg):
