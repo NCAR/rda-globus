@@ -179,7 +179,8 @@ function globus_browseEndpoint($msg, $gtype, $email) {
      $_SESSION['cancelurl'] = $_POST['cancelurl'];
    }
 
-# Build http query
+/**
+# Build http query & redirect user
    $params = array(
       "method" => "POST",
       "action" => $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer",
@@ -188,12 +189,15 @@ function globus_browseEndpoint($msg, $gtype, $email) {
       "cancelurl" => $cancelurl,
       "label" => "NCAR RDA Globus transfer"
    );
-   
    $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);   
-   $authcallback = $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer"
-      
-# Redirect user to Globus Auth and Browse Endpoint
-#   header('Location: ' . $browse_endpoint);
+   header('Location: ' . $browse_endpoint);
+**/
+
+   $params = array(
+      "method" => "POST",
+      "action" => "authcallback"
+   );
+   $authcallback = $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer?" . http_build_query($params);
    header("Location: " . $authcallback);
    exit();
 }
