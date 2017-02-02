@@ -145,6 +145,10 @@ def submit_transfer(form):
     if(gtype == '3'):
        source_endpoint_id = MyGlobus['datashare_ep']
 
+    print_header()
+    print_form(form)
+    sys.exit()
+    
     destination_endpoint_id = form['endpoint_id'].value
 
     """ Instantiate the Globus SDK transfer client """
