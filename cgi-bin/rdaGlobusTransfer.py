@@ -152,7 +152,7 @@ def submit_transfer(form):
 
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['transfer.api.globus.org']['refresh_token']), load_portal_client())
+        session['transfer.api.globus.org']['refresh_token'], load_portal_client()))
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -185,7 +185,9 @@ def transfer_status(task_id):
 
     """ Instantiate the transfer client & get transfer task details """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['transfer.api.globus.org']['refresh_token']), load_portal_client())
+        session['transfer.api.globus.org']['refresh_token'], 
+        load_portal_client()))
+    
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
