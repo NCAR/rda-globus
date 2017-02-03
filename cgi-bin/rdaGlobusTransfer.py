@@ -39,7 +39,7 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    #print_info(form)
+    print_info(form)
     
     if 'action' in form:
     	if (form['action'].value == 'transfer_status'):
@@ -377,6 +377,7 @@ def print_info(form):
     print_form(form)
     print_session_data()
     print_environ()
+    sys.exit()
 
 #=========================================================================================
 
