@@ -187,7 +187,6 @@ def transfer_status(task_id):
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
         session['transfer.api.globus.org']['refresh_token'], 
         load_portal_client()))
-    
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
@@ -206,7 +205,7 @@ def transfer_status(task_id):
     print "<strong>Faults</strong>: {0}\n</p>\n".format(task["faults"])
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><a href=\"/#!cgi-bin/rdaGlobusTransfer?method=POST&action=transfer_status&task_id={0}\">\n".format(task_id)
+    print "<p><a href=\"/cgi-bin/rdaGlobusTransfer?method=POST&action=transfer_status&task_id={0}\">\n".format(task_id)
     print "<button>Refresh</button>\n"
     print "</a></p>\n"
     print "</div>\n"
