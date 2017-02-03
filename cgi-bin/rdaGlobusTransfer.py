@@ -51,6 +51,8 @@ def main():
     			print "<div id=\"error\">\n"
     			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
     			print "</div>\n"
+    	elif (form['action'].value == 'display_status'):
+    		display_transfer_status()
     	elif 'endpoint_id' in form:
     		submit_transfer(form)
     else:
@@ -68,7 +70,7 @@ def authcallback(form):
 
     # Set up our Globus Auth client
     client = load_portal_client()
-    redirect_uri = 'https://' + os.environ['HTTP_HOST'] + '/' + MyGlobus['redirect_uri']
+    redirect_uri = 'https://' + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
     client.oauth2_start_flow(redirect_uri, state=state, refresh_tokens=True)
 
@@ -106,7 +108,7 @@ def transfer(form):
     
     params = {
     	'method': 'POST',
-        'action': protocol + os.environ['HTTP_HOST'] + '/#!' + MyGlobus['redirect_uri'],
+        'action': protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri'],
         'filelimit': 0,
         'folderlimit': 1,
         'cancelurl': cancelurl,
@@ -180,7 +182,6 @@ def transfer_status(task_id):
 
     """ Get session data from database """
     session = get_session_data()
-    dsid = session['dsid']
 
     """ Instantiate the transfer client & get transfer task details """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
@@ -188,23 +189,47 @@ def transfer_status(task_id):
         load_portal_client()))
     task = transfer.get_task(task_id)
     
-    """ Display transfer status """
+    update_session_data(task)
+    
+    params = {
+    	'method': 'POST',
+        'action': 'display_status'
+    }
+
+    display_url = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
+    print "Location: {0}\r\n\r\n".format(display_url)
+    
+    return
+    
+def display_transfer_status():
+    """ Display Globus transfer status """
+    session = get_session_data()
+
+    task_id = session['task']['task_id']
+    source_endpoint_display_name = session['task']['source_endpoint_display_name']
+    destination_endpoint_display_name = session['task']['destination_endpoint_display_name']
+    request_time = session['task']['request_time']
+    status = session['task']['status']
+    files_transferred = session['task']['files_transferred']
+    faults = session['task']['faults']
+    dsid = session['dsid']
+    
     print_header()
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Transfer status</h1>\n"
     print "</div>"
     print "<hr style=\"height: 1px; color: #cccccc; background-color: #cccccc; border: none; width: 90%;\">"
     print "<p style=\"margin-left: 10px\">\n"
-    print "<strong>Task ID</strong>: {0}<br />\n".format(task["task_id"])
-    print "<strong>Source endpoint</strong>: {0}<br />\n".format(task["source_endpoint_display_name"])
-    print "<strong>Destination Endpoint</strong>: {0}<br />\n".format(task["destination_endpoint_display_name"])
-    print "<strong>Request Time</strong>: {0}<br />\n".format(task["request_time"])
-    print "<strong>Status</strong>: {0}<br />\n".format(task["status"])
-    print "<strong>Files transferred</strong>: {0}<br />\n".format(task["files_transferred"])
-    print "<strong>Faults</strong>: {0}\n</p>\n".format(task["faults"])
+    print "<strong>Task ID</strong>: {0}<br />\n".format(task_id)
+    print "<strong>Source endpoint</strong>: {0}<br />\n".format(source_endpoint_display_name)
+    print "<strong>Destination Endpoint</strong>: {0}<br />\n".format(destination_endpoint_display_name)
+    print "<strong>Request Time</strong>: {0}<br />\n".format(request_time)
+    print "<strong>Status</strong>: {0}<br />\n".format(status)
+    print "<strong>Files transferred</strong>: {0}<br />\n".format(files_transferred)
+    print "<strong>Faults</strong>: {0}\n</p>\n".format(faults)
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><a href=\"/#!{0}?method=POST&action=transfer_status&task_id={1}\">\n".format(MyGlobus['redirect_uri'], task_id)
+    print "<p><a href=\"{0}?method=POST&action=transfer_status&task_id={1}\">\n".format(MyGlobus['redirect_uri'], task_id)
     print "<button>Refresh</button>\n"
     print "</a></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
