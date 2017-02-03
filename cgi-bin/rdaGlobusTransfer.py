@@ -39,12 +39,12 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    print_info(form)
+    # print_info(form)
     
     if 'action' in form:
     	if (form['action'].value == 'transfer_status'):
     		try:
-    			task_id = form['task_id'].value
+    			task_id = form.getvalue('task_id')
     			transfer_status(task_id)
     		except:
     			print_header()
