@@ -189,6 +189,10 @@ def transfer_status(task_id):
         load_portal_client()))
     task = transfer.get_task(task_id)
     
+    print_header()
+    print "<p>{0}\n</p>".format(task)
+    sys.exit()
+    
     update_session_data(task)
     
     params = {
@@ -196,8 +200,8 @@ def transfer_status(task_id):
         'action': 'display_status'
     }
 
-    display_url = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
-    print "Location: {0}\r\n\r\n".format(display_url)
+    display_status = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
+    print "Location: {0}\r\n\r\n".format(display_status)
     
     return
     
@@ -205,7 +209,7 @@ def display_transfer_status():
     """ Display Globus transfer status """
     session = get_session_data()
 
-    task_id = session['task']['task_id']
+    task_id = session['task_id']
     source_endpoint_display_name = session['task']['source_endpoint_display_name']
     destination_endpoint_display_name = session['task']['destination_endpoint_display_name']
     request_time = session['task']['request_time']
