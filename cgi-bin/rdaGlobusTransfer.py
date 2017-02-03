@@ -66,11 +66,9 @@ def authcallback(form):
         print "<p><strong>You could not be logged into the portal:</strong>{0} {1}\n".format(form['error_description'].value,form['error'].value)
         return
 
-    # Set up our Globus Auth/OAuth2 state
-    redirect_uri = 'https://rda-web-dev.ucar.edu/cgi-bin/rdaGlobusTransfer'
+    # Set up our Globus Auth client
     client = load_portal_client()
-    
-    # Generate state parameter
+    redirect_uri = 'https://' + os.environ['HTTP_HOST'] + '/' + MyGlobus['redirect_uri']
     state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
     client.oauth2_start_flow(redirect_uri, state=state, refresh_tokens=True)
 
@@ -108,7 +106,7 @@ def transfer(form):
     
     params = {
     	'method': 'POST',
-        'action': protocol + os.environ['HTTP_HOST'] + "/cgi-bin/rdaGlobusTransfer",
+        'action': protocol + os.environ['HTTP_HOST'] + '/#!' + MyGlobus['redirect_uri'],
         'filelimit': 0,
         'folderlimit': 1,
         'cancelurl': cancelurl,
@@ -182,6 +180,7 @@ def transfer_status(task_id):
 
     """ Get session data from database """
     session = get_session_data()
+    dsid = session['dsid']
 
     """ Instantiate the transfer client & get transfer task details """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
@@ -205,9 +204,10 @@ def transfer_status(task_id):
     print "<strong>Faults</strong>: {0}\n</p>\n".format(task["faults"])
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><a href=\"/cgi-bin/rdaGlobusTransfer?method=POST&action=transfer_status&task_id={0}\">\n".format(task_id)
+    print "<p><a href=\"/#!{0}?method=POST&action=transfer_status&task_id={1}\">\n".format(MyGlobus['redirect_uri'], task_id)
     print "<button>Refresh</button>\n"
     print "</a></p>\n"
+    print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
 
     return

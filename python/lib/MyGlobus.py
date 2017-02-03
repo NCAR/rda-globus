@@ -16,6 +16,8 @@
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 
+REDIRECT_URI = 'cgi-bin/rdaGlobusTransfer'
+
 transfer_tokenf = open(CLIENT_BASE+'globus.transfer-token', 'r')
 auth_tokenf = open(CLIENT_BASE+'globus.auth-token', 'r')
 client_idf = open(CLIENT_BASE+'globus.client-id', 'r')
@@ -47,5 +49,6 @@ MyGlobus = {
    'host_endpoint_id' : 'd33b3614-6d04-11e5-ba46-22000b92c6ec',
    'client_id': CLIENT_ID,
    'client_secret': CLIENT_SECRET,
-   'private_key': PRIVATE_KEY
+   'private_key': PRIVATE_KEY,
+   'redirect_uri': REDIRECT_URI
 }
