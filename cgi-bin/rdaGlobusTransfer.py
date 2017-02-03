@@ -23,10 +23,10 @@ from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt
 from phpserialize import *
 import json
-import globus_sdk
 import hmac
 from base64 import b64encode
 import hashlib
+from globus_sdk import *
 
 try:
     from urllib.parse import urlencode
