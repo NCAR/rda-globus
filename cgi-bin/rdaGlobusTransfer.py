@@ -150,6 +150,10 @@ def submit_transfer(form):
 
     destination_endpoint_id = form['endpoint_id'].value
 
+    print_header()
+    print_session_data()
+    sys.exit()
+    
     """ Instantiate the Globus SDK transfer client """
     transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
     transfer = TransferClient(transfer_authorizer, load_portal_client())
