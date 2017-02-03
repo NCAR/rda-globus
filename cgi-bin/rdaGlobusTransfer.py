@@ -26,7 +26,8 @@ import json
 import hmac
 from base64 import b64encode
 import hashlib
-from globus_sdk import *
+from globus_sdk import (TransferClient, TransferAPIError,
+                        TransferData, RefreshTokenAuthorizer)
 
 try:
     from urllib.parse import urlencode
