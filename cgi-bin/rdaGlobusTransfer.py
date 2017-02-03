@@ -26,6 +26,7 @@ import json
 import hmac
 from base64 import b64encode
 import hashlib
+from globus_utils import load_portal_client
 from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer)
 
@@ -67,7 +68,7 @@ def authcallback(form):
 
     # Set up our Globus Auth/OAuth2 state
     redirect_uri = 'https://rda-web-dev.ucar.edu/cgi-bin/rdaGlobusTransfer'
-    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
+    client = load_portal_client()
     
     # Generate state parameter
     state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
@@ -151,8 +152,7 @@ def submit_transfer(form):
 
     """ Instantiate the Globus SDK transfer client """
     transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
-    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
-    transfer = TransferClient(transfer_authorizer, client)
+    transfer = TransferClient(transfer_authorizer, load_portal_client())
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -185,8 +185,7 @@ def transfer_status(task_id):
 
     """ Instantiate the transfer client & get transfer task details """
     transfer_authorizer = RefreshTokenAuthorizer(session['tokens']['transfer.api.globus.org']['refresh_token'])
-    client = globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
-    transfer = TransferClient(transfer_authorizer, client)
+    transfer = TransferClient(transfer_authorizer, load_portal_client())
     task = transfer.get_task(task_id)
     
     """ Display transfer status """
