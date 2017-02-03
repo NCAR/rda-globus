@@ -189,11 +189,15 @@ def transfer_status(task_id):
         load_portal_client()))
     task = transfer.get_task(task_id)
     
-    print_header()
-    print "<p>{0}\n</p>".format(task)
-    sys.exit()
-    
-    update_session_data(task)
+    task_data = {'task_id': task_id,
+                 'source_endpoint_display_name': task['source_endpoint_display_name'],
+                 'destination_endpoint_display_name': task['destination_endpoint_display_name'],
+                 'request_time': task['request_time'],
+                 'status': task['status'],
+                 'files_transferred': task['files_transferred'],
+                 'faults': task['faults']}
+                 
+    update_session_data(task_data)
     
     params = {
     	'method': 'POST',
