@@ -44,7 +44,7 @@ def main():
     if 'action' in form:
     	if (form['action'].value == 'transfer_status'):
     		try:
-    			task_id = form["task_id"].value
+    			task_id = form['task_id'].value
     			transfer_status(task_id)
     		except:
     			print_header()
