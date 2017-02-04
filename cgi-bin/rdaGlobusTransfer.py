@@ -36,7 +36,10 @@ except:
     from urllib import urlencode
 
 def main():
-    form = cgi.FieldStorage()
+    cgi.test()
+    sys.exit()
+    
+#    form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
     # print_info(form)
@@ -52,8 +55,7 @@ def main():
     			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
     			print "</div>\n"
     	elif (form['action'].value == 'display_status'):
-    	#	display_transfer_status()
-    		cgi.test()
+    		display_transfer_status()
     	elif 'endpoint_id' in form:
     		submit_transfer(form)
     else:
