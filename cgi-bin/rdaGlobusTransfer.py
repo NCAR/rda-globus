@@ -36,7 +36,7 @@ except:
     from urllib import urlencode
 
 def main():
-  #  form = cgi.FieldStorage()
+    form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
     # print_info(form)
