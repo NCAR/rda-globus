@@ -52,7 +52,7 @@ def main():
     			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
     			print "</div>\n"
     	elif (form['action'].value == 'display_status'):
-    		display_transfer_status()
+    		display_transfer_status(form)
     	elif 'endpoint_id' in form:
     		submit_transfer(form)
     else:
@@ -204,14 +204,14 @@ def transfer_status(task_id):
         'action': 'display_status'
     }
 
-    display_status = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
+    display_status = '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
     print "Location: {0}\r\n\r\n".format(display_status)
     
     return
     
-def display_transfer_status():
+def display_transfer_status(form):
     """ Display Globus transfer status """
-    print_info()
+    print_info(form)
     sys.exit()
     
     session = get_session_data()
