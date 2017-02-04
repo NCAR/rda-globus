@@ -214,12 +214,12 @@ def display_transfer_status():
     session = get_session_data()
 
     task_id = session['task_id']
-    source_endpoint_display_name = session['task']['source_endpoint_display_name']
-    destination_endpoint_display_name = session['task']['destination_endpoint_display_name']
-    request_time = session['task']['request_time']
-    status = session['task']['status']
-    files_transferred = session['task']['files_transferred']
-    faults = session['task']['faults']
+    source_endpoint_display_name = session['source_endpoint_display_name']
+    destination_endpoint_display_name = session['destination_endpoint_display_name']
+    request_time = session['request_time']
+    status = session['status']
+    files_transferred = session['files_transferred']
+    faults = session['faults']
     dsid = session['dsid']
     
     print_header()
