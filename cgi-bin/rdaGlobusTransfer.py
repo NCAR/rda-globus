@@ -36,7 +36,7 @@ except:
     from urllib import urlencode
 
 def main():
-    form = cgi.FieldStorage()
+  #  form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
     # print_info(form)
@@ -52,7 +52,8 @@ def main():
     			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
     			print "</div>\n"
     	elif (form['action'].value == 'display_status'):
-    		display_transfer_status(form)
+    	#	display_transfer_status()
+    		cgi.test()
     	elif 'endpoint_id' in form:
     		submit_transfer(form)
     else:
@@ -204,16 +205,13 @@ def transfer_status(task_id):
         'action': 'display_status'
     }
 
-    display_status = '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
+    display_status = 'https://rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
     print "Location: {0}\r\n\r\n".format(display_status)
     
     return
     
-def display_transfer_status(form):
+def display_transfer_status():
     """ Display Globus transfer status """
-    print_info(form)
-    sys.exit()
-    
     session = get_session_data()
 
     task_id = session['task_id']
