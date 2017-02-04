@@ -53,7 +53,7 @@ def main():
     			print "</div>\n"
     	elif (form['action'].value == 'display_status'):
     	#	display_transfer_status()
-    		print_info()
+    		print_info(form)
     	elif 'endpoint_id' in form:
     		submit_transfer(form)
     else:
