@@ -211,6 +211,9 @@ def transfer_status(task_id):
     
 def display_transfer_status():
     """ Display Globus transfer status """
+    print_info()
+    sys.exit()
+    
     session = get_session_data()
 
     task_id = session['task_id']
