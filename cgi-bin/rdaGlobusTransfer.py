@@ -49,7 +49,7 @@ def main():
     		action = form.getvalue('action')
     		if (action == 'transfer_status'):
     			transfer_status(task_id)
-    		if (action == 'display_status'):
+    		elif (action == 'display_status'):
     			display_transfer_status(task_id)
     	except:
     		print_header()
@@ -180,8 +180,18 @@ def transfer_status(task_id):
     """
     Call Globus to get status/details of transfer associated with the given task_id.
     """
+    update_transfer_status(task_id)
+    
+    params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
+    protocol = 'https://'
+    display_status = protocol + 'rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
+    qs = urlencode(params)
+    print "Location: %s%s\r\n" % (display_status, qs)
 
-    """ Get session data from database """
+def update_transfer_status(task_id):
+	""" Update the Globus transfer status in the database """
+
+	""" Get session data from database """
     session = get_session_data()
 
     """ Instantiate the transfer client & get transfer task details """
@@ -199,14 +209,6 @@ def transfer_status(task_id):
                  'faults': task['faults']}
                  
     update_session_data(task_data)
-    
-    params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
-
-    protocol = 'https://'
-    display_status = protocol + 'rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
-    qs = urlencode(params)
-    print "Location: %s%s\r\n" % (display_status, qs)
-    
     return
     
 def display_transfer_status(task_id):
@@ -246,8 +248,6 @@ def display_transfer_status(task_id):
     print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
-
-    return
 
 def get_session_data():
     """ 
