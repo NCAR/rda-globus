@@ -191,7 +191,7 @@ def transfer_status(task_id):
 def update_transfer_status(task_id):
     """ Update the Globus transfer status in the database """
 
-	""" Get session data from database """
+    """ Get session data from database """
     session = get_session_data()
 
     """ Instantiate the transfer client & get transfer task details """
