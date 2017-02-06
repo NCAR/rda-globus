@@ -203,8 +203,9 @@ def transfer_status(task_id):
     params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
 
     protocol = 'https://'
-    display_status = protocol + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
-    print "Location: {0}\r\n\r\n".format(display_status)
+    display_status = protocol + 'rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
+    qs = urlencode(params)
+    print "Location: %s%s\r\n" % (display_status, qs)
     
     return
     
