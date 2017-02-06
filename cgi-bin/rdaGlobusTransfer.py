@@ -189,7 +189,7 @@ def transfer_status(task_id):
     print "Location: %s%s\r\n" % (display_status, qs)
 
 def update_transfer_status(task_id):
-	""" Update the Globus transfer status in the database """
+    """ Update the Globus transfer status in the database """
 
 	""" Get session data from database """
     session = get_session_data()
