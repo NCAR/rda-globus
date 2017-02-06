@@ -204,7 +204,7 @@ def transfer_status(task_id):
         'action': 'display_status'
     }
 
-    display_status = 'https://rda-web-dev.ucar.edu/cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
+    display_status = '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
     print "Location: {0}\r\n\r\n".format(display_status)
     
     return
