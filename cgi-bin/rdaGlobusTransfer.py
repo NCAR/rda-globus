@@ -41,20 +41,21 @@ def main():
     """ Print HTTP headers and debug info """
     # print_info(form)
     
-    if 'action' in form:
-    	if (form['action'].value == 'transfer_status'):
-    		try:
-    			task_id = form.getvalue('task_id')
+    if 'endpoint_id' in form:
+    	submit_transfer(form)
+    elif 'action' in form:
+    	try:
+    		task_id = form.getvalue('task_id')
+    		action = form.getvalue('action')
+    		if (action == 'transfer_status'):
     			transfer_status(task_id)
-    		except:
-    			print_header()
-    			print "<div id=\"error\">\n"
-    			print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
-    			print "</div>\n"
-    	elif (form['action'].value == 'display_status'):
-    		display_transfer_status()
-    	elif 'endpoint_id' in form:
-    		submit_transfer(form)
+    		if (action == 'display_status'):
+    			display_transfer_status(task_id)
+    	except:
+    		print_header()
+    		print "<div id=\"error\">\n"
+    		print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
+    		print "</div>\n"
     else:
     	authcallback(form)
 
@@ -199,21 +200,18 @@ def transfer_status(task_id):
                  
     update_session_data(task_data)
     
-    params = {
-    	'method': 'POST',
-        'action': 'display_status'
-    }
+    params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
 
-    display_status = '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
+    protocol = 'https://'
+    display_status = protocol + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?{}'.format(urlencode(params))
     print "Location: {0}\r\n\r\n".format(display_status)
     
     return
     
-def display_transfer_status():
+def display_transfer_status(task_id):
     """ Display Globus transfer status """
     session = get_session_data()
 
-    task_id = session['task_id']
     source_endpoint_display_name = session['source_endpoint_display_name']
     destination_endpoint_display_name = session['destination_endpoint_display_name']
     request_time = session['request_time']
@@ -222,7 +220,14 @@ def display_transfer_status():
     faults = session['faults']
     dsid = session['dsid']
     
+    protocol = 'https://'
+    redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
+    
     print_header()
+    print "<form name=\"displayStatus\" action=\"{0}\" method=\"POST\" onsubmit=\"showLoading()\">\n".format(redirect_uri)
+    print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
+    print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
+    print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Transfer status</h1>\n"
     print "</div>"
@@ -237,9 +242,7 @@ def display_transfer_status():
     print "<strong>Faults</strong>: {0}\n</p>\n".format(faults)
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><a href=\"{0}?method=POST&action=transfer_status&task_id={1}\">\n".format(MyGlobus['redirect_uri'], task_id)
-    print "<button>Refresh</button>\n"
-    print "</a></p>\n"
+    print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
 
