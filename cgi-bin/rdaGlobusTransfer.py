@@ -226,9 +226,7 @@ def display_transfer_status(task_id):
     protocol = 'https://'
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     
-    print "Content-type: text/html"
-    print "Access-Control-Allow-Origin: http://rda-web-dev.ucar.edu"
-    print "\r\n\r\n"
+    print_header()
     print "<form name=\"displayStatus\" action=\"{0}\" method=\"POST\" onsubmit=\"showLoading()\">\n".format(redirect_uri)
     print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
     print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
