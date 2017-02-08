@@ -183,7 +183,7 @@ def transfer_status(task_id):
     update_transfer_status(task_id)
     
     params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
-    protocol = 'http://'
+    protocol = 'https://'
     display_status = protocol + 'rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
     qs = urlencode(params)
     print "Location: %s%s\r\n" % (display_status, qs)
@@ -226,7 +226,9 @@ def display_transfer_status(task_id):
     protocol = 'https://'
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     
-    print_header()
+    print "Content-type: text/html"
+    print "Access-Control-Allow-Origin: http://rda-web-dev.ucar.edu"
+    print "\r\n\r\n"
     print "<form name=\"displayStatus\" action=\"{0}\" method=\"POST\" onsubmit=\"showLoading()\">\n".format(redirect_uri)
     print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
     print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
