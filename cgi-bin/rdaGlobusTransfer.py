@@ -50,7 +50,10 @@ def main():
     		if (action == 'transfer_status'):
     			transfer_status(task_id)
     		elif (action == 'display_status'):
-    			display_transfer_status(task_id)
+    			new = False
+    			if ('new' in form and form.getvalue('new') == 'true'):
+    				new = True
+    			display_transfer_status(task_id, new=new)
     	except:
     		print_header()
     		print "<div id=\"error\">\n"
@@ -172,17 +175,19 @@ def submit_transfer(form):
     transfer.endpoint_autoactivate(destination_endpoint_id)
     
     task_id = transfer.submit_transfer(transfer_data)['task_id']
-    transfer_status(task_id)
+    transfer_status(task_id, new=True)
     
     return
     
-def transfer_status(task_id):
+def transfer_status(task_id, new=False):
     """
     Call Globus to get status/details of transfer associated with the given task_id.
     """
     update_transfer_status(task_id)
     
     params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
+    if new:
+    	params.update({'new': 'true'})
     protocol = 'https://'
     display_status = protocol + 'rda-web-dev.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
     qs = urlencode(params)
@@ -211,7 +216,7 @@ def update_transfer_status(task_id):
     update_session_data(task_data)
     return
     
-def display_transfer_status(task_id):
+def display_transfer_status(task_id, new=False):
     """ Display Globus transfer status """
     session = get_session_data()
 
@@ -231,6 +236,10 @@ def display_transfer_status(task_id):
     print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
     print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
     print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
+    print "<div id=\"flashMessage\" style=\"margin-left: 10px\">\n"
+    if new:
+    	print "Transfer request submitted successfully. Task ID: {0}".format(task_id)
+    print "</div>"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Transfer status</h1>\n"
     print "</div>"
@@ -245,7 +254,7 @@ def display_transfer_status(task_id):
     print "<strong>Faults</strong>: {0}\n</p>\n".format(faults)
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
+    print "<p><button type=\"submit\" class=\"normal\">Refresh</button></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
 
