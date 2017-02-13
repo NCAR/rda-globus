@@ -200,14 +200,14 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       if(showgroup && shownote) break;
    }
    html += "<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
-      "<table class=\"filelist sortable\" style=\"max-width: 900px\" " +
+      "<table class=\"filelist\" style=\"max-width: 900px\" " +
       "cellspacing=\"0\" cellpadding=\"3\" rowcolor=\"flcolor1 flcolor2\">\n" +
-      "<tr class=\"flcolor0\">\n" +
-      "<th class=\"thick-border sorttable_nosort sorttable_index\">Index</th>\n" +
-      "<th class=\"thick-border sorttable_nosort\">File name</th>\n" + 
-      "<th class=\"thick-border sorttable_nosort\">Size</th>\n";
-   if(showgroup) html += "<th class=\"thick-border sorttable_nosort\">Group ID</th>\n";
-   if(shownote)  html += "<th class=\"thick-border sorttable_nosort\">Description</th>\n";
+      "<tr>\n" +
+      "<th class=\"thick-border blue-header\">Index</th>\n" +
+      "<th class=\"thick-border blue-header\">File name</th>\n" + 
+      "<th class=\"thick-border blue-header\">Size</th>\n";
+   if(showgroup) html += "<th class=\"thick-border blue-header\">Group ID</th>\n";
+   if(shownote)  html += "<th class=\"thick-border blue-header\">Description</th>\n";
    html += "</tr>\n";
    k = 1;
    for(i = 1; i <= grpcnt; i++) {
@@ -222,12 +222,12 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       for(j = 0; j < checks.length; j++) {
          if(!checks[j].checked || checks[j].value == -1) continue;
          fidx = parseInt(checks[j].value);
-         rcolor = (j%2 == 0) ? "flcolor1" : "flcolor2";
-         html += "<tr class=\"" + rcolor + "\">\n<td class=\"thin-border\">" + k++ + "</td>\n" +
-                 "<td class=\"thin-border\">" + files[fidx].value + "</td>\n" + 
-                 "<td class=\"thin-border\">" + totalSize(sizes[fidx].value) + "</td>\n";
-         if(showgroup) html += "<td class=\"thin-border\">" + str_value(gname) + "</td>\n";
-         if(shownote)  html += "<td class=\"thin-border\">" + str_value(notes[fidx]) + "</td>\n";
+         html += "<tr class=\"zebra globus\">\n" +
+                 "<td class=\"thin-border-bottom\">" + k++ + "</td>\n" +
+                 "<td class=\"thin-border-bottom\">" + files[fidx].value + "</td>\n" + 
+                 "<td class=\"thin-border-bottom\">" + totalSize(sizes[fidx].value) + "</td>\n";
+         if(showgroup) html += "<td class=\"thin-border-bottom\">" + str_value(gname) + "</td>\n";
+         if(shownote)  html += "<td class=\"thin-border-bottom\">" + str_value(notes[fidx]) + "</td>\n";
          html += "</tr>\n" + 
                  "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
       }
