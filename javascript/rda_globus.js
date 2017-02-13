@@ -200,8 +200,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       if(showgroup && shownote) break;
    }
    html += "<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
-      "<table class=\"filelist\" style=\"max-width: 900px\" " +
-      "cellspacing=\"0\" cellpadding=\"3\">\n" +
+      "<table class=\"filelist\" style=\"width: 95%\">\n" +
       "<tr class=\"zebra\">\n" +
       "<th class=\"blue-header\">Index</th>\n" +
       "<th class=\"blue-header\">File name</th>\n" + 
