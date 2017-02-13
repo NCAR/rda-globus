@@ -200,10 +200,14 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       if(showgroup && shownote) break;
    }
    html += "<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
-      "<table class=\"table table-striped table-hover\">\n" +
-      "<thead>\n<tr>\n<th>Index</th>\n<th>File name</th>\n<th>Size</th>\n";
-   if(showgroup) html += "<th>Group ID</th>\n";
-   if(shownote)  html += "<th>Description</th>\n";
+      "<table class=\"filelist sortable\" style=\"max-width: 900px\" " +
+      "cellspacing=\"0\" cellpadding=\"2\" rowcolor=\"flcolor1 flcolor2\">\n" +
+      "<thead>\n<tr class=\"flcolor0\">\n" +
+      "<th class=\"thick-border\">Index</th>\n" +
+      "<th class=\"thick-border\">File name</th>\n" + 
+      "<th class=\"thick-border\">Size</th>\n";
+   if(showgroup) html += "<th class=\"thick-border\">Group ID</th>\n";
+   if(shownote)  html += "<th class=\"thick-border\">Description</th>\n";
    html += "</tr>\n</thead>\n<tbody>\n";
    k = 1;
    for(i = 1; i <= grpcnt; i++) {
@@ -218,11 +222,11 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       for(j = 0; j < checks.length; j++) {
          if(!checks[j].checked || checks[j].value == -1) continue;
          fidx = parseInt(checks[j].value);
-         html += "<tr>\n<td>" + k++ + "</td>\n" +
-                 "<td>" + files[fidx].value + "</td>\n" + 
-                 "<td>" + totalSize(sizes[fidx].value) + "</td>\n";
-         if(showgroup) html += "<td>" + str_value(gname) + "</td>\n";
-         if(shownote)  html += "<td>" + str_value(notes[fidx]) + "</td>\n";
+         html += "<tr>\n<td class=\"thin-border\">" + k++ + "</td>\n" +
+                 "<td class=\"thin-border\">" + files[fidx].value + "</td>\n" + 
+                 "<td class=\"thin-border\">" + totalSize(sizes[fidx].value) + "</td>\n";
+         if(showgroup) html += "<td class=\"thin-border\">" + str_value(gname) + "</td>\n";
+         if(shownote)  html += "<td class=\"thin-border\">" + str_value(notes[fidx]) + "</td>\n";
          html += "</tr>\n" + 
                  "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
       }
