@@ -202,13 +202,13 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    html += "<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
       "<table class=\"filelist sortable\" style=\"max-width: 900px\" " +
       "cellspacing=\"0\" cellpadding=\"2\" rowcolor=\"flcolor1 flcolor2\">\n" +
-      "<thead>\n<tr class=\"flcolor0\">\n" +
+      "<tr class=\"flcolor0\">\n" +
       "<th class=\"thick-border sorttable_nosort sorttable_index\">Index</th>\n" +
       "<th class=\"thick-border sorttable_nosort\">File name</th>\n" + 
       "<th class=\"thick-border sorttable_nosort\">Size</th>\n";
    if(showgroup) html += "<th class=\"thick-border sorttable_nosort\">Group ID</th>\n";
    if(shownote)  html += "<th class=\"thick-border sorttable_nosort\">Description</th>\n";
-   html += "</tr>\n</thead>\n<tbody>\n";
+   html += "</tr>\n";
    k = 1;
    for(i = 1; i <= grpcnt; i++) {
       checks = document.form.elements["GRP" + i];
@@ -231,7 +231,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
                  "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
       }
    }
-   html += "</tbody>\n</table>\n</form>\n</div>\n";
+   html += "</table>\n</form>\n</div>\n";
    document.getElementById("divForm").innerHTML = html;
 }
 
