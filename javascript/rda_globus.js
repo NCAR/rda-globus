@@ -202,12 +202,12 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    html += "<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
       "<table class=\"filelist\" style=\"max-width: 900px\" " +
       "cellspacing=\"0\" cellpadding=\"3\">\n" +
-      "<tr>\n" +
-      "<th class=\"thick-border-bottom blue-header\">Index</th>\n" +
-      "<th class=\"thick-border-bottom blue-header\">File name</th>\n" + 
-      "<th class=\"thick-border-bottom blue-header\">Size</th>\n";
-   if(showgroup) html += "<th class=\"thick-border-bottom blue-header\">Group ID</th>\n";
-   if(shownote)  html += "<th class=\"thick-border-bottom blue-header\">Description</th>\n";
+      "<tr class=\"zebra\">\n" +
+      "<th class=\"blue-header\">Index</th>\n" +
+      "<th class=\"blue-header\">File name</th>\n" + 
+      "<th class=\"blue-header\">Size</th>\n";
+   if(showgroup) html += "<th class=\"blue-header\">Group ID</th>\n";
+   if(shownote)  html += "<th class=\"blue-header\">Description</th>\n";
    html += "</tr>\n";
    k = 1;
    for(i = 1; i <= grpcnt; i++) {
