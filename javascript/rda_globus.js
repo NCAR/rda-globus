@@ -222,7 +222,8 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       for(j = 0; j < checks.length; j++) {
          if(!checks[j].checked || checks[j].value == -1) continue;
          fidx = parseInt(checks[j].value);
-         html += "<tr>\n<td class=\"thin-border\">" + k++ + "</td>\n" +
+         rcolor = (j%2 == 0) ? "flcolor1" : "flcolor2";
+         html += "<tr class=\"" + rcolor + "\">\n<td class=\"thin-border\">" + k++ + "</td>\n" +
                  "<td class=\"thin-border\">" + files[fidx].value + "</td>\n" + 
                  "<td class=\"thin-border\">" + totalSize(sizes[fidx].value) + "</td>\n";
          if(showgroup) html += "<td class=\"thin-border\">" + str_value(gname) + "</td>\n";
