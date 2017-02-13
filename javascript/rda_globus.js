@@ -221,12 +221,12 @@ function showGlobusList(gtype, dsid, grpcnt, count)
       for(j = 0; j < checks.length; j++) {
          if(!checks[j].checked || checks[j].value == -1) continue;
          fidx = parseInt(checks[j].value);
-         html += "<tr class=\"zebra globus\">\n" +
-                 "<td class=\"thin-border-bottom\">" + k++ + "</td>\n" +
-                 "<td class=\"thin-border-bottom\">" + files[fidx].value + "</td>\n" + 
-                 "<td class=\"thin-border-bottom\">" + totalSize(sizes[fidx].value) + "</td>\n";
-         if(showgroup) html += "<td class=\"thin-border-bottom\">" + str_value(gname) + "</td>\n";
-         if(shownote)  html += "<td class=\"thin-border-bottom\">" + str_value(notes[fidx]) + "</td>\n";
+         html += "<tr class=\"zebra\">\n" +
+                 "<td class=\"zebra\">" + k++ + "</td>\n" +
+                 "<td class=\"zebra\">" + files[fidx].value + "</td>\n" + 
+                 "<td class=\"zebra\">" + totalSize(sizes[fidx].value) + "</td>\n";
+         if(showgroup) html += "<td class=\"zebra\">" + str_value(gname) + "</td>\n";
+         if(shownote)  html += "<td class=\"zebra\">" + str_value(notes[fidx]) + "</td>\n";
          html += "</tr>\n" + 
                  "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
       }
