@@ -201,7 +201,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    }
    html += "<p>The file" + s + " you have selected" + are + " listed below:</p>\n" +
       "<table class=\"filelist sortable\" style=\"max-width: 900px\" " +
-      "cellspacing=\"0\" cellpadding=\"2\" rowcolor=\"flcolor1 flcolor2\">\n" +
+      "cellspacing=\"0\" cellpadding=\"5\" rowcolor=\"flcolor1 flcolor2\">\n" +
       "<tr class=\"flcolor0\">\n" +
       "<th class=\"thick-border sorttable_nosort sorttable_index\">Index</th>\n" +
       "<th class=\"thick-border sorttable_nosort\">File name</th>\n" + 
