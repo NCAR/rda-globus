@@ -253,7 +253,7 @@ function displayGlobusList(action) {
    return;
 }
 
-function closeButton(id) {
+function closeAlert(id) {
    var close = document.getElementsByClassName(id);
    var i;
 

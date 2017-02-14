@@ -232,13 +232,14 @@ def display_transfer_status(task_id, new=False):
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     
     print_header()
+    print "<script id=\"globus_script\" language=\"JavaScript\" type=\"text/javascript\" src=\"/js/rda_globus.js\"></script>\n"
     print "<form name=\"displayStatus\" action=\"{0}\" method=\"POST\" onsubmit=\"showLoading()\">\n".format(redirect_uri)
     print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
     print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
     print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
     if new:
     	print "<div class=\"alert success\" id=\"alertMessage\" style=\"margin-left: 5px\">\n"
-    	print "<span class=\"closebtn\" onclick=\"closeButton('closebtn')\">&times;</span>"
+    	print "<span class=\"closebtn\" onclick=\"closeAlert('closebtn')\">&times;</span>"
     	print "Transfer request submitted successfully. Task ID: {0}".format(task_id)
     	print "</div>"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
