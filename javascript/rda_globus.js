@@ -137,7 +137,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    var showgroup = false;
    var shownote = false;
    var adesc, wpath;
-   var html;
+   var html, hidden_input;
    var gindex = document.form.gindex ? document.form.gindex.value : 0;
    var rstat = document.form.rstat ? document.form.rstat.value : null;
    var dfmt = document.form.dfmt ? document.form.dfmt.value : null;
@@ -177,8 +177,9 @@ function showGlobusList(gtype, dsid, grpcnt, count)
            "<p><button type=\"submit\" class=\"normal\">Globus transfer</button>" +
            "&nbsp;<a class=\"small-link\" href=\"" + cancelurl + "\">Cancel</a></p>\n";
 
-// Write selected files to hidden input
+// Display table and write selected files to hidden input
 
+   hidden_input = "";
    // check if show local file names / group ids
    for(i = 1; i <= grpcnt; i++) {
       checks = document.form.elements["GRP" + i];
@@ -227,12 +228,12 @@ function showGlobusList(gtype, dsid, grpcnt, count)
                  "<td class=\"zebra\">" + totalSize(sizes[fidx].value) + "</td>\n";
          if(showgroup) html += "<td class=\"zebra\">" + str_value(gname) + "</td>\n";
          if(shownote)  html += "<td class=\"zebra\">" + str_value(notes[fidx]) + "</td>\n";
-         html += "</tr>\n" + 
-                 "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
+         html += "</tr>\n";
+         hidden_input += "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
       }
    }
    html += "</table>\n</form>\n</div>\n";
-   document.getElementById("divForm").innerHTML = html;
+   document.getElementById("divForm").innerHTML = html + hidden_input;
 }
 
 function showLoading() {
