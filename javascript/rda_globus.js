@@ -253,6 +253,20 @@ function displayGlobusList(action) {
    return;
 }
 
+function closeButton(id) {
+   var close = document.getElementsByClassName(id);
+   var i;
+
+   for (i = 0; i < close.length; i++) {
+      close[i].onclick = function() {
+         var div = this.parentElement;
+         div.style.opacity = "0";
+         setTimeout(function(){ div.style.display = "none"; }, 600);
+      }
+   }
+   return;
+}
+
 function showLoading() {
    getElementById("load").innerHTML = "<img src=\"images/loader.gif\"></img>";
 }
