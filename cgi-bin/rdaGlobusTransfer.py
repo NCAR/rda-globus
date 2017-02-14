@@ -236,12 +236,13 @@ def display_transfer_status(task_id, new=False):
     print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
     print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
     print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
-    print "<div id=\"flashMessage\" style=\"margin-left: 10px\">\n"
+    print "<div class=\"alert success\" id=\"alertMessage\" style=\"margin-left: 10px\">\n"
     if new:
+    	print "<span class=\"closebtn\">&times;</span>"
     	print "Transfer request submitted successfully. Task ID: {0}".format(task_id)
     print "</div>"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
-    print "<h1>Transfer status</h1>\n"
+    print "<h1>Globus transfer status</h1>\n"
     print "</div>"
     print "<hr style=\"height: 1px; color: #cccccc; background-color: #cccccc; border: none; width: 90%;\">"
     print "<p style=\"margin-left: 10px\">\n"
@@ -257,6 +258,18 @@ def display_transfer_status(task_id, new=False):
     print "<p><button type=\"submit\" class=\"normal\">Refresh</button></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
+    
+    print "<script>\n"
+    print "var close = document.getElementsByClassName(\"closebtn\");"
+    print "var i;"
+    print "for (i = 0; i < close.length; i++) {"
+    print "    close[i].onclick = function(){"
+    print "        var div = this.parentElement;"
+    print "        div.style.opacity = \"0\";"
+    print "        setTimeout(function(){ div.style.display = \"none\"; }, 600);"
+    print "    }"
+    print "}"
+    print "</script>\n"
 
 def get_session_data():
     """ 
