@@ -256,7 +256,7 @@ def display_transfer_status(task_id, new=False):
     print "<strong>Faults</strong>: {0}\n</p>\n".format(faults)
     
     print "<div style=\"margin-left: 10px\">\n"
-    print "<p><button type=\"submit\" class=\"btn info\">Refresh</button></p>\n"
+    print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
     
