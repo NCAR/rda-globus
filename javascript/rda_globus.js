@@ -159,7 +159,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    html += "<p>To transfer these files using the Globus data transfer service, " +
       "select the button labeled <strong>'Globus transfer'</strong> below.  You will be redirected to the " +
       "Globus web app where you will be prompted to select a target endpoint to receive " +
-      "the data transfer. Once you have defined a target endpoint, you will returned back " +
+      "the data transfer. Once you have defined a target endpoint, you will be redirected back " +
       "to the RDA website and your data transfer will be submitted.</p>\n" +
       "<p>A Globus user account is not required to use this service. You " +
       "may sign into Globus with your RDA user e-mail and password by selecting the " +
@@ -175,7 +175,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    }
    html += "<p>Contact <strong>" + specialist + "@ucar.edu (" + name + ")</strong> for further assistance.</p>\n" +
            "<p><button type=\"submit\" class=\"normal\">Globus transfer</button>" +
-           "&nbsp;<a class=\"small-link\" href=\"" + cancelurl + "\">Cancel</a></p>\n";
+           "&nbsp;<a class=\"small-link\" href=\"#\" onclick=\"displayGlobusList(0)\">Cancel</a></p>\n";
 
 // Display table and write selected files to hidden input
 
@@ -232,8 +232,25 @@ function showGlobusList(gtype, dsid, grpcnt, count)
          hidden_input += "<input type=\"hidden\" name=\"globusFile[]\" value=\"" + files[fidx].value + "\">\n";
       }
    }
-   html += "</table>\n</form>\n</div>\n";
-   document.getElementById("divForm").innerHTML = html + hidden_input;
+   html += "</table>\n";
+   html += hidden_input + "</div>\n</form>\n";
+   displayGlobusList(1);
+   document.getElementById("globusForm").innerHTML = html;
+}
+
+/**
+ Display (action = 1) or hide (action = 0) files selected by user for a Globus transfer
+**/
+function displayGlobusList(action) {
+   if (action == 1) {
+      document.getElementById("dsForm").style.display = "none";
+      document.getElementById("globusForm").style.display = "block";
+   }
+   if (action == 0) {
+      document.getElementById("globusForm").style.display = "none";
+      document.getElementById("dsForm").style.display = "block";
+   }
+   return;
 }
 
 function showLoading() {
