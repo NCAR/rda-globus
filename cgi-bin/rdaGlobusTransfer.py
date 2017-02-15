@@ -86,11 +86,12 @@ def authcallback(form):
     else:
         # If we do have a "code" param, we're coming back from Globus Auth
         # and can start the process of exchanging an auth code for a token.        
-        code = form['code'].value
+        code = form.getvalue('code')
         tokens = client.oauth2_exchange_code_for_tokens(code)
 
         if not is_valid_state(tokens['state']):
         	print_http_status("403 Forbidden")
+        	sys.exit()
 
         #id_token = tokens.decode_id_token(client)
         tokens=tokens.by_resource_server
@@ -152,7 +153,7 @@ def submit_transfer(form):
     if(gtype == '3'):
        source_endpoint_id = MyGlobus['datashare_ep']
 
-    destination_endpoint_id = form['endpoint_id'].value
+    destination_endpoint_id = form.getvalue('endpoint_id')
 
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
@@ -162,13 +163,13 @@ def submit_transfer(form):
     transfer_data = TransferData(transfer_client=transfer,
                                  source_endpoint=source_endpoint_id,
                                  destination_endpoint=destination_endpoint_id,
-                                 label=form['label'].value)
+                                 label=form.getvalue('label'))
 
     """ Add files to be transferred.  Note source_path is relative to the source
         endpoint base path. """
     for file in selected:
         source_path = directory + selected[file]
-        dest_path = form['path'].value + selected[file]
+        dest_path = form.getvalue('path') + selected[file]
         transfer_data.add_item(source_path, dest_path)
 
     transfer.endpoint_autoactivate(source_endpoint_id)
