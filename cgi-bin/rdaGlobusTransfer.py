@@ -228,7 +228,7 @@ def display_transfer_status(task_id, new=False):
     faults = session['faults']
     dsid = session['dsid']
     
-    alert_uri = "https://www.globus.org/app/activity/{0}".format(task_id)
+    detail_uri = "https://www.globus.org/app/activity/{0}".format(task_id)
     
     protocol = 'https://'
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
@@ -241,13 +241,14 @@ def display_transfer_status(task_id, new=False):
     print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
     if new:
     	print "<div class=\"alert alert-success\" id=\"alertMessage\">\n"
-    	print "Transfer request submitted successfully. Task ID: <a href=\"{0}\" class=\"alert-link\" target=\"_blank\">{1}</a>".format(alert_uri, task_id)
+    	print "Transfer request submitted successfully. Task ID: <a href=\"{0}\" class=\"alert-link\" target=\"_blank\">{1}</a>".format(detail_uri, task_id)
     	print "</div>"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
-    print "<h1>Globus transfer status</h1>\n"
+    print "<h1>Globus transfer details</h1>\n"
     print "</div>"
     print "<hr style=\"height: 1px; color: #cccccc; background-color: #cccccc; border: none; width: 90%;\">"
-    print "<p style=\"margin-left: 10px\">\n"
+    print "<div id=\"transferDetails\" style=\"margin-left: 10px\">\n"
+    print "<p>\n"
     print "<strong>Task ID</strong>: {0}<br />\n".format(task_id)
     print "<strong>Source endpoint</strong>: {0}<br />\n".format(source_endpoint_display_name)
     print "<strong>Destination Endpoint</strong>: {0}<br />\n".format(destination_endpoint_display_name)
@@ -255,7 +256,8 @@ def display_transfer_status(task_id, new=False):
     print "<strong>Status</strong>: {0}<br />\n".format(status)
     print "<strong>Files transferred</strong>: {0}<br />\n".format(files_transferred)
     print "<strong>Faults</strong>: {0}\n</p>\n".format(faults)
-    
+    print "<p><a href=\"{0}\" target=\"_blank\">{1}</a></p>\n".format(detail_uri, detail_uri)
+    print "</div>\n"
     print "<div style=\"margin-left: 10px\">\n"
     print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
