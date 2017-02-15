@@ -238,8 +238,7 @@ def display_transfer_status(task_id, new=False):
     print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
     print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
     if new:
-    	print "<div class=\"alert success\" id=\"alertMessage\" style=\"margin-left: 5px\">\n"
-    	print "<span class=\"closebtn\" onclick=\"closeAlert('closebtn')\">&times;</span>"
+    	print "<div class=\"alert alert-success\" id=\"alertMessage\">\n"
     	print "Transfer request submitted successfully. Task ID: {0}".format(task_id)
     	print "</div>"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
