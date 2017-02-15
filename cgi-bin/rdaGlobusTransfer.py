@@ -228,6 +228,8 @@ def display_transfer_status(task_id, new=False):
     faults = session['faults']
     dsid = session['dsid']
     
+    alert_uri = "https://www.globus.org/app/activity/{0}".format(task_id)
+    
     protocol = 'https://'
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     
@@ -239,7 +241,7 @@ def display_transfer_status(task_id, new=False):
     print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
     if new:
     	print "<div class=\"alert alert-success\" id=\"alertMessage\">\n"
-    	print "Transfer request submitted successfully. Task ID: {0}".format(task_id)
+    	print "Transfer request submitted successfully. Task ID: <a href=\"{0}\" class=\"alert-link\">{1}</a>".format(alert_uri, task_id)
     	print "</div>"
     print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
     print "<h1>Globus transfer status</h1>\n"
