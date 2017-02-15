@@ -255,8 +255,8 @@ def display_transfer_status(task_id, new=False):
     print "<strong>Request Time</strong>: {0}<br />\n".format(request_time)
     print "<strong>Status</strong>: {0}<br />\n".format(status)
     print "<strong>Files transferred</strong>: {0}<br />\n".format(files_transferred)
-    print "<strong>Faults</strong>: {0}\n</p>\n".format(faults)
-    print "<p><a href=\"{0}\" target=\"_blank\">{1}</a></p>\n".format(detail_uri, detail_uri)
+    print "<strong>Faults</strong>: {0}<br />\n".format(faults)
+    print "<strong>Overview and event log</strong>: <a href=\"{0}\" target=\"_blank\">{1}</a></p>\n".format(detail_uri, detail_uri)
     print "</div>\n"
     print "<div style=\"margin-left: 10px\">\n"
     print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
