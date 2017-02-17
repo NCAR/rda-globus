@@ -234,7 +234,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    html += "</table>\n";
    html += hidden_input + "</div>\n</form>\n";
    displayDownloadForm(1);
-   document.getElementById("globusForm").innerHTML = html;
+   document.getElementById("downloadForm").innerHTML = html;
 }
 
 function closeAlert(id) {
