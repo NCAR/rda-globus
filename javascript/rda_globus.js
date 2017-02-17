@@ -39,7 +39,6 @@ function requestGlobusInvite(gtype, ridx, dsid, grpcnt) {
      if(count === 0) {
        return;
      }
-     msg = "transfer the selected data files";
      showGlobusList(gtype, dsid, grpcnt, count);
    }
 }
@@ -175,7 +174,7 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    }
    html += "<p>Contact <strong>" + specialist + "@ucar.edu (" + name + ")</strong> for further assistance.</p>\n" +
            "<p><button type=\"submit\" class=\"btn btn-primary\">Globus transfer</button>" +
-           "&nbsp;<a class=\"btn btn-link\" href=\"javascript:void(0)\" onclick=\"displayGlobusList(0)\">Cancel</a></p>\n";
+           "&nbsp;<a class=\"btn btn-link\" href=\"javascript:void(0)\" onclick=\"displayDownloadForm(0)\">Cancel</a></p>\n";
 
 // Display table and write selected files to hidden input
 
@@ -234,23 +233,8 @@ function showGlobusList(gtype, dsid, grpcnt, count)
    }
    html += "</table>\n";
    html += hidden_input + "</div>\n</form>\n";
-   displayGlobusList(1);
+   displayDownloadForm(1);
    document.getElementById("globusForm").innerHTML = html;
-}
-
-/**
- Display (action = 1) or hide (action = 0) files selected by user for a Globus transfer
-**/
-function displayGlobusList(action) {
-   if (action == 1) {
-      document.getElementById("dsForm").style.display = "none";
-      document.getElementById("globusForm").style.display = "block";
-   }
-   if (action == 0) {
-      document.getElementById("globusForm").style.display = "none";
-      document.getElementById("dsForm").style.display = "block";
-   }
-   return;
 }
 
 function closeAlert(id) {
