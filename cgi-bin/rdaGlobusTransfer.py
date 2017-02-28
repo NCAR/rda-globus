@@ -155,6 +155,11 @@ def submit_transfer(form):
 
     destination_endpoint_id = form.getvalue('endpoint_id')
 
+	""" Check if user has a share set up for this endpoint & path """
+	rule_data = {'email': email, 'dsid': dsid}
+	if not query_acl_rule(1, rule_data):
+		data = add_endpoint_acl_rule(endpoint_id, **kwargs)
+	
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
         session['transfer.api.globus.org']['refresh_token'], load_portal_client()))
