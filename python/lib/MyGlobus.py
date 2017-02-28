@@ -51,5 +51,5 @@ MyGlobus = {
    'client_secret': CLIENT_SECRET,
    'private_key': PRIVATE_KEY,
    'redirect_uri': REDIRECT_URI,
-   'globusURL' 'https://www.globus.org/app/'
+   'globusURL': 'https://www.globus.org/app/'
 }
