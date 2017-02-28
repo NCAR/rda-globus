@@ -52,7 +52,7 @@ def add_endpoint_acl_rule(endpoint_id, **kwargs):
 	    "principal_type": "identity",
 	    "principal": identity_id,
 	    "path": path,
-	    "permissions": "r",
+	    "permissions": "r"
  	}
 	result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
 	return {'access_id': result["access_id"]}
@@ -74,7 +74,7 @@ def construct_share_path(action, **kwargs):
 			if (len(rqst_path) > 0):
 				base_path = MyGlobus['data_request_ep_base']
 				loc = rqst_path['location']
-				if (loc.find(base_path]) != -1):
+				if (loc.find(base_path) != -1):
 					path_len = len(base_path)
 					path = "/{0}/".format(loc[path_len:])
 				else:
