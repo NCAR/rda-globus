@@ -168,10 +168,10 @@ def query_acl_rule(action, **kwargs):
 	
 	if 'globus_rid' in myrule:
 		rule_id = myrule['globus_rid']
+		return {'acl_rule': rule_id}
 	else:
-		rule_id = None
+		return None
 	
-	return {'acl_rule': rule_id}
 	
 def update_share_record(action, **kwargs):
 	""" Update the user's Globus share in RDADB """

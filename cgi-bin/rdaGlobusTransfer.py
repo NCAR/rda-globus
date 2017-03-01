@@ -157,7 +157,8 @@ def submit_transfer(form):
 
 	""" Check if user has a share set up for this endpoint & path """
 	rule_data = {'email': email, 'dsid': dsid}
-	if not query_acl_rule(1, rule_data):
+	if not query_acl_rule(2, rule_data):
+		args = {'email': email, 'path': directory}
 		data = add_endpoint_acl_rule(endpoint_id, **kwargs)
 	
     """ Instantiate the Globus SDK transfer client """
