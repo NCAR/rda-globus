@@ -35,11 +35,11 @@ except:
 def main():
 	parse_input()
 
-def add_endpoint_acl_rule(endpoint_id, **kwargs):
+def add_endpoint_acl_rule(endpoint_id, data):
 	""" Create a new endpoint access rule """	
 	try:
-		rda_identity = "{0}{1}".format(kwargs['email'],'@rda.ucar.edu')
-		path = kwargs['path']
+		rda_identity = "{0}{1}".format(data['email'],'@rda.ucar.edu')
+		path = data['path']
 	except KeyError as err:
 		print "Error in add_endpoint_acl_rule: ", err
 		sys.exit(1)
@@ -60,7 +60,7 @@ def add_endpoint_acl_rule(endpoint_id, **kwargs):
 def delete_endpoint_acl_rule(id):
 	""" Delete a specific endpoint access rule """ 
 
-def construct_share_path(action, **kwargs):
+def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
 	    shared endpoint base path.
 	    
@@ -69,7 +69,7 @@ def construct_share_path(action, **kwargs):
 	"""
 	if (action == 1):
 		try:
-			cond = " WHERE rindex='{0}' and location IS NOT NULL".format(kwargs['ridx'])
+			cond = " WHERE rindex='{0}' and location IS NOT NULL".format(data['ridx'])
 			rqst_path = myget('dsrqst', ['location'], cond)
 			if (len(rqst_path) > 0):
 				base_path = MyGlobus['data_request_ep_base']
@@ -80,33 +80,33 @@ def construct_share_path(action, **kwargs):
 				else:
 					path = None
 			else:
-				path = "/download.auto/{0}/".format(kwargs['rqstid'])
+				path = "/download.auto/{0}/".format(data['rqstid'])
 		except KeyError as err:
 			print "Error in construct_share_path: ", err
 			sys.exit(1)
 	elif (action == 2):
 		try:
-			path = "/{0}/".format(kwargs['dsid'])
+			path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
 			print "Error is construct_share_path: ", err
 			sys.exit(1)
 
 	return path
 
-def construct_share_url(action, **kwargs):
+def construct_share_url(action, data):
 	""" Construct the URL to the shared data on the Globus web app 
 	
 		action = 1: dsrqst shares
 		       = 2: standard dataset share
 	"""
-	if 'identity' not in kwargs:
+	if 'identity' not in data:
 		add_identity = ""
 	else:
-		add_identity = '&add_identity={0}'.format(kwargs['identity'])
+		add_identity = '&add_identity={0}'.format(data['identity'])
 	
 	if (action == 1):
 		try:
-			ridx = kwargs['ridx']
+			ridx = data['ridx']
 			cond = ' WHERE ridx={0}'.format(ridx)
 			myrqst = myget('dsrqst', '*', cond)
 			if (len(myrqst) > 0):
@@ -121,7 +121,7 @@ def construct_share_url(action, **kwargs):
 	if (action == 2):
 		try:
 			origin_id = MyGlobus['datashare_ep']
-			origin_path = "/{0}/".format(kwargs['dsid'])
+			origin_path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
 			print "Error in construct_share_url", err
 			sys.exit(1)
@@ -145,13 +145,13 @@ def get_user_id(identity):
 	
 	return uuid
 
-def query_acl_rule(action, **kwargs):
+def query_acl_rule(action, data):
 	""" Check if an active ACL rule exists for a given RDA user """
 	
 	if (action == 1):
 		""" dsrqst shares """
 		try:
-			cond = " WHERE rindex='{0}'".format(kwargs['ridx'])
+			cond = " WHERE rindex='{0}'".format(data['ridx'])
 			myrule = myget('dsrqst', '*', cond)
 		except KeyError as err:
 			print "Error in query_acl_rule: ", err
@@ -160,7 +160,7 @@ def query_acl_rule(action, **kwargs):
 	elif (action == 2):
 		""" standard dataset shares """
 		try:
-			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(kwargs['email'], kwargs['dsid'])
+			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
 			myrule = myget('goshare', '*', cond)
 		except:
 			print "Error in query_acl_rule: ", err
@@ -173,12 +173,12 @@ def query_acl_rule(action, **kwargs):
 		return None
 	
 	
-def update_share_record(action, **kwargs):
+def update_share_record(action, data):
 	""" Update the user's Globus share in RDADB """
 	
 	try:
-		globus_rid = kwargs['globus_rid']
-		globus_url = kwargs['globus_url']
+		globus_rid = data['globus_rid']
+		globus_url = data['globus_url']
 	except KeyError as err:
 		print "Error in update_share_record: ", err
 		sys.exit(1)
@@ -187,9 +187,9 @@ def update_share_record(action, **kwargs):
 	
 	if (action == 1):
 		try:
-			cond = " WHERE rindex='{0}'".format(kwargs['ridx'])
-			record.append({unicode('globus_rid'): kwargs['globus_rid'],
-			               unicode('globus_url'): kwargs['globus_url']
+			cond = " WHERE rindex='{0}'".format(data['ridx'])
+			record.append({unicode('globus_rid'): data['globus_rid'],
+			               unicode('globus_url'): data['globus_url']
 			              })
 			myupdt('dsrqst', record[0], cond)
 		except KeyError as err:
@@ -197,20 +197,20 @@ def update_share_record(action, **kwargs):
 			sys.exit(1) 
 	elif (action == 2):
 		try:
-			email = kwargs['email']
-			cond = " WHERE email='{0}' AND end_date IS NULL".format(kwargs['email'])
+			email = data['email']
+			cond = " WHERE email='{0}' AND end_date IS NULL".format(data['email'])
 			myuser = myget('ruser', ['id'], cond)
 			if 'id' not in myuser:
 				return {'Error': '[update_share_record] email {0} not in RDADB table ruser'.format(email)}
-			record = {'globus_rid': '{0}'.format(kwargs['globus_rid']),
-                      'globus_url': '{0}'.format(kwargs['globus_url']),
+			record = {'globus_rid': '{0}'.format(data['globus_rid']),
+                      'globus_url': '{0}'.format(data['globus_url']),
                       'email': email,
                       'user_id': '{0}'.format(myuser['id']),
                       'username': None,
                       'request_date': date,
-                      'source_endpoint': '{0}'.format(kwargs['endpoint']),
-                      'dsid': '{0}'.format(kwargs['dsid']),
-                      'acl_path': '{0}'.format(kwargs['path']),
+                      'source_endpoint': '{0}'.format(data['endpoint']),
+                      'dsid': '{0}'.format(data['dsid']),
+                      'acl_path': '{0}'.format(data['path']),
                       'status': 'ACTIVE'}
 			myadd('goshare', record)
 		except KeyError as e:
