@@ -99,11 +99,6 @@ def construct_share_url(action, data):
 		action = 1: dsrqst shares
 		       = 2: standard dataset share
 	"""
-	if 'identity' not in data:
-		add_identity = ""
-	else:
-		add_identity = '&add_identity={0}'.format(data['identity'])
-	
 	if (action == 1):
 		try:
 			ridx = data['ridx']
@@ -121,13 +116,16 @@ def construct_share_url(action, data):
 	if (action == 2):
 		try:
 			origin_id = MyGlobus['datashare_ep']
-			origin_path = "/{0}/".format(data['dsid'])
+			origin_path = construct_share_path(2, {'dsid': data['dsid']})
 		except KeyError as err:
 			print "Error in construct_share_url", err
 			sys.exit(1)
 
-	url = '{0}transfer?origin_id={1}&origin_path={2}{3}'.format(MyGlobus['globusURL'], 
-	       urlencode(origin_id), urlencode(origin_path), add_identity)
+	params = {'origin_id': origin_id, 'origin_path': origin_path}
+	if 'identity' in data:
+		params.update({'add_identity': data['identity']})
+	
+	url = '{0}transfer?{1}'.format(MyGlobus['globusURL'], urlencode(params))
 	
 	return url
 	
