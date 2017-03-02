@@ -20,13 +20,14 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
 from Cookie import SimpleCookie
-from MyGlobus import headers, MyGlobus
-from PyDBI import myget, myupdt
 from phpserialize import *
 import json
 import hmac
 from base64 import b64encode
 import hashlib
+
+from MyGlobus import headers, MyGlobus
+from PyDBI import myget, myupdt
 from globus_utils import load_portal_client
 from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer)
