@@ -34,9 +34,6 @@ try:
 except:
     from urllib import urlencode
 
-""" Set up logging """
-configure_log(level='info')
-
 def main():
 	parse_input()
 
@@ -301,6 +298,11 @@ def configure_log(**kwargs):
 	handler.setFormatter(formatter)
 	my_logger.addHandler(handler)
 	
+	return
+
 #=========================================================================================
+""" Set up logging """
+configure_log(level='info')
+
 if __name__ == "__main__":
     main()
