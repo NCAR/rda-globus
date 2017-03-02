@@ -292,7 +292,7 @@ def configure_log(**kwargs):
                'critical':logging.CRITICAL,
              }
 
-    level = LEVELS.get(loglevel, logging.INFO)
+	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger = logging.getLogger(__name__)
 	my_logger.setLevel(level)
 	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
