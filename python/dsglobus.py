@@ -22,30 +22,69 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt, myadd
-import json
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient)
 from globus_utils import load_portal_client
+import json
+import logging
+import logging.handlers
 
 try:
     from urllib.parse import urlencode
 except:
     from urllib import urlencode
-    
+
+""" Set up logging """
+configure_log(level='info')
+
 def main():
 	parse_input()
 
-def add_endpoint_acl_rule(endpoint_id, data):
-	""" Create a new endpoint access rule """	
+def add_endpoint_acl_rule(action, data):
+	""" Create a new endpoint access rule """
 	try:
-		rda_identity = "{0}{1}".format(data['email'],'@rda.ucar.edu')
-		path = data['path']
+		email = data['email']
+		rda_identity = "{0}@rda.ucar.edu".format(email)
 	except KeyError as err:
-		print "Error in add_endpoint_acl_rule: ", err
+		logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
 		sys.exit(1)
 	
+	if (action == 1):
+		try:
+			endpoint_id = MyGlobus['data_request_ep']
+			ridx = data['ridx']
+			cond = " WHERE rindex='{0}'".format(ridx)
+			myrqst = myget('dsrst', ['*'], cond)
+			if (len(myrqst) == 0):
+				print "Request index not on file"
+				sys.exit(1)
+			rqstid = myrqst['rqstid']
+			if myrqst['globus_rid']:
+				return {'access_id': myrqst['globus_rid'], 'share_url': myrqst['globus_url']}
+			share_data = {'ridx': ridx}
+			path = construct_share_path(1, share_data)
+		except KeyError as err:
+			logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
+			sys.exit(1)
+
+	elif (action == 2):
+		try:
+			endpoint_id = MyGlobus['datashare_ep']
+			dsid = data['dsid']
+			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
+			myshare = myget('goshare', ['*'], cond)
+			if myshare['globus_rid']:
+				return {'access_id': myshare['globus_rid'], 'share_url': myshare['globus_url']}
+			share_data = {'dsid': dsid}
+			path = construct_share_path(2, share_data)
+			share_data.update({'email': email})
+		except KeyError as err:
+			logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
+			sys.exit(1)
+
 	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 	identity_id = get_user_id(rda_identity)
+	share_data.update({'identity': identity_id})
 	
 	rule_data = {
 	    "DATA_TYPE": "access",
@@ -55,7 +94,13 @@ def add_endpoint_acl_rule(endpoint_id, data):
 	    "permissions": "r"
  	}
 	result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
-	return {'access_id': result["access_id"]}
+	logger.info("[add_endpoint_acl_rule] ACL created for user {0}.  ACL ID: {1}".format(email, result['access_id']))
+	
+	url = construct_share_url(action, share_data)
+	share_data.update({'globus_rid': result['access_id'],'globus_url': url})	
+	update_share_record(action, share_data)
+	
+	return {'access_id': result["access_id"], 'share_url': url}
 
 def delete_endpoint_acl_rule(id):
 	""" Delete a specific endpoint access rule """ 
@@ -70,27 +115,28 @@ def construct_share_path(action, data):
 	if (action == 1):
 		try:
 			cond = " WHERE rindex='{0}' and location IS NOT NULL".format(data['ridx'])
-			rqst_path = myget('dsrqst', ['location'], cond)
-			if (len(rqst_path) > 0):
+			myrqst = myget('dsrqst', ['rqstid','location'], cond)
+			if (len(myrqst) > 0):
 				base_path = MyGlobus['data_request_ep_base']
-				loc = rqst_path['location']
+				loc = myrqst['location']
 				if (loc.find(base_path) != -1):
 					path_len = len(base_path)
 					path = "/{0}/".format(loc[path_len:])
 				else:
 					path = None
 			else:
-				path = "/download.auto/{0}/".format(data['rqstid'])
+				path = "/download.auto/{0}/".format(myrqst['rqstid'])
 		except KeyError as err:
-			print "Error in construct_share_path: ", err
+			logger.error("[construct_share_path] {0}".format(err), exc_info=True)
 			sys.exit(1)
 	elif (action == 2):
 		try:
 			path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
-			print "Error is construct_share_path: ", err
+			logger.error("[construct_share_path] {0}".format(err), exc_info=True)
 			sys.exit(1)
 
+	logger.info("[construct_share_path] Path to shared data: {0}".format(path))
 	return path
 
 def construct_share_url(action, data):
@@ -106,11 +152,12 @@ def construct_share_url(action, data):
 			myrqst = myget('dsrqst', '*', cond)
 			if (len(myrqst) > 0):
 				origin_id = MyGlobus['data_request_ep']
-				origin_path = "/download.auto/{0}/".format(rqstid)
+				origin_path = construct_share_path(1, {'ridx': ridx})
 			else:
-				return {'Error': '[construct_share_url] Request {0} not found in RDADB'.format(ridx)}
+				logger.warning("[construct_share_url] Request {0} not found in RDADB".format(ridx))
+				sys.exit(1)
 		except KeyError as err:
-			print "Error in construct_share_url", err
+			logger.error("[construct_share_url] {0}".format(err), exc_info=True)
 			sys.exit(1)
 
 	if (action == 2):
@@ -118,7 +165,7 @@ def construct_share_url(action, data):
 			origin_id = MyGlobus['datashare_ep']
 			origin_path = construct_share_path(2, {'dsid': data['dsid']})
 		except KeyError as err:
-			print "Error in construct_share_url", err
+			logger.error("[construct_share_url] {0}".format(err), exc_info=True)
 			sys.exit(1)
 
 	params = {'origin_id': origin_id, 'origin_path': origin_path}
@@ -127,6 +174,7 @@ def construct_share_url(action, data):
 	
 	url = '{0}transfer?{1}'.format(MyGlobus['globusURL'], urlencode(params))
 	
+	logger.info("[construct_share_url] Globus share URL created: {0}".format(url))
 	return url
 	
 def get_user_id(identity):
@@ -152,7 +200,7 @@ def query_acl_rule(action, data):
 			cond = " WHERE rindex='{0}'".format(data['ridx'])
 			myrule = myget('dsrqst', '*', cond)
 		except KeyError as err:
-			print "Error in query_acl_rule: ", err
+			logger.error("[query_acl_rule] {0}".format(err), exc_info=True)
 			sys.exit(1)
 		
 	elif (action == 2):
@@ -161,7 +209,7 @@ def query_acl_rule(action, data):
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
 			myrule = myget('goshare', '*', cond)
 		except:
-			print "Error in query_acl_rule: ", err
+			logger.error("[query_acl_rule] {0}".format(err), exc_info=True)
 			sys.exit(1)
 	
 	if 'globus_rid' in myrule:
@@ -173,46 +221,53 @@ def query_acl_rule(action, data):
 	
 def update_share_record(action, data):
 	""" Update the user's Globus share in RDADB """
+	from datetime import datetime
+	from time import strftime
 	
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
 	except KeyError as err:
-		print "Error in update_share_record: ", err
+		logger.error("[update_share_record] {0}".format(err), exc_info=True)
 		sys.exit(1)
 	
 	record = []
 	
 	if (action == 1):
 		try:
-			cond = " WHERE rindex='{0}'".format(data['ridx'])
+			ridx = data['ridx']
+			cond = " WHERE rindex='{0}'".format(ridx)
 			record.append({unicode('globus_rid'): data['globus_rid'],
 			               unicode('globus_url'): data['globus_url']
 			              })
 			myupdt('dsrqst', record[0], cond)
+			logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid)) 
 		except KeyError as err:
-			print "Error in update_share_record: ", err
+			logger.error("[update_share_record] {0}".format(err), exc_info=True)
 			sys.exit(1) 
 	elif (action == 2):
 		try:
+			dsid = data['dsid']
 			email = data['email']
-			cond = " WHERE email='{0}' AND end_date IS NULL".format(data['email'])
+			cond = " WHERE email='{0}' AND end_date IS NULL".format(email)
 			myuser = myget('ruser', ['id'], cond)
 			if 'id' not in myuser:
 				return {'Error': '[update_share_record] email {0} not in RDADB table ruser'.format(email)}
+			path = construct_share_path(2, {'dsid': dsid})
 			record = {'globus_rid': '{0}'.format(data['globus_rid']),
                       'globus_url': '{0}'.format(data['globus_url']),
                       'email': email,
                       'user_id': '{0}'.format(myuser['id']),
                       'username': None,
-                      'request_date': date,
-                      'source_endpoint': '{0}'.format(data['endpoint']),
-                      'dsid': '{0}'.format(data['dsid']),
-                      'acl_path': '{0}'.format(data['path']),
+                      'request_date': datetime.now().strftime("%Y-%m-%d"),
+                      'source_endpoint': MyGlobus['datashare_legacy'],
+                      'dsid': '{0}'.format(dsid),
+                      'acl_path': '{0}'.format(path),
                       'status': 'ACTIVE'}
 			myadd('goshare', record)
+			logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid)) 
 		except KeyError as e:
-			print "Error in update_share_record: ", err
+			logger.error("[update_share_record] {0}".format(err), exc_info=True)
 			sys.exit(1)
 
 	return
@@ -220,6 +275,32 @@ def update_share_record(action, data):
 def parse_input():
 	""" Parse command line arguments """
 
+def configure_log(**kwargs):
+	""" Set up log file """
+	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
+	LOGFILE = 'dsglobus.log'
+
+	if 'level' in kwargs:
+    	loglevel = kwargs['level']
+	else:
+		loglevel = 'info'
+
+	LEVELS = { 'debug':logging.DEBUG,
+               'info':logging.INFO,
+               'warning':logging.WARNING,
+               'error':logging.ERROR,
+               'critical':logging.CRITICAL,
+             }
+
+    level = LEVELS.get(loglevel, logging.INFO)
+	my_logger = logging.getLogger(__name__)
+	my_logger.setLevel(level)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler.setLevel(level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	my_logger.addHandler(handler)
+	
 #=========================================================================================
 if __name__ == "__main__":
     main()
