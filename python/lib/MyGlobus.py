@@ -15,6 +15,7 @@
 
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
+GLOBUS_APP_URL = 'https://www.globus.org/app/'
 
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 
@@ -44,6 +45,8 @@ MyGlobus = {
    'auth_token': AUTH_TOKEN,
    'datashare_ep': 'db57de42-6d04-11e5-ba46-22000b92c6ec',
    'data_request_ep' : 'd20e610e-6d04-11e5-ba46-22000b92c6ec',
+   'datashare_legacy' : 'rda#datashare',
+   'data_request_legacy' : 'rda#data_request',
    'datashare_ep_base' : '/glade/p/rda/data/',
    'data_request_ep_base' : '/glade/p/rda/transfer/',
    'host_endpoint_id' : 'd33b3614-6d04-11e5-ba46-22000b92c6ec',
@@ -51,5 +54,5 @@ MyGlobus = {
    'client_secret': CLIENT_SECRET,
    'private_key': PRIVATE_KEY,
    'redirect_uri': REDIRECT_URI,
-   'globusURL': 'https://www.globus.org/app/'
+   'globusURL': GLOBUS_APP_URL
 }
