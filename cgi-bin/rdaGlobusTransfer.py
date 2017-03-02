@@ -15,6 +15,7 @@ import os, sys
 
 sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.append("/glade/u/home/rdadata/bin")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
@@ -29,6 +30,7 @@ import hashlib
 from globus_utils import load_portal_client
 from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer)
+from dsglobus import *
 
 try:
     from urllib.parse import urlencode
@@ -156,10 +158,9 @@ def submit_transfer(form):
     destination_endpoint_id = form.getvalue('endpoint_id')
 
 	""" Check if user has a share set up for this endpoint & path """
-	rule_data = {'email': email, 'dsid': dsid}
+	share_data = {'email': email, 'dsid': dsid}
 	if not query_acl_rule(2, rule_data):
-		args = {'email': email, 'path': directory}
-		data = add_endpoint_acl_rule(endpoint_id, **kwargs)
+		data = add_endpoint_acl_rule(2, share_data)
 	
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
