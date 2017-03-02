@@ -281,7 +281,7 @@ def configure_log(**kwargs):
 	LOGFILE = 'dsglobus.log'
 
 	if 'level' in kwargs:
-    	loglevel = kwargs['level']
+		loglevel = kwargs['level']
 	else:
 		loglevel = 'info'
 
