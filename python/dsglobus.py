@@ -113,18 +113,22 @@ def construct_share_path(action, data):
 	"""
 	if (action == 1):
 		try:
-			cond = " WHERE rindex='{0}' and location IS NOT NULL".format(data['ridx'])
+			ridx = data['ridx']
+			cond = " WHERE rindex='{0}'".format(ridx)
 			myrqst = myget('dsrqst', ['rqstid','location'], cond)
 			if (len(myrqst) > 0):
-				base_path = MyGlobus['data_request_ep_base']
-				loc = myrqst['location']
-				if (loc.find(base_path) != -1):
-					path_len = len(base_path)
-					path = "/{0}/".format(loc[path_len:])
+				if myrqst['location']:
+					base_path = MyGlobus['data_request_ep_base']
+					loc = myrqst['location']
+					if (loc.find(base_path) != -1):
+						path_len = len(base_path)
+						path = "/{0}/".format(loc[path_len:])
+					else:
+						path = None
 				else:
-					path = None
+					path = "/download.auto/{0}/".format(myrqst['rqstid'])
 			else:
-				path = "/download.auto/{0}/".format(myrqst['rqstid'])
+				my_logger.error("[construct_share_path] Request index {0} not found or request ID not defined".format(ridx))
 		except KeyError as err:
 			my_logger.error("[construct_share_path] {0}".format(err), exc_info=True)
 			sys.exit(1)
@@ -148,7 +152,7 @@ def construct_share_url(action, data):
 		try:
 			ridx = data['ridx']
 			cond = ' WHERE ridx={0}'.format(ridx)
-			myrqst = myget('dsrqst', '*', cond)
+			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) > 0):
 				origin_id = MyGlobus['data_request_ep']
 				origin_path = construct_share_path(1, {'ridx': ridx})
@@ -197,7 +201,7 @@ def query_acl_rule(action, data):
 		""" dsrqst shares """
 		try:
 			cond = " WHERE rindex='{0}'".format(data['ridx'])
-			myrule = myget('dsrqst', '*', cond)
+			myrule = myget('dsrqst', ['*'], cond)
 		except KeyError as err:
 			my_logger.error("[query_acl_rule] {0}".format(err), exc_info=True)
 			sys.exit(1)
@@ -206,7 +210,7 @@ def query_acl_rule(action, data):
 		""" standard dataset shares """
 		try:
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
-			myrule = myget('goshare', '*', cond)
+			myrule = myget('goshare', ['*'], cond)
 		except:
 			my_logger.error("[query_acl_rule] {0}".format(err), exc_info=True)
 			sys.exit(1)
