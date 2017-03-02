@@ -151,7 +151,7 @@ def construct_share_url(action, data):
 	if (action == 1):
 		try:
 			ridx = data['ridx']
-			cond = ' WHERE ridx={0}'.format(ridx)
+			cond = ' WHERE rindex={0}'.format(ridx)
 			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) > 0):
 				origin_id = MyGlobus['data_request_ep']
