@@ -170,14 +170,14 @@ sub remove_endpoint_permission{
    
    if ($action == 1) {
      $ridx = $options{ridx};
-     mysystem("update_globus_users.py -n rda#data_request", LGWNEX, 7, __FILE__, __LINE__);
+    # mysystem("update_globus_users.py -n rda#data_request", LGWNEX, 7, __FILE__, __LINE__);
      $myrqst = myget("dsrqst", "*", "rindex = $ridx", LOGWRN, __FILE__, __LINE__);   
      return mylog("$ridx: Request Index is not on file", LGWNEX) if(!$myrqst);
      return mylog("$ridx: Globus rule id is not on file.", LGWNEX) if(!$myrqst->{globus_rid});
      myexec("UPDATE dsrqst SET globus_rid = NULL WHERE rindex=$ridx");
      $rule_id = $myrqst->{globus_rid};
    } elsif ($action == 2) {
-     mysystem("update_globus_users.py -n rda#datashare", LGWNEX, 7, __FILE__, __LINE__);
+    # mysystem("update_globus_users.py -n rda#datashare", LGWNEX, 7, __FILE__, __LINE__);
      $cond = "email='$options{email}' AND dsid='$options{dsid}' AND status='ACTIVE'";
      $myshare = myget("goshare", "*", $cond, LOGWRN, __FILE__, __LINE__);
      return mylog("Globus rule id is not on file for user $options{email} and dataset " .
