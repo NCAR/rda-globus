@@ -164,6 +164,7 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    $protocol = "https://";
    
 # Save path, selected files, and other hidden input to session
+   $_SESSION['email'] = $email;
    $_SESSION['gtype'] = $gtype;
    if(empty($_POST['dsid'])) return pmessage("Missing dataset ID (dsnnn.n)", true);
    $_SESSION['dsid'] = $_POST['dsid'];

@@ -139,6 +139,7 @@ def submit_transfer(form):
     """ Get session data from database """
     session = get_session_data()
     
+    email = session['email']
     gtype = session['gtype']
     dsid = session['dsid']
     directory = session['directory']
