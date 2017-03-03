@@ -158,7 +158,7 @@ def submit_transfer(form):
 
     destination_endpoint_id = form.getvalue('endpoint_id')
 
-	""" Check if user has a share set up for this endpoint & path """
+    """ Check if user has a share set up for this endpoint & path """
     share_data = {'email': email, 'dsid': dsid, 'notify': True}
     if not query_acl_rule(2, share_data):
         data = add_endpoint_acl_rule(2, share_data)
