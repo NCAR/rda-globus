@@ -23,7 +23,7 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt, myadd
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
-                        AuthClient)
+                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_portal_client
 import json
 import logging
@@ -81,10 +81,8 @@ def add_endpoint_acl_rule(action, data):
 			my_logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
 			sys.exit(1)
 
-	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 	identity_id = get_user_id(rda_identity)
 	share_data.update({'identity': identity_id})
-	
 	rule_data = {
 	    "DATA_TYPE": "access",
 	    "principal_type": "identity",
@@ -92,7 +90,26 @@ def add_endpoint_acl_rule(action, data):
 	    "path": path,
 	    "permissions": "r"
  	}
-	result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
+ 	if 'notify' in data:
+ 		rule_data.update({"notify_email": email})	
+
+	try:
+		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
+	except GlobusAPIError as e:
+		my_logger.error(("[add_endpoint_acl_rule] Globus API Error\n"
+		                 "HTTP status: {}\n"
+		                 "Error code: {}\n"
+		                 "Error message: {}").format(e.http_status, e.code, e.message))
+		raise e
+	except NetworkError:
+    	my_logger.error(("[add_endpoint_acl_rule] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+    	raise
+	except GlobusError:
+    	logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
+    	raise
+    
 	my_logger.info("[add_endpoint_acl_rule] ACL created for user {0}.  ACL ID: {1}".format(email, result['access_id']))
 	
 	url = construct_share_url(action, share_data)
@@ -188,10 +205,24 @@ def get_user_id(identity):
 		NCAR RDA identity                 : in the form of user@domain.com@rda.ucar.edu, where user@domain.com is the user's RDA e-mail login
 		E-mail identity                   : in the form of user@domain.com
 	"""
-	ac = AuthClient(authorizer=AccessTokenAuthorizer(MyGlobus['auth_token']))
-	result = ac.get_identities(usernames=identity)
-	uuid = result.data['identities'][0]['id']
-	
+	try:
+		ac = AuthClient(authorizer=AccessTokenAuthorizer(MyGlobus['auth_token']))
+		result = ac.get_identities(usernames=identity)
+		uuid = result.data['identities'][0]['id']
+	except GlobusAPIError as e:
+		my_logger.error(("[get_user_id] Globus API Error\n"
+		                 "HTTP status: {}\n"
+		                 "Error code: {}\n"
+		                 "Error message: {}").format(e.http_status, e.code, e.message))
+		raise e
+	except NetworkError:
+    	my_logger.error(("[get_user_id] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+    	raise
+	except GlobusError:
+    	logging.exception("[get_user_id] Totally unexpected GlobusError!")
+    	raise
+
 	return uuid
 
 def query_acl_rule(action, data):
