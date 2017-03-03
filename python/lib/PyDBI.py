@@ -123,7 +123,7 @@ def mymget(tablename, fields, condition):
 #             record: dictionary with keys as field names and
 #                     values as field values
 #
-def myadd(tablename, record):
+def myadd(tablename, record, print_status=None):
 	try:
 		db = dbconnect()
 		c = db.cursor()
@@ -144,7 +144,8 @@ def myadd(tablename, record):
 		c.execute(sqlstr, values)
 		db.commit()
 		dbclose(db)
-		print "One record added to table %s" % tablename
+		if print_status:
+			print "One record added to table %s" % tablename
 	except mysql.connector.Error as err:
 		print "table: "+tablename
 		print record
