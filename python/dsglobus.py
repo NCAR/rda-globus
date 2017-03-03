@@ -118,7 +118,7 @@ def add_endpoint_acl_rule(action, data):
 	
 	return {'access_id': result["access_id"], 'share_url': url}
 
-def delete_endpoint_acl_rule(id):
+def delete_endpoint_acl_rule(action, data):
 	""" Delete a specific endpoint access rule """ 
 
 def construct_share_path(action, data):
