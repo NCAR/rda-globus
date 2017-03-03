@@ -103,12 +103,12 @@ def add_endpoint_acl_rule(action, data):
 		                 "Error message: {}").format(e.http_status, e.code, e.message))
 		raise e
 	except NetworkError:
-    	my_logger.error(("[add_endpoint_acl_rule] Network Failure. "
+		my_logger.error(("[add_endpoint_acl_rule] Network Failure. "
                    "Possibly a firewall or connectivity issue"))
-    	raise
+		raise
 	except GlobusError:
-    	logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
-    	raise
+		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
+		raise
     
 	my_logger.info("[add_endpoint_acl_rule] ACL created for user {0}.  ACL ID: {1}".format(email, result['access_id']))
 	
@@ -216,12 +216,12 @@ def get_user_id(identity):
 		                 "Error message: {}").format(e.http_status, e.code, e.message))
 		raise e
 	except NetworkError:
-    	my_logger.error(("[get_user_id] Network Failure. "
+		my_logger.error(("[get_user_id] Network Failure. "
                    "Possibly a firewall or connectivity issue"))
-    	raise
+		raise
 	except GlobusError:
-    	logging.exception("[get_user_id] Totally unexpected GlobusError!")
-    	raise
+		logging.exception("[get_user_id] Totally unexpected GlobusError!")
+		raise
 
 	return uuid
 
