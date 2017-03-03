@@ -35,7 +35,7 @@ except:
     from urllib import urlencode
 
 def main():
-	parse_input()
+	options = parse_input()
 
 def add_endpoint_acl_rule(action, data):
 	""" Create a new endpoint access rule """
@@ -51,9 +51,9 @@ def add_endpoint_acl_rule(action, data):
 			endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
-			myrqst = myget('dsrst', ['*'], cond)
+			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) == 0):
-				print "Request index not on file"
+				my_logger.warning("[add_endpoint_acl_rule] Request index not on file")
 				sys.exit(1)
 			rqstid = myrqst['rqstid']
 			if myrqst['globus_rid']:
@@ -71,7 +71,7 @@ def add_endpoint_acl_rule(action, data):
 			dsid = data['dsid']
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
-			if myshare['globus_rid']:
+			if (len(myshare) > 0 and myshare['globus_rid']):
 				my_logger.info("[add_endpoint_acl_rule] Globus ACL rule has already been created for user {0} and dataset {1}.".format(email, dsid))
 				return {'access_id': myshare['globus_rid'], 'share_url': myshare['globus_url']}
 			share_data = {'dsid': dsid}
@@ -308,7 +308,9 @@ def update_share_record(action, data):
 	
 def parse_input():
 	""" Parse command line arguments """
-
+	options = {}
+	return options
+	
 def configure_log(**kwargs):
 	""" Set up log file """
 	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
