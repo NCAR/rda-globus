@@ -12,7 +12,6 @@
 ################################################################################
 
 include_once("MyRqst.inc");
-include_once("MyGlobus.inc");
 include("PDO/MySession.inc");
 
 manage_acl();
@@ -179,20 +178,6 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    } else {
      $_SESSION['cancelurl'] = $_POST['cancelurl'];
    }
-
-/**
-# Build http query & redirect user
-   $params = array(
-      "method" => "POST",
-      "action" => $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer",
-      "filelimit" => 0,
-      "folderlimit" => 1,
-      "cancelurl" => $cancelurl,
-      "label" => "NCAR RDA Globus transfer"
-   );
-   $browse_endpoint = 'https://www.globus.org/app/browse-endpoint?' . http_build_query($params);   
-   header('Location: ' . $browse_endpoint);
-**/
 
    $params = array(
       "method" => "POST"
