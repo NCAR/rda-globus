@@ -76,6 +76,7 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
    filewin.document.write("<html><head><title>" + fname + "</title>" +
          "<meta charset=\"utf-8\">\n" +
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
+         "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/newstyle.css\">\n" +
          "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/bootstrap.rda.css\">\n" +
           "</head>\n<body>\n");
 
