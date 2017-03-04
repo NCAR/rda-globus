@@ -28,7 +28,7 @@ import hashlib
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt
-from globus_utils import load_portal_client
+from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer)
 from dsglobus import *
@@ -76,7 +76,7 @@ def authcallback(form):
         return
 
     # Set up our Globus Auth client
-    client = load_portal_client()
+    client = load_app_client()
     redirect_uri = 'https://' + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
     client.oauth2_start_flow(redirect_uri, state=state, refresh_tokens=True)
@@ -166,7 +166,7 @@ def submit_transfer(form):
 	
     """ Instantiate the Globus SDK transfer client """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['transfer.api.globus.org']['refresh_token'], load_portal_client()))
+        session['transfer.api.globus.org']['refresh_token'], load_app_client()))
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -212,7 +212,7 @@ def update_transfer_status(task_id):
     """ Instantiate the transfer client & get transfer task details """
     transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
         session['transfer.api.globus.org']['refresh_token'], 
-        load_portal_client()))
+        load_app_client()))
     task = transfer.get_task(task_id)
     
     task_data = {'task_id': task_id,

@@ -16,6 +16,6 @@
 import globus_sdk
 from MyGlobus import MyGlobus
 
-def load_portal_client():
+def load_app_client():
     """Create an AuthClient for the portal"""
     return globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
