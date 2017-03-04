@@ -72,21 +72,22 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
    }
 
 //   filewin = window.open("", "_blank");
-   filewin = window.open("", action, "width=1100,height=750,scrollbars=yes,resizable=yes");
+   filewin = window.open("", action, "width=500,height=400,scrollbars=yes,resizable=yes");
    filewin.document.write("<html><head><title>" + fname + "</title>" +
          "<meta charset=\"utf-8\">\n" +
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
-         "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">\n" +
+         "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/bootstrap.rda.css\">\n" +
           "</head>\n<body>\n");
 
    if(gtype == 1) {
      msg = "transfer your data files";
-     showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
    }
    if(gtype == 2) {
      msg = "transfer the data files from this dataset (" + dsid + ")";
-     showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
    }
+   
+   showGlobusInstructions(filewin, msg, gtype, ridx, dsid);
+   
    filewin.document.write("</body></html>\n");
    filewin.document.close();
    filewin.focus();
