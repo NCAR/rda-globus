@@ -26,12 +26,9 @@ function manage_acl() {
    $email = cookie_email($msg, true, $mfunc);
    if(empty($email)) return;
 
-   if(empty($_POST["gtype"]) && empty($_POST["endpoint_id"])) {
+   if(empty($_POST["gtype"])) {
      return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share, 3=custom file list)", true);
-   } 
-   elseif (!empty($_POST["endpoint_id"])) {
-     $gtype = 4;
-   } 
+   }
    else {
      $gtype = escape_input_string($_POST["gtype"]);
    }
@@ -44,14 +41,10 @@ function manage_acl() {
    } 
    elseif ($gtype == 3) {
      globus_browseEndpoint($msg, $gtype, $email);
-   } 
-   elseif ($gtype == 4) {
-     submit_transfer();
-   } 
+   }
    else {
      return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share, 3=custom file list)", true);
    }
-
 }
 
 /**
