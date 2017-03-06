@@ -24,7 +24,7 @@ from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt, myadd
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient, GlobusError, GlobusAPIError, NetworkError)
-from globus_utils import load_portal_client
+from globus_utils import load_app_client
 import json
 import logging
 import logging.handlers
