@@ -78,9 +78,11 @@ function openGlobusWindow(grpcnt, gtype, ridx, dsid, count)
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
          "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/bootstrap.rda.css\">\n" +
          "<style>\n" +
-         "font-family: calibri,arial,helvetica,verdana,sans-serif;\n" +
-         "margin-top: 0px;\n" +
-         "font-size: 16px;\n" +
+         "body {\n" +
+         "  font-family: calibri,arial,helvetica,verdana,sans-serif;\n" +
+         "  margin-top: 0px;\n" +
+         "  font-size: 16px;\n" +
+         "}\n" +
          "</style>\n" +
          "</head>\n<body>\n");
 
