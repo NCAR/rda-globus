@@ -48,6 +48,8 @@ my %options = (
    path           => undef,    # Path to shared data, relative to the root path of the shared endpoint
    ridx           => undef,    # dsrqst ID
    dsid           => undef,    # dataset ID
+   cidx           => undef,    # data cart ID
+   order_id       => undef,    # data cart order ID
    email          => undef,    # user e-mail address
    user_identity  => undef,    # user identity (UUID) associated with the user's Globus Auth NCAR RDA alternate identity
    donotnotify    => undef,    # If set, do not send e-mail notification to user when new share is created (default behavior sends notification)
@@ -100,7 +102,8 @@ sub add_endpoint_permission{
    my ($myrqst, $myshare);
    my ($email, $dsid, $path, $cond);
    my ($ssh_id, $cmd, $stdout, $rule_id, $logmsg, $ridx, $rqstid);
-   
+   my ($mycart, $cidx);
+ 
    if ($action == 1) {
      $ridx = $options{ridx};
      $myrqst = myget("dsrqst", "*", "rindex = $ridx", LOGWRN, __FILE__, __LINE__);
@@ -125,7 +128,17 @@ sub add_endpoint_permission{
        return mylog($logmsg, LGWNEX);
      }
    } elsif ($action == 3) {
-     # [Need code here to query Globus access rule ID for this endpoint]
+     $cidx = $options{cidx};
+     $mycart = myget("dscart", "*", "cartindex=$cidx", LOGWRN, __FILE__, __LINE__);
+     return mylog("$cidx: Data cart index not on file", LGWNEX) if(!$mycart);
+     return mylog("$cidx: Data cart order ID is missing", LGWNEX) if(!$mycart->{orderid});   
+     $options{orderid} = $mycart->{orderid};
+     $options{email} = $mycart->{email};
+     if($mycart->{globus_rid}) {
+       $logmsg = "The Globus permission rule ID " . $mycart->{globus_rid} . 
+                 " has already been created for data cart index $cidx.";
+       return mylog($logmsg, LGWNEX);
+     }
    }
    
    if(!$options{path}) {
@@ -231,6 +244,9 @@ sub construct_share_path {
   } elsif ($action == 2) {
     return mylog("Dataset ID is missing", LGWNEX, __FILE__, __LINE__) if(!defined $options{dsid});
     $path = "/" . $options{dsid} . "/";
+  } elsif ($action == 3) {
+    return mylog("Data cart ID is missing", LGWNEX, __FILE__, __LINE__) if(!defined $options{orderid});
+    $path = "/datacart/" . $options{orderid} . "/";
   }
   return $path;
 }
@@ -251,6 +267,7 @@ sub construct_endpoint_url {
   my $urlhash = "%23";
   my $urlslash = "%2F";
   my ($identity, $add_identity);
+  my ($mycart, $cidx);
   
   if ($options{user_identity} ne "") {
     $add_identity = "&add_identity=$options{user_identity}";
@@ -269,6 +286,13 @@ sub construct_endpoint_url {
     $origin_id = $MYGLOBUS{fileendpointID};
     $dsid = $options{dsid};
     $origin_path = $urlslash . $dsid . $urlslash;
+  } elsif ($action == 3) {
+    $origin_id = $MYGLOBUS{cartendpointUUID};
+    $cidx = $options{cidx};
+    $mycart = myget("dscart", "*", "cartindex = $cidx", LOGWRN, __FILE__, __LINE__);   
+    return mylog("$cidx: Data cart index not on file", LGWNEX) if(!$mycart);
+    return mylog("$cidx: Data cart order ID is missing", LGWNEX) if(!$mycart->{orderid});   
+    $origin_path = $urlslash . "datacart" . $urlslash . $mycart->{orderid} . $urlslash;
   }  
   $endpointURL = $MYGLOBUS{endpointURL} . "transfer?origin_id=". $origin_id . "&origin_path=" . $origin_path . $add_identity;
   return $endpointURL;
@@ -302,7 +326,7 @@ sub get_user_identity {
 # 
 sub update_share_db {
   my ($action) = @_;
-  my ($myuser, $cond, $date, $ridx);
+  my ($myuser, $cond, $date, $ridx, $cidx);
   my %record;
 
   $date = curdate();
@@ -331,6 +355,13 @@ sub update_share_db {
       status => 'ACTIVE'
     );
     myadd("goshare", \%record, LGEREX, __FILE__, __LINE__) if($record{globus_url} && $record{globus_rid});
+  } elsif($action == 3) {
+    $cidx = $options{cidx};
+    %record = (
+      globus_rid => $options{globus_rid},
+      globus_url => $options{globus_url}
+    );
+    myupdt("dscart", \%record, "cartindex=$cidx", LGEREX, __FILE__, __LINE__) if($record{globus_url} && $record{globus_rid});
   }
   return;
 }
@@ -356,7 +387,8 @@ sub parse_input {
   Getopt::Long::Configure("bundling_override", "ignore" . $us . "case_always");
 
   if(!GetOptions("ri|RequestIndex=i" => \$ridx,
-  				 "ds|Dataset=s" => \$dsid,
+  		 "ds|Dataset=s" => \$dsid,
+  		 "ci|CartIndex" => \$cidx,
                  "ap|AddPermission" => \$addperm,
                  "rp|RemovePermission" => \$removeperm,
                  "rs|ResendInvitation" => \$resend,
@@ -373,8 +405,8 @@ sub parse_input {
     $errmsg = "Only one action option is allowed: -ap, -rp, or -rs";
     mylog($errmsg, LGEREX, __FILE__, __LINE__);
   }
-  if($ridx && $dsid) {
-    $errmsg = "Please specify either the dsrqst index (-ri) or dataset ID (-ds), not both.";
+  if(($ridx && $dsid) || ($ridx && $cidx) || ($dsid && $cidx)) {
+    $errmsg = "Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both.";
     mylog($errmsg, LGEREX, __FILE__, __LINE__);
   }
 
@@ -397,6 +429,10 @@ sub parse_input {
     $options{endpoint} = $MYGLOBUS{fileendpoint};
     $options{endpointID} = $MYGLOBUS{fileendpointID};
     $action = 2;
+  } elsif ($cidx) {
+    $options{cidx} = $cidx;
+    $options{endpoint} = $MYGLOBUS{datacartendpoint};
+    $action = 3;
   } else {
     $errmsg = "Please specify either the dsrqst index (-ri) for a subset request, or 
                the dataset ID (-ds) and user e-mail address (-em) for a general Globus 

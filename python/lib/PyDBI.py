@@ -17,11 +17,8 @@ import os, sys
 import mysql.connector
 from mysql.connector import errorcode
 
-dbconfig = {'user': os.environ['DBUSER'], \
-            'password': os.environ['DBPWD'], \
-            'database': os.environ['DBUSER'], \
-            'host': os.environ['DBHOST'], \
-            'port': 3306}
+sys.path.append("/glade/u/home/tcram/lib/python")
+from dbconfig import dbconfig
 
 #=========================================================================================
 # Function dbconnect: Create database connection
@@ -126,7 +123,7 @@ def mymget(tablename, fields, condition):
 #             record: dictionary with keys as field names and
 #                     values as field values
 #
-def myadd(tablename, record):
+def myadd(tablename, record, print_status=None):
 	try:
 		db = dbconnect()
 		c = db.cursor()
@@ -147,7 +144,8 @@ def myadd(tablename, record):
 		c.execute(sqlstr, values)
 		db.commit()
 		dbclose(db)
-		print "One record added to table %s" % tablename
+		if print_status:
+			print "One record added to table %s" % tablename
 	except mysql.connector.Error as err:
 		print "table: "+tablename
 		print record
@@ -169,7 +167,7 @@ def myadd(tablename, record):
 #             record: dictionary with keys as field names and
 #                     values as field values
 #
-def myupdt(tablename, record, condition):
+def myupdt(tablename, record, condition, print_status=None):
 	try:
 		db = dbconnect()
 		c = db.cursor()
@@ -194,7 +192,8 @@ def myupdt(tablename, record, condition):
 		c.execute(sqlstr, values)
 		db.commit()
 		dbclose(db)
-		print "One record updated in table %s" % tablename
+		if print_status:
+			print "One record updated in table %s" % tablename
 	except mysql.connector.Error as err:
 		print record
 		print condition

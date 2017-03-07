@@ -1,0 +1,9 @@
+# Database configuration #
+#########################
+*config.py
+
+# OSX generated files #
+#######################
+.DS_Store
+.DS_Store?
+._*

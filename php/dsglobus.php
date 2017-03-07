@@ -12,6 +12,7 @@
 ################################################################################
 
 include_once("MyRqst.inc");
+include("PDO/MySession.inc");
 
 manage_acl();
 
@@ -25,16 +26,25 @@ function manage_acl() {
    $email = cookie_email($msg, true, $mfunc);
    if(empty($email)) return;
 
-   if(empty($_POST["gtype"])) return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share)", true);
-   $gtype = escape_input_string($_POST["gtype"]);
+   if(empty($_POST["gtype"])) {
+     return pmessage("Missing Globus request gtype (1=dsrqst, 2=dataset share, 3=custom file list)", true);
+   }
+   else {
+     $gtype = escape_input_string($_POST["gtype"]);
+   }
+   
    if($gtype == 1) {
      acl_dsrqst($msg, $gtype, $email);
-   } elseif ($gtype == 2) {
+   } 
+   elseif ($gtype == 2) {
      acl_dataset($msg, $gtype, $email);
-   } else {
-     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share)", true);
+   } 
+   elseif ($gtype == 3) {
+     globus_browseEndpoint($msg, $gtype, $email);
    }
-
+   else {
+     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share, 3=custom file list)", true);
+   }
 }
 
 /**
@@ -134,6 +144,90 @@ function acl_dataset($msg, $gtype, $email) {
 }
 
 /**
+ * Save session data and redirect user to Globus browse_endpoint helper API.  For users 
+ * who generate custom file lists.  See https://docs.globus.org/api/helper-pages/browse-endpoint/
+ */
+
+function globus_browseEndpoint($msg, $gtype, $email) {
+
+   $session = new Session;
+
+   $mfunc = "bmessage";
+   $unames = get_ruser_names($email, 5);
+   $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
+   
+#   $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+   $protocol = "https://";
+   
+# Save path, selected files, and other hidden input to session
+   $_SESSION['email'] = $email;
+   $_SESSION['gtype'] = $gtype;
+   if(empty($_POST['dsid'])) return pmessage("Missing dataset ID (dsnnn.n)", true);
+   $_SESSION['dsid'] = $_POST['dsid'];
+   if(empty($_POST['directory'])) return pmessage("Missing path to web files", true);
+   $_SESSION['directory'] = $_POST['directory'];
+   if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
+   $_SESSION['files'] = $_POST['globusFile'];
+
+# URL if user cancels endpoint selection on the Globus Browse Endpoint web app
+   if(empty($_POST['cancelurl'])) {
+     $_SESSION['cancelurl'] = $protocol . $_SERVER['HTTP_HOST'] . "/datasets/" . $_POST['dsid'];
+   } else {
+     $_SESSION['cancelurl'] = $_POST['cancelurl'];
+   }
+
+   $params = array(
+      "method" => "POST"
+   );
+   $authcallback = $protocol . $_SERVER['HTTP_HOST'] . "/cgi-bin/rdaGlobusTransfer?" . http_build_query($params);
+   header("Location: " . $authcallback);
+   exit();
+}
+
+/**
+ * Manage ACLs for a prototype data cart.
+ */
+
+function acl_datacart($msg, $gtype, $email) {
+
+   $mfunc = "bmessage";
+
+   $unames = get_ruser_names($email, 5);
+   $unames["rid"] = strtoupper(convert_chars($unames["lstname"]));
+
+   # create data cart order record
+   $nidx = new_datacart_id();
+   $mycart["orderid"] = $unames["rid"] . $nidx;
+   $mycart["email"] = $email;
+/**   $mycart["size_cart"] = ; */
+/**   $mycart["fcount"] = ; */
+   $mycart["date_order"] = curdate();
+   $mycart["time_order"] = curtime();
+   $mycart["date_purge"] = adddate($mycart["date_order"], 5);
+   $mycart["time_purge"] = $mycar["time_order"];
+   
+   $cidx = myadd("dscart", $mycart, true, true);   
+
+   if($nidx != $cidx) { # reset order ID only if it is different
+      $mycart["orderid"] = $record["orderid"] = $unames["rid"] . $cidx;
+      myupdt("dscart", $record, "cartindex = $cidx");
+   }
+
+# Create hard links to data files.  Update size_cart and fcount in dscart table when ready.
+# Store as hidden input?
+
+   $cmd = escapeshellcmd('dsglobus -ap -ci ' . $cidx);
+   $info = globus_cli_cmd($cmd);
+   $order = datacart_record($msg, $cidx, $mfunc);
+   bmessage("You may now transfer your data using Globus at the URL <a href=\"" . 
+            $order["globus_url"] . "\">" . $order["globus_url"] . "</a>.<br /> From the Globus " .
+            "website, please select 'NCAR RDA' from the list of organizations " .
+            "and then enter your RDA e-mail address " .
+            "<span style=\"font-weight: bold\">(" . $rqst["email"] . ")</span> and " .
+            "password to log in.");
+}
+
+/**
  * get dataset share record for a given $email and $dsid, use $_POST["dsid"] if 
  * $dsid = 0
  */
@@ -155,6 +249,42 @@ function dataset_share_record($msg, $email, $dsid = 0, $mfunc = "pmessage") {
      return $datashare;
    }
 }
+
+/**
+ * get a single record for a data cart order, given the $email and $cidx
+ */
+ 
+function datacart_record($msg, $cidx = 0, $mfunc = "pmessage") {
+   if(!$cidx) {
+      if(empty($_POST["cidx"])) {
+         if($msg) $mfunc("Data cart order index is missing.");
+         return null;
+      }
+      $cidx = escape_input_string($_POST["cidx"]);
+   }
+   $cond = "cartindex=$cidx";
+   $datacart = myget("dscart", "*", $cond, FALSE);
+
+   if(empty($datacart)) {
+     return null;
+   } else {
+     return $datacart;
+   }
+}
+
+/**
+ * find a unique request name/ID from given user last name
+ * by appending (existing maximum rindex + 1) 
+ */
+function new_datacart_id() {
+
+   $myrec = myget("dscart", "MAX(cartindex) maxid");
+   if($myrec) {
+      return ($myrec["maxid"] + 1);
+   } else {
+      return 0;
+   }
+} 
 
 /**
  * Show HTML message with the user option of re-sending the Globus share invitation.
