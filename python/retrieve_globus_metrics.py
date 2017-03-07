@@ -23,17 +23,25 @@ import logging
 import logging.handlers
 import re
 import urllib
-import time
 
 LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
 LOGFILE = 'retrieve_globus_metrics.log'
-ERRLOG = 'retrieve_globus_metrics.err'
-DBGLOG  = 'retrieve_globus_metrics.dbg'
+loglevel = 'INFO'
+loggerName = 'GlobusMetricsLog'
+
+my_logger = logging.getLogger(loggerName)
+num_level = getattr(logging, loglevel.upper())
+my_logger.setLevel(num_level)
+handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=1000000000,backupCount=10)
+handler.setLevel(num_level)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+my_logger.addHandler(handler)
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
-token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/goauth-token', 'r')
-gotoken = token_file.read().rstrip('\\n')
-headers = {'Authorization':'Globus-Goauthtoken '+gotoken}
+token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/globus.transfer-token', 'r')
+gotoken = token_file.read().rstrip()
+headers = {'Authorization':'Bearer '+gotoken}
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -45,16 +53,23 @@ task_keys = ['status','bytes_transferred','task_id','username',\
 
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
+
+# Endpoint UUIDs
+data_requestID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
+datashareID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
                  
 #=========================================================================================
 def main(filters):
 
 # Get Globus transfer tasks
+	my_logger.info(__name__+': Getting tasks')
 	data_tasks = get_tasks(filters)
 	if doprint: print_doc(data_tasks, task_keys)
+	my_logger.info(__name__+': Adding/updating tasks in RDA DB')
 	add_tasks('gotask', data_tasks)
 
 # Get list of successful transfers for each Globus task id.
+	my_logger.info(__name__+': Getting and adding Globus transfers')
 	for i in range(len(data_tasks['DATA'])):
 		task_id = data_tasks['DATA'][i]['task_id']
 		bytes = data_tasks['DATA'][i]['bytes_transferred']
@@ -68,7 +83,6 @@ def main(filters):
 # Get Globus transfer tasks
 
 def get_tasks(filters):
-	my_debug.debug('[get_tasks] Getting tasks')
 	resource = 'endpoint_manager/task_list'
 	r = requests.get(url+resource, headers=headers, params=filters)
 	data = r.json()
@@ -96,7 +110,6 @@ def get_tasks(filters):
 # Insert/update Globus transfer tasks
 
 def add_tasks(go_table, data):
-	my_debug.debug('[add_tasks] Adding/updating tasks in RDA DB')
 	
 # Prepare database records
 	if (len(data['DATA']) >= 1):
@@ -130,14 +143,11 @@ def add_tasks(go_table, data):
 			myadd(go_table, records[i])
 
 #=========================================================================================
-# Get list of files transferred successfully under a single task ID
+# Get list of files transferred successfully
 
 def get_successful_transfers(task_id):
-	my_debug.debug("[get_successful_transfers] Processsing task_id: {0}".format(task_id))
 	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
-	limit = 1000
-	params = {'limit':limit}
-	r = requests.get(url+resource, headers=headers, params=params)
+	r = requests.get(url+resource, headers=headers)
 	data = r.json()
 	data_transfers = {}
 	
@@ -149,12 +159,8 @@ def get_successful_transfers(task_id):
 	
 	# Check for additional pages.  Append response to data_transfers.
 		while (data['next_marker']):
-			marker = data['marker']
-			next_marker = data['next_marker']
-			my_debug.debug("[get_successful_transfers] marker: {0}, next_marker: {1}".format(marker, next_marker))
-			time.sleep(1)
-			params['marker'] = next_marker
-			r = requests.get(url+resource, headers=headers, params=params)
+			markers = {'marker':data['next_marker']}
+			r = requests.get(url+resource, headers=headers, params=markers)
 			data = r.json()
 			if (r.status_code >= 400):
 				handle_error(r, data)
@@ -164,6 +170,31 @@ def get_successful_transfers(task_id):
 	# return all successful transfers
 		return data_transfers
 
+#=========================================================================================
+# Handle errors returned by API resource
+
+# Example:
+# Verify that task id exists.  Response will be as follows if not:
+# r.status_code = 404
+# r.headers['x-transfer-api-error'] = 'TaskNotFound'
+# data['code'] = 'TaskNotFound'
+# data['message'] = 'Task ID <task_id> not found'
+# data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
+
+# Also, for failed tasks, the task ID will exist, but response will have zero content:
+# len(data['DATA']) = 0
+
+def handle_error(r, data):
+	msg = "Error {0}: {1}".format(str(r.status_code), data['message'])
+	msg += " Resource: {0}".format(data['resource'])
+	my_logger.error(msg)
+	error_code = r.headers['x-transfer-api-error']
+	
+	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
+		sys.exit()
+	else:
+		return
+	
 #=========================================================================================
 # Parse file names in data_transfers dictionary
 
@@ -177,7 +208,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		data_type = data['DATA'][i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
-		if (endpoint == 'rda#datashare'):
+		if (endpoint == datashareID):
 		    # Query file size from wfile.data_size
 			dsid = pathsplit[1]
 			wfile = urllib.unquote("/".join(pathsplit[2:]))
@@ -195,7 +226,8 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			                 unicode('size'):myrec['data_size'],
 			                 unicode('count'):1})
 		
-		if (endpoint == 'rda#data_request'):
+		# rda#data_request
+		if (endpoint == data_requestID):
 			searchObj = re.search(r'\d+$', pathsplit[2])
 			rindex = int(searchObj.group(0))
 			condition = " WHERE {0}='{1}'".format("rindex", rindex)
@@ -225,7 +257,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 # Insert/update list of files transferred successfully
 
 def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
-	my_debug.debug("[add_successful_transfers] Processing task_id: {0}".format(task_id))
+	my_logger.info("[add_successful_transfers] task_id: {0}".format(task_id))
 
 # Prepare database records
 
@@ -252,27 +284,27 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if searchObj:
 			continue
 		else:
-			if (endpoint == 'rda#datashare'):
+			if (endpoint == datashareID):
 				condition = " WHERE {0} = '{1}' AND {2}='{3}'".format("task_id", records[i]['task_id'], "source_path", records[i]['source_path'])
 				myrec = myget(go_table, keys, condition)
 				if (len(myrec) > 0):
 					if (cmp(records[i],myrec) != 0):
 						myupdt(go_table, records[i], condition)
 					else:
-						my_debug.debug("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
+						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
 				else:
 					myadd(go_table, records[i])
-			elif (endpoint == 'rda#data_request'):
+			elif (endpoint == data_requestID):
 				dsrqst_count += 1
 			else:
 				my_logger.warning('[add_successful_transfers] Endpoint {0} not found'.format(endpoint))
 				return
 
 	# Insert usage from rda#datashare into table allusage
-	if (endpoint == 'rda#datashare' and len(records) > 0):
+	if (endpoint == datashareID and len(records) > 0):
 		update_allusage(task_id)
 
-	if (endpoint == 'rda#data_request' and len(records) > 0):
+	if (endpoint == data_requestID and len(records) > 0):
 		dsrqst_rec = []
 		pathsplit = records[0]['source_path'].split("/")
 		file_name = pathsplit.pop()
@@ -293,7 +325,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			if (cmp(dsrqst_rec, myrec) != 0):
 				myupdt(go_table, dsrqst_rec[0], condition)
 			else:
-				my_debug.debug("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
+				my_logger.info("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
 		else:
 			myadd(go_table, dsrqst_rec[0])
 
@@ -352,7 +384,7 @@ def update_allusage(task_id):
 			if (cmp(all_recs[i], myrec) != 0):
 				myupdt(go_table, all_recs[i], condition)
 			else:
-				my_debug.debug("[update_allusage] DB record already exists and is up to date.")
+				my_logger.info("[update_allusage] DB record already exists and is up to date.")
 		else:
 			myadd(go_table, all_recs[i])
 
@@ -360,9 +392,9 @@ def update_allusage(task_id):
 # Define filters to apply in API requests
 
 def set_filters(args):
-	my_debug.debug('[set_filters] Defining Globus API filters')
+	my_logger.info('[set_filters] Defining Globus API filters')
 	filters = {}
-	if (args['endpoint']): filters['filter_endpoint'] = args['endpoint']		
+	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']		
 	if (args['user'] != ''): filters['filter_username'] = args['user']
 	if (args['start'] != ''):
 		if (args['end'] != ''):
@@ -388,6 +420,7 @@ def parse_opts(argv):
 	global doprint
 	global my_debug
 
+	my_logger.info('[parse_opts] Parsing command line arguments')
 	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
 	date_fmt = "%Y-%m-%d"
 	thirtyDays = timedelta(days=30)
@@ -396,19 +429,22 @@ def parse_opts(argv):
 	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
 	endpoint = 'rda#data_request'
+	endpointID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
 	user = ''
 	start_date = thirtyDaysAgo.isoformat()
 	end_date = datetime.now(tz=pytz.utc).isoformat()
 	doprint = bool(False)
 	rem = ''
-	dbglevel = 'INFO'
-	
+
 	opts, rem = getopt.getopt(argv, 'n:u:s:e:p:b', ['endpoint=','user=','startdate=','enddate=','print','debug'])
 	
 	for opt, arg in opts:
 		if opt in ('-n', '--endpoint'):
-			endpoint = arg
+			if(arg == 'rda#datashare'):
+				endpoint = arg
+				endpointID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
 			my_logger.info('ENDPOINT  : {0}'.format(endpoint))
+			my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
 		elif opt in ('-u', '--user'):
 			user = arg
 			my_logger.info('USER      : {0}'.format(user))
@@ -421,20 +457,20 @@ def parse_opts(argv):
 		elif opt in ('-p', '--print'):
 			doprint = bool(True)
 		elif opt in ('-b', '--debug'):
-			dbglevel = 'DEBUG'
+			my_debug = mydbg(LOGPATH)
 		elif opt in ('-h', '--help'):
 			print usg
 	
-	my_debug = mydbg(LOGPATH, DBGLOG, dbglevel)
-	
-	print 'ENDPOINT  :', endpoint
-	print 'USER      :', user
-	print 'START     :', start_date
-	print 'END       :', end_date
-	print 'PRINT     :', doprint
-	print 'REMAINING :', rem
+	print 'ENDPOINT   :', endpoint
+	print 'ENDPOINT ID:', endpointID
+	print 'USER       :', user
+	print 'START      :', start_date
+	print 'END        :', end_date
+	print 'PRINT      :', doprint
+	print 'REMAINING  :', rem
 
 	return {'endpoint': endpoint, \
+	        'endpointID': endpointID, \
             'user': user, \
             'start': start_date, \
             'end': end_date, \
@@ -507,82 +543,26 @@ def print_doc(data, keys):
 				continue
 
 #=========================================================================================
-# Handle errors returned by API resource
-
-# Example:
-# Verify that task id exists.  Response will be as follows if not:
-# r.status_code = 404
-# r.headers['x-transfer-api-error'] = 'TaskNotFound'
-# data['code'] = 'TaskNotFound'
-# data['message'] = 'Task ID <task_id> not found'
-# data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
-
-# Also, for failed tasks, the task ID will exist, but response will have zero content:
-# len(data['DATA']) = 0
-
-def handle_error(r, data):
-	msg = "Error {0}: {1}, {2}".format(str(r.status_code), data['code'], data['message'])
-	msg += " Resource: {0}".format(data['resource'])
-	my_err.error(msg)
-	error_code = r.headers['x-transfer-api-error']
-	
-	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
-		sys.exit()
-	else:
-		return
-	
-#=========================================================================================
-# Open log file
-# level = DEBUG, INFO, WARNING, ERROR, or CRITICAL
-
-def mylog(logpath, logfile, level):
-	loggerName = 'GlobusMetricsLog'
-	my_logger = logging.getLogger(loggerName)
-	num_level = getattr(logging, level.upper())
-	my_logger.setLevel(num_level)
-	handler = logging.handlers.RotatingFileHandler(logpath+'/'+logfile,maxBytes=1000000000,backupCount=10)
-	handler.setLevel(num_level)
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - line %(lineno)d - %(message)s')
-	handler.setFormatter(formatter)
-	my_logger.addHandler(handler)
-	return my_logger
- 
-#=========================================================================================
-# Open error log file
-
-def myerr(logpath, errlog):
-	loglevel = 'ERROR'
-	loggerName = 'GlobusMetricsErrorLog'
-	my_err = logging.getLogger(loggerName)
-	num_level = getattr(logging, loglevel.upper())
-	my_err.setLevel(num_level)
-	handler = logging.handlers.RotatingFileHandler(logpath+'/'+errlog,maxBytes=1000000000,backupCount=10)
-	handler.setLevel(num_level)
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - line %(lineno)d - %(message)s')
-	handler.setFormatter(formatter)
-	my_err.addHandler(handler)
-	return my_err
- 
-#=========================================================================================
 # Open debug log file
 
-def mydbg(logpath, dbglog, loglevel):
+def mydbg(logpath):
+	logfile = 'retrieve_globus_metrics.dbg'
+	loglevel = 'DEBUG'
 	loggerName = 'GlobusMetricsDebug'
+
 	my_debug = logging.getLogger(loggerName)
 	num_level = getattr(logging, loglevel.upper())
 	my_debug.setLevel(num_level)
-	handler = logging.handlers.RotatingFileHandler(logpath+'/'+dbglog,maxBytes=1000000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(logpath+'/'+logfile,maxBytes=1000000000,backupCount=10)
 	handler.setLevel(num_level)
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - line %(lineno)d - %(message)s')
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
 	my_debug.addHandler(handler)
 	return my_debug
- 
+
 #=========================================================================================
 
 if __name__ == "__main__":
-	my_logger = mylog(LOGPATH, LOGFILE, 'INFO')
-	my_err = myerr(LOGPATH, ERRLOG)
 	args = parse_opts(sys.argv[1:])
 	filters = set_filters(args)
 	main(filters)
