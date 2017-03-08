@@ -110,8 +110,9 @@ def add_endpoint_acl_rule(action, data):
 		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
     
-	my_logger.info("[add_endpoint_acl_rule] ACL created for user {0}.  ACL ID: {1}".format(email, result['access_id']))
-	
+	my_logger.info("[add_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}. Access ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id']))
+	my_logger.info("[add_endpoint_acl_rule] User email: {0}".format(email))
+		
 	url = construct_share_url(action, share_data)
 	share_data.update({'globus_rid': result['access_id'],'globus_url': url})	
 	update_share_record(action, share_data)
@@ -121,6 +122,65 @@ def add_endpoint_acl_rule(action, data):
 def delete_endpoint_acl_rule(action, data):
 	""" Delete a specific endpoint access rule """ 
 
+	if (action == 1):
+		try:
+			endpoint_id = MyGlobus['data_request_ep']
+			ridx = data['ridx']
+			cond = " WHERE rindex='{0}'".format(ridx)
+			myrqst = myget('dsrqst', ['*'], cond)
+			if (len(myrqst) == 0):
+				my_logger.warning("[delete_endpoint_acl_rule] Request index not on file")
+				sys.exit(1)
+			if (!myrqst['globus_rid']):
+				my_logger.warning("[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx))
+				sys.exit(1)
+			else:
+				rule_id = myrqst['globus_rid']
+		except KeyError as err:
+			my_logger.error("[delete_endpoint_acl_rule] {0}".format(err), exc_info=True)
+			sys.exit(1)
+	elif (action == 2):
+		try:
+			endpoint_id = MyGlobus['datashare_ep']
+			email = data['email']
+			dsid = data['dsid']
+			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
+			myshare = myget('goshare', ['*'], cond)
+			if (len(myshare) == 0):
+				my_logger.warning("[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid))
+				sys.exit(1)
+			if (!myrqst['globus_rid']):
+				my_logger.warning("[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid))
+				sys.exit(1)
+			else:
+				rule_id = myshare['globus_rid']
+				record = []
+				record.append({unicode('delete_date'): date,
+			                   unicode('status'): 'DELETED'
+			                   })
+				myupdt('goshare', record[0], cond)
+
+	try:
+		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		result = tc.delete_endpoint_acl_rule(endpoint_id, rule_id)
+	except GlobusAPIError as e:
+		my_logger.error(("[delete_endpoint_acl_rule] Globus API Error\n"
+		                 "HTTP status: {}\n"
+		                 "Error code: {}\n"
+		                 "Error message: {}").format(e.http_status, e.code, e.message))
+		raise e
+	except NetworkError:
+		my_logger.error(("[delete_endpoint_acl_rule] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
+		raise
+    
+	my_logger.info("[delete_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}.".format(result['message'], result['resource'], result['request_id']))
+	
+	return
+				
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
 	    shared endpoint base path.
