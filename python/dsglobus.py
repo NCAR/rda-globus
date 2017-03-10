@@ -30,6 +30,8 @@ import json
 import logging
 import logging.handlers
 import argparse
+import textwrap
+import re
 
 try:
     from urllib.parse import urlencode
@@ -37,15 +39,15 @@ except:
     from urllib import urlencode
 
 def main():
-	options = parse_input()
-	action = options['action']
+	opts = parse_input()
+	action = opts['action']
 	
-	if options['removePermission']:
-		delete_endpoint_acl_rule(action, options)
-	elif options['addPermission']:
-		add_endpoint_acl_rule(action, options)
+	if opts['removePermission']:
+		result = delete_endpoint_acl_rule(action, opts)
+	elif opts['addPermission']:
+		result = add_endpoint_acl_rule(action, opts)
 	
-	sys.exit()
+	return result
 
 def add_endpoint_acl_rule(action, data):
 	""" Create a new endpoint access rule """
@@ -53,8 +55,7 @@ def add_endpoint_acl_rule(action, data):
 		email = data['email']
 		rda_identity = "{0}@rda.ucar.edu".format(email)
 	except KeyError as err:
-		my_logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
-		sys.exit(1)
+		return handle_error(err, name="[add_endpoint_acl_rule]")
 	
 	if (action == 1):
 		try:
@@ -63,8 +64,9 @@ def add_endpoint_acl_rule(action, data):
 			cond = " WHERE rindex='{0}'".format(ridx)
 			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) == 0):
-				my_logger.warning("[add_endpoint_acl_rule] Request index not on file")
-				sys.exit(1)
+				msg = "[add_endpoint_acl_rule] Request index not on file"
+				my_logger.warning(msg)
+				return {'Error': msg}
 			rqstid = myrqst['rqstid']
 			if myrqst['globus_rid']:
 				my_logger.info("[add_endpoint_acl_rule] Globus ACL rule has already been created for request {0}.".format(ridx))
@@ -72,8 +74,7 @@ def add_endpoint_acl_rule(action, data):
 			share_data = {'ridx': ridx}
 			path = construct_share_path(1, share_data)
 		except KeyError as err:
-			my_logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[add_endpoint_acl_rule]")
 
 	elif (action == 2):
 		try:
@@ -88,8 +89,7 @@ def add_endpoint_acl_rule(action, data):
 			path = construct_share_path(2, share_data)
 			share_data.update({'email': email})
 		except KeyError as err:
-			my_logger.error("[add_endpoint_acl_rule] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[add_endpoint_acl_rule]")
 
 	identity_id = get_user_id(rda_identity)
 	share_data.update({'identity': identity_id})
@@ -107,10 +107,11 @@ def add_endpoint_acl_rule(action, data):
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 		result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
 	except GlobusAPIError as e:
-		my_logger.error(("[add_endpoint_acl_rule] Globus API Error\n"
-		                 "HTTP status: {}\n"
-		                 "Error code: {}\n"
-		                 "Error message: {}").format(e.http_status, e.code, e.message))
+		msg = ("[add_endpoint_acl_rule] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
 		raise e
 	except NetworkError:
 		my_logger.error(("[add_endpoint_acl_rule] Network Failure. "
@@ -139,16 +140,18 @@ def delete_endpoint_acl_rule(action, data):
 			cond = " WHERE rindex='{0}'".format(ridx)
 			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) == 0):
-				my_logger.warning("[delete_endpoint_acl_rule] Request index not on file")
-				sys.exit(1)
-			if (!myrqst['globus_rid']):
-				my_logger.warning("[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx))
-				sys.exit(1)
+				msg = "[delete_endpoint_acl_rule] Request index not on file"
+				my_logger.warning(msg)
+				return {'Error': msg}
+			if not myrqst['globus_rid']:
+				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
+				my_logger.warning(msg)
+				return {'Error': msg}
 			else:
 				rule_id = myrqst['globus_rid']
 		except KeyError as err:
-			my_logger.error("[delete_endpoint_acl_rule] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[delete_endpoint_acl_rule]")
+
 	elif (action == 2):
 		try:
 			endpoint_id = MyGlobus['datashare_ep']
@@ -157,11 +160,13 @@ def delete_endpoint_acl_rule(action, data):
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) == 0):
-				my_logger.warning("[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid))
-				sys.exit(1)
-			if (!myrqst['globus_rid']):
-				my_logger.warning("[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid))
-				sys.exit(1)
+				msg = "[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid)
+				my_logger.warning(msg)
+				return {'Error': msg}
+			if not myrqst['globus_rid']:
+				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid)
+				my_logger.warning(msg)
+				return {'Error': msg}
 			else:
 				rule_id = myshare['globus_rid']
 				record = []
@@ -187,10 +192,11 @@ def delete_endpoint_acl_rule(action, data):
 		logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
     
-	my_logger.info("[delete_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}.".format(result['message'], result['resource'], result['request_id']))
+    msg = "[delete_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}.".format(result['message'], result['resource'], result['request_id'])
+	my_logger.info(msg)
 	
-	return
-				
+	return msg
+
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
 	    shared endpoint base path.
@@ -215,16 +221,16 @@ def construct_share_path(action, data):
 				else:
 					path = "/download.auto/{0}/".format(myrqst['rqstid'])
 			else:
-				my_logger.error("[construct_share_path] Request index {0} not found or request ID not defined".format(ridx))
+				msg = "[construct_share_path] Request index {0} not found or request ID not defined".format(ridx)
+				my_logger.error(msg)
+				return {'Error': msg}
 		except KeyError as err:
-			my_logger.error("[construct_share_path] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[construct_share_path]")
 	elif (action == 2):
 		try:
 			path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
-			my_logger.error("[construct_share_path] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[construct_share_path]")
 
 	my_logger.info("[construct_share_path] Path to shared data: {0}".format(path))
 	return path
@@ -244,19 +250,18 @@ def construct_share_url(action, data):
 				origin_id = MyGlobus['data_request_ep']
 				origin_path = construct_share_path(1, {'ridx': ridx})
 			else:
-				my_logger.warning("[construct_share_url] Request {0} not found in RDADB".format(ridx))
-				sys.exit(1)
+				msg = "[construct_share_url] Request {0} not found in RDADB".format(ridx)
+				my_logger.warning(msg)
+				return {'Error': msg}
 		except KeyError as err:
-			my_logger.error("[construct_share_url] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[construct_share_url]")
 
 	if (action == 2):
 		try:
 			origin_id = MyGlobus['datashare_ep']
 			origin_path = construct_share_path(2, {'dsid': data['dsid']})
 		except KeyError as err:
-			my_logger.error("[construct_share_url] {0}".format(err), exc_info=True)
-			sys.exit(1)
+			return handle_error(err, name="[construct_share_url]")
 
 	params = {'origin_id': origin_id, 'origin_path': origin_path}
 	if 'identity' in data:
@@ -300,28 +305,19 @@ def query_acl_rule(action, data):
 	
 	if (action == 1):
 		""" dsrqst shares """
-		try:
-			cond = " WHERE rindex='{0}'".format(data['ridx'])
-			myrule = myget('dsrqst', ['*'], cond)
-		except KeyError as err:
-			my_logger.error("[query_acl_rule] {0}".format(err), exc_info=True)
-			sys.exit(1)
+		cond = " WHERE rindex='{0}'".format(data['ridx'])
+		myrule = myget('dsrqst', ['*'], cond)
 		
 	elif (action == 2):
 		""" standard dataset shares """
-		try:
-			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
-			myrule = myget('goshare', ['*'], cond)
-		except:
-			my_logger.error("[query_acl_rule] {0}".format(err), exc_info=True)
-			sys.exit(1)
+		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
+		myrule = myget('goshare', ['*'], cond)
 	
 	if 'globus_rid' in myrule:
 		rule_id = myrule['globus_rid']
 		return {'acl_rule': rule_id}
 	else:
 		return None
-	
 	
 def update_share_record(action, data):
 	""" Update the user's Globus share in RDADB """
@@ -332,8 +328,7 @@ def update_share_record(action, data):
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
 	except KeyError as err:
-		my_logger.error("[update_share_record] {0}".format(err), exc_info=True)
-		sys.exit(1)
+		return handle_error(err, name="[update_share_record]")
 	
 	record = []
 	
@@ -347,8 +342,7 @@ def update_share_record(action, data):
 			myupdt('dsrqst', record[0], cond)
 			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid)) 
 		except KeyError as err:
-			my_logger.error("[update_share_record] {0}".format(err), exc_info=True)
-			sys.exit(1) 
+			return handle_error(err, name="[update_share_record]") 
 	elif (action == 2):
 		try:
 			dsid = data['dsid']
@@ -356,7 +350,9 @@ def update_share_record(action, data):
 			cond = " WHERE email='{0}' AND end_date IS NULL".format(email)
 			myuser = myget('ruser', ['id'], cond)
 			if 'id' not in myuser:
-				return {'Error': '[update_share_record] email {0} not in RDADB table ruser'.format(email)}
+				msg = "[update_share_record] email {0} not in RDADB table ruser".format(email)
+				my_logger.warning(msg)
+				return {'Error': msg}
 			path = construct_share_path(2, {'dsid': dsid})
 			record = {'globus_rid': '{0}'.format(data['globus_rid']),
                       'globus_url': '{0}'.format(data['globus_url']),
@@ -370,16 +366,13 @@ def update_share_record(action, data):
                       'status': 'ACTIVE'}
 			myadd('goshare', record)
 			my_logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid)) 
-		except KeyError as e:
-			my_logger.error("[update_share_record] {0}".format(err), exc_info=True)
-			sys.exit(1)
+		except KeyError as err:
+			return handle_error(err, name="[update_share_record]")
 
 	return
 	
 def parse_input():
 	""" Parse command line arguments """
-	options = {}
-	
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
 	epilog = textwrap.dedent('''\
 	Examples:
@@ -415,37 +408,44 @@ def parse_input():
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("{0}: {1}".format(sys.argv[0], args)
 	
-	options = vars(args)
+	opts = vars(args)
 
-	if (options['REQUESTINDEX'] and options['DATASETID']):
-		my_logger.error("Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both.")
+	if (opts['REQUESTINDEX'] and opts['DATASETID']):
+		msg = "Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both."
+		my_logger.error(msg)
+		print msg
 		sys.exit(1)
-
- 	if options['REQUESTINDEX']:
-		options['ridx'] = options.pop('REQUESTINDEX')
-		options.update({'action': 1})
-	elif options['DATASETID']:
-		if !options['EMAIL']:
-			my_logger.error("Please specify user e-mail via the -em option.")
+ 	if opts['REQUESTINDEX']:
+		opts['ridx'] = options.pop('REQUESTINDEX')
+		opts.update({'action': 1})
+	elif opts['DATASETID']:
+		if not opts['EMAIL']:
+			msg = "Please specify user e-mail via the -em option."
+			my_logger.error(msg)
+			print msg
 			sys.exit(1)
-		dsid = options['DATASETID']
-		searchObj = re.search(/^\d+\.\d+$/, dsid)
+		dsid = opts['DATASETID']
+		searchObj = re.search(r'^\d+\.\d+$', dsid)
 		if searchObj:
 			dsid = "ds%s" % dsid
-		if re.match(!~ /^(ds){0,1}\d+\.\d+$/i, args['DATASETID']):
-			my_logger.error("Please specify the dataset id as dsnnn.n or nnn.")
+		if not re.match(r'^(ds){0,1}\d+\.\d+$', dsid, re.I):
+			msg = "Please specify the dataset id as dsnnn.n or nnn.n"
+			my_logger.error(msg)
+			print msg
 			sys.exit(1)
-		options['dsid'] = options.pop('DATASETID')
-		options['email'] = options.pop('EMAIL')
-		options.update({'action': 2})
-	elif options['EMAIL']:
-		my_logger.error("Please specify the dataset ID via the -ds option.")
+		opts['dsid'] = opts.pop('DATASETID').lower()
+		opts['email'] = opts.pop('EMAIL')
+		opts.update({'action': 2})
+	elif opts['EMAIL']:
+		msg = "Please specify the dataset ID via the -ds option."
+		my_logger.error(msg)
+		print msg
 		sys.exit(1)
 	else:
 		parser.print_help()
 		sys.exit(1)
 
-	return options
+	return opts
 	
 def configure_log(**kwargs):
 	""" Set up log file """
@@ -473,6 +473,17 @@ def configure_log(**kwargs):
 	my_logger.addHandler(handler)
 	
 	return
+
+def handle_error(err, **kwargs):
+	if 'name' in kwargs:
+		name = kwargs['function']
+	else:
+		name = ""
+	
+	msg = "{0} {1}".format(name, err)
+	my_logger.error(msg, exc_info=True)
+	
+	return {'Error': msg}
 
 #=========================================================================================
 """ Set up logging """
