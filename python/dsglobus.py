@@ -414,9 +414,9 @@ def parse_input():
 	opts['removePermission'] = opts.pop('rp')
 	
 	if opts['ne']:
-		opts['notify': False]
+		opts['notify'] = False
 	else:
-		opts['notify': True]
+		opts['notify'] = True
 	opts.pop('ne')
 	
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
