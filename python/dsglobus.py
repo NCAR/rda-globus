@@ -410,6 +410,7 @@ def parse_input():
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("{0}: {1}".format(sys.argv[0], args)
 	
+	opts = {}
 	opts=vars(args)
 	
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
@@ -418,7 +419,7 @@ def parse_input():
 		print msg
 		sys.exit(1)
  	if opts['REQUESTINDEX']:
-		opts['ridx'] = options.pop('REQUESTINDEX')
+		opts['ridx'] = opts.pop('REQUESTINDEX')
 		opts.update({'action': 1})
 	elif opts['DATASETID']:
 		if not opts['EMAIL']:
