@@ -194,7 +194,7 @@ def delete_endpoint_acl_rule(action, data):
 		logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
     
-    msg = "[delete_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}.".format(result['message'], result['resource'], result['request_id'])
+	msg = "[delete_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}.".format(result['message'], result['resource'], result['request_id'])
 	my_logger.info(msg)
 	
 	return msg
