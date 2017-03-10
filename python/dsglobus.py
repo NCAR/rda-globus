@@ -485,7 +485,7 @@ def configure_log(**kwargs):
 
 def handle_error(err, **kwargs):
 	if 'name' in kwargs:
-		name = kwargs['function']
+		name = kwargs['name']
 	else:
 		name = ""
 	
