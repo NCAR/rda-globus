@@ -410,6 +410,14 @@ def parse_input():
 	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	
 	opts = vars(args)
+	opts['addPermission'] = opts.pop('ap')
+	opts['removePermission'] = opts.pop('rp')
+	
+	if opts['ne']:
+		opts['notify': False]
+	else:
+		opts['notify': True]
+	opts.pop('ne')
 	
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
 		msg = "Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both."
