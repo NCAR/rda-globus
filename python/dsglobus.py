@@ -174,6 +174,8 @@ def delete_endpoint_acl_rule(action, data):
 				               unicode('status'): 'DELETED'
 				               })
 				myupdt('goshare', record[0], cond)
+		except KeyError as err:
+			return handle_error(err, name="[delete_endpoint_acl_rule]")
 
 	try:
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
