@@ -25,9 +25,11 @@ from PyDBI import myget, myupdt, myadd
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient, GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
+from MyLOG import show_usage
 import json
 import logging
 import logging.handlers
+import argparse
 
 try:
     from urllib.parse import urlencode
@@ -36,6 +38,14 @@ except:
 
 def main():
 	options = parse_input()
+	action = options['action']
+	
+	if options['removePermission']:
+		delete_endpoint_acl_rule(action, options)
+	elif options['addPermission']:
+		add_endpoint_acl_rule(action, options)
+	
+	sys.exit()
 
 def add_endpoint_acl_rule(action, data):
 	""" Create a new endpoint access rule """
@@ -369,6 +379,72 @@ def update_share_record(action, data):
 def parse_input():
 	""" Parse command line arguments """
 	options = {}
+	
+	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
+	epilog = textwrap.dedent('''\
+	Examples:
+	  - Grant permission to a user for dsrqst index 1234:
+	              dsglobus -ap -ri 1234
+	
+	  - Delete permission from a user and delete the access share rule for dsrqst index 1234:
+	              dsglobus -rp -ri 1234
+	
+	  - Share all files from RDA dataset ds131.2 with a user:
+	             dsglobus -ap -ds 131.2 -em tcram@ucar.edu
+	''')
+
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
+
+	group = parser.add_mutually_exclusive_group(required=True)
+	group.add_argument('-ap', action="store_true", default=False, help='Add endpoint permission')
+	group.add_argument('-rp', action="store_true", default=False, help='Delete endpoint permission')
+
+	parser.add_argument('-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
+	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Used together with the -em argument.')
+	parser.add_argument('-em', action="store", dest="EMAIL", help='User e-mail.  Used together with the -ds argument.')
+	parser.add_argument('-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
+		
+	parser = argparse.ArgumentParser(description="{}".format(sys.argv[0]))
+	parser.add_argument('-ri', action="store", dest="ri", type=int)
+	parser.add_argument('-ds', action="store", dest="ds")
+	parser.add_argument('-em', action="store", dest="em")
+	parser.add_argument('-ap', action="store_true", default=False)
+	parser.add_argument('-rp', action="store_true", default=False)
+	parser.add_argument('-ne', action="store_true", default=False)
+	parser.add_argument('-h', action="store", dest="h")
+	args = parser.parse_args(sys.argv[1:])
+	my_logger.info("{0}: {1}".format(sys.argv[0], args)
+	
+	options = vars(args)
+
+	if (options['REQUESTINDEX'] and options['DATASETID']):
+		my_logger.error("Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both.")
+		sys.exit(1)
+
+ 	if options['REQUESTINDEX']:
+		options['ridx'] = options.pop('REQUESTINDEX')
+		options.update({'action': 1})
+	elif options['DATASETID']:
+		if !options['EMAIL']:
+			my_logger.error("Please specify user e-mail via the -em option.")
+			sys.exit(1)
+		dsid = options['DATASETID']
+		searchObj = re.search(/^\d+\.\d+$/, dsid)
+		if searchObj:
+			dsid = "ds%s" % dsid
+		if re.match(!~ /^(ds){0,1}\d+\.\d+$/i, args['DATASETID']):
+			my_logger.error("Please specify the dataset id as dsnnn.n or nnn.")
+			sys.exit(1)
+		options['dsid'] = options.pop('DATASETID')
+		options['email'] = options.pop('EMAIL')
+		options.update({'action': 2})
+	elif options['EMAIL']:
+		my_logger.error("Please specify the dataset ID via the -ds option.")
+		sys.exit(1)
+	else:
+		parser.print_help()
+		sys.exit(1)
+
 	return options
 	
 def configure_log(**kwargs):
