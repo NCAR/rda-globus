@@ -171,8 +171,8 @@ def delete_endpoint_acl_rule(action, data):
 				rule_id = myshare['globus_rid']
 				record = []
 				record.append({unicode('delete_date'): date,
-			                   unicode('status'): 'DELETED'
-			                   })
+				               unicode('status'): 'DELETED'
+				               })
 				myupdt('goshare', record[0], cond)
 
 	try:
