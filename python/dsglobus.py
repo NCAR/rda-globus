@@ -51,12 +51,6 @@ def main():
 
 def add_endpoint_acl_rule(action, data):
 	""" Create a new endpoint access rule """
-	try:
-		email = data['email']
-		rda_identity = "{0}@rda.ucar.edu".format(email)
-	except KeyError as err:
-		return handle_error(err, name="[add_endpoint_acl_rule]")
-	
 	if (action == 1):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
@@ -68,6 +62,7 @@ def add_endpoint_acl_rule(action, data):
 				my_logger.warning(msg)
 				return {'Error': msg}
 			rqstid = myrqst['rqstid']
+			email = myrqst['email']
 			if myrqst['globus_rid']:
 				my_logger.info("[add_endpoint_acl_rule] Globus ACL rule has already been created for request {0}.".format(ridx))
 				return {'access_id': myrqst['globus_rid'], 'share_url': myrqst['globus_url']}
@@ -80,6 +75,7 @@ def add_endpoint_acl_rule(action, data):
 		try:
 			endpoint_id = MyGlobus['datashare_ep']
 			dsid = data['dsid']
+			email = data['email']
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) > 0 and myshare['globus_rid']):
@@ -91,6 +87,7 @@ def add_endpoint_acl_rule(action, data):
 		except KeyError as err:
 			return handle_error(err, name="[add_endpoint_acl_rule]")
 
+	rda_identity = "{0}@rda.ucar.edu".format(email)
 	identity_id = get_user_id(rda_identity)
 	share_data.update({'identity': identity_id})
 	rule_data = {
