@@ -410,8 +410,8 @@ def parse_input():
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("{0}: {1}".format(sys.argv[0], args)
 	
-	opts = vars(args)
-
+	opts=vars(args)
+	
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
 		msg = "Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
