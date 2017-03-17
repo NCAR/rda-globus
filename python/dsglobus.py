@@ -82,7 +82,7 @@ def add_endpoint_acl_rule(action, data):
 			share_data = {'ridx': ridx}
 			path = construct_share_path(1, share_data)
 		except KeyError as err:
-			return handle_error(err, name="[add_endpoint_acl_rule]", print=print_stdout)
+			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	elif (action == 2):
 		try:
@@ -101,7 +101,7 @@ def add_endpoint_acl_rule(action, data):
 			path = construct_share_path(2, share_data)
 			share_data.update({'email': email})
 		except KeyError as err:
-			return handle_error(err, name="[add_endpoint_acl_rule]", print=print_stdout)
+			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	rda_identity = "{0}@rda.ucar.edu".format(email)
 	identity_id = get_user_id(rda_identity)
@@ -180,7 +180,7 @@ def delete_endpoint_acl_rule(action, data):
 			else:
 				rule_id = myrqst['globus_rid']
 		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]", print=print_stdout)
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	elif (action == 2):
 		try:
@@ -209,7 +209,7 @@ def delete_endpoint_acl_rule(action, data):
 				               })
 				myupdt('goshare', record[0], cond)
 		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]", print=print_stdout)
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	try:
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
@@ -270,12 +270,12 @@ def construct_share_path(action, data):
 				my_logger.error(msg)
 				return {'Error': msg}
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_path]", print=print_stdout)
+			return handle_error(err, name="[construct_share_path]", print_stdout=print_stdout)
 	elif (action == 2):
 		try:
 			path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_path]", print=print_stdout)
+			return handle_error(err, name="[construct_share_path]", print_stdout=print_stdout)
 
 	my_logger.info("[construct_share_path] Path to shared data: {0}".format(path))
 	return path
@@ -306,14 +306,14 @@ def construct_share_url(action, data):
 				my_logger.warning(msg)
 				return {'Error': msg}
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_url]", print=print_stdout)
+			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
 
 	if (action == 2):
 		try:
 			origin_id = MyGlobus['datashare_ep']
 			origin_path = construct_share_path(2, {'dsid': data['dsid']})
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_url]", print=print_stdout)
+			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
 
 	params = {'origin_id': origin_id, 'origin_path': origin_path}
 	if 'identity' in data:
@@ -390,7 +390,7 @@ def update_share_record(action, data):
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
 	except KeyError as err:
-		return handle_error(err, name="[update_share_record]", print=print_stdout)
+		return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
 	
 	record = []
 	
@@ -404,7 +404,7 @@ def update_share_record(action, data):
 			myupdt('dsrqst', record[0], cond)
 			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid)) 
 		except KeyError as err:
-			return handle_error(err, name="[update_share_record]", print=print_stdout) 
+			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout) 
 	elif (action == 2):
 		try:
 			dsid = data['dsid']
@@ -429,7 +429,7 @@ def update_share_record(action, data):
 			myadd('goshare', record)
 			my_logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid)) 
 		except KeyError as err:
-			return handle_error(err, name="[update_share_record]", print=print_stdout)
+			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
 
 	return
 	
@@ -553,7 +553,7 @@ def handle_error(err, **kwargs):
 	msg = "{0} {1}".format(name, err)
 	my_logger.error(msg, exc_info=True)
 	
-	if 'print' in kwargs and kwargs['print']:
+	if 'print_stdout' in kwargs and kwargs['print_stdout']:
 		sys.exit(msg)
 	
 	return {'Error': msg}
