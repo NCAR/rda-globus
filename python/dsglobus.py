@@ -8,8 +8,8 @@
 #   Purpose : Python module to create and manage shared endpoints to facilitate
 #             Globus data transfers from the RDA.
 #
-# Work File : $DSSHOME/bin/dsglobus.py*
-# Test File : $DSSHOME/bin/dsglobus_test.py*
+# Work File : $DSSHOME/lib/python/dsglobus.py*
+# Test File : $DSSHOME/lib/python/dsglobus_test.py*
 # Github    : https://github.com/NCAR/rda-globus/python/dsglobus.py
 #
 ##################################################################################
