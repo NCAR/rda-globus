@@ -181,6 +181,11 @@ def delete_endpoint_acl_rule(action, data):
 				return {'Error': msg}
 			else:
 				rule_id = myrqst['globus_rid']
+				record = []
+				record.append({unicode('globus_rid'): None,
+				               unicode('globus_url'): None
+				               })
+				myupdt('dsrqst', record[0], cond)
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 
