@@ -134,7 +134,7 @@ def add_endpoint_acl_rule(action, data):
 		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
 	
-	msg = "[add_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}. Access ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
+	msg = "[add_endpoint_acl_rule] {0}\nResource: {1}\nRequest ID: {2}\nAccess ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
 	if 'print' in data and data['print']:
 		print msg
 	my_logger.info(msg)
@@ -479,8 +479,7 @@ def parse_input():
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
 		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
-		print msg
-		sys.exit(1)
+		sys.exit(msg)
  	if opts['REQUESTINDEX']:
 		opts['ridx'] = opts.pop('REQUESTINDEX')
 		opts.update({'action': 1})
@@ -488,25 +487,22 @@ def parse_input():
 		if not opts['EMAIL']:
 			msg = "The e-mail option (-em) is required with the dataset ID option (-ds)."
 			my_logger.error(msg)
-			print msg
-			sys.exit(1)
+			sys.exit(msg)
 		dsid = opts['DATASETID']
-		searchObj = re.search(r'^\d+\.\d+$', dsid)
-		if searchObj:
-			dsid = "ds%s" % dsid
-		if not re.match(r'^(ds){0,1}\d+\.\d+$', dsid, re.I):
+		if not re.match(r'^(ds){0,1}\d{3}\.\d{1}$', dsid, re.I):
 			msg = "Please specify the dataset id as dsnnn.n or nnn.n"
 			my_logger.error(msg)
-			print msg
-			sys.exit(1)
+			sys.exit(msg)
+		searchObj = re.search(r'^\d{3}\.\d{1}$', dsid)
+		if searchObj:
+			opts['DATASETID'] = "ds%s" % dsid
 		opts['dsid'] = opts.pop('DATASETID').lower()
 		opts['email'] = opts.pop('EMAIL')
 		opts.update({'action': 2})
 	elif opts['EMAIL']:
 		msg = "The dataset ID option (-ds) is required with the e-mail option (-em)."
 		my_logger.error(msg)
-		print msg
-		sys.exit(1)
+		sys.exit(msg)
 	else:
 		parser.print_help()
 		sys.exit(1)
