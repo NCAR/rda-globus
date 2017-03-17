@@ -455,8 +455,8 @@ def parse_input():
 	group.add_argument('-rp', action="store_true", default=False, help='Delete endpoint permission')
 
 	parser.add_argument('-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
-	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Used together with the -em argument.')
-	parser.add_argument('-em', action="store", dest="EMAIL", help='User e-mail.  Used together with the -ds argument.')
+	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
+	parser.add_argument('-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
 	parser.add_argument('-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
 	
 	if len(sys.argv)==1:
@@ -477,7 +477,7 @@ def parse_input():
 	opts.pop('ne')
 	
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
-		msg = "Please specify only one of: dsrqst index (-ri) or dataset ID (-ds), not both."
+		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
 		print msg
 		sys.exit(1)
@@ -486,7 +486,7 @@ def parse_input():
 		opts.update({'action': 1})
 	elif opts['DATASETID']:
 		if not opts['EMAIL']:
-			msg = "Please specify user e-mail via the -em option."
+			msg = "The e-mail option (-em) is required with the dataset ID option (-ds)."
 			my_logger.error(msg)
 			print msg
 			sys.exit(1)
@@ -503,7 +503,7 @@ def parse_input():
 		opts['email'] = opts.pop('EMAIL')
 		opts.update({'action': 2})
 	elif opts['EMAIL']:
-		msg = "Please specify the dataset ID via the -ds option."
+		msg = "The dataset ID option (-ds) is required with the e-mail option (-em)."
 		my_logger.error(msg)
 		print msg
 		sys.exit(1)
