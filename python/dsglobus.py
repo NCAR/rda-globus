@@ -459,11 +459,6 @@ def parse_input():
 	parser.add_argument('-em', action="store", dest="EMAIL", help='User e-mail.  Used together with the -ds argument.')
 	parser.add_argument('-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
 		
-	parser = argparse.ArgumentParser(description="{}".format(sys.argv[0]))
-	parser.add_argument('-ri', action="store", dest="REQUESTINDEX", type=int, help="dsrqst request index")
-	parser.add_argument('-ds', action="store", dest="DATASETID", help="Dataset ID, specified as dsnnn.n or nnn.n.  Required with the -em argument.")
-	parser.add_argument('-em', action="store", dest="EMAIL", help="User e-mail.  Required with the -ds argument.")
-	parser.add_argument('-ne', action="store_true", default=False, help="Do not send notification e-mail.  Default behavior = False.")
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	
