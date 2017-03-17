@@ -133,8 +133,8 @@ def add_endpoint_acl_rule(action, data):
 	except GlobusError:
 		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
-    
-    msg = "[add_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}. Access ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
+	
+	msg = "[add_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}. Access ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
 	if 'print' in data and data['print']:
 		print msg
 	my_logger.info(msg)
