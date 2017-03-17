@@ -32,6 +32,8 @@ import logging.handlers
 import argparse
 import textwrap
 import re
+from datetime import datetime
+from time import strftime	
 
 try:
     from urllib.parse import urlencode
@@ -204,7 +206,7 @@ def delete_endpoint_acl_rule(action, data):
 			else:
 				rule_id = myshare['globus_rid']
 				record = []
-				record.append({unicode('delete_date'): date,
+				record.append({unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
 				               unicode('status'): 'DELETED'
 				               })
 				myupdt('goshare', record[0], cond)
@@ -383,9 +385,6 @@ def update_share_record(action, data):
 	    action = 1: dsrqst share
 	           = 2: standard dataset share
 	"""
-	from datetime import datetime
-	from time import strftime
-	
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
