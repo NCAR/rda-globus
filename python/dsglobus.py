@@ -50,7 +50,15 @@ def main():
 	return result
 
 def add_endpoint_acl_rule(action, data):
-	""" Create a new endpoint access rule """
+	""" Create a new endpoint access rule
+	    action = 1: dsrqst share
+	           = 2: standard dataset share
+	"""
+	if 'print' in data:
+		print_stdout = data['print']
+	else:
+		print_stdout = False
+	
 	if (action == 1):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
@@ -60,16 +68,21 @@ def add_endpoint_acl_rule(action, data):
 			if (len(myrqst) == 0):
 				msg = "[add_endpoint_acl_rule] Request index not on file"
 				my_logger.warning(msg)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				return {'Error': msg}
 			rqstid = myrqst['rqstid']
 			email = myrqst['email']
 			if myrqst['globus_rid']:
-				my_logger.info("[add_endpoint_acl_rule] Globus ACL rule has already been created for request {0}.".format(ridx))
+				msg = "[add_endpoint_acl_rule] Globus ACL rule has already been created for request {0}.".format(ridx)
+				my_logger.info("msg")
+				if 'print' in data and data['print']:
+					sys.exit(msg)
 				return {'access_id': myrqst['globus_rid'], 'share_url': myrqst['globus_url']}
 			share_data = {'ridx': ridx}
 			path = construct_share_path(1, share_data)
 		except KeyError as err:
-			return handle_error(err, name="[add_endpoint_acl_rule]")
+			return handle_error(err, name="[add_endpoint_acl_rule]", print=print_stdout)
 
 	elif (action == 2):
 		try:
@@ -79,13 +92,16 @@ def add_endpoint_acl_rule(action, data):
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) > 0 and myshare['globus_rid']):
-				my_logger.info("[add_endpoint_acl_rule] Globus ACL rule has already been created for user {0} and dataset {1}.".format(email, dsid))
+				msg = "[add_endpoint_acl_rule] Globus ACL rule has already been created for user {0} and dataset {1}. ACL rule {2}".format(email, dsid, myshare['globus_rid'])
+				my_logger.info(msg)
+				if 'print' in data and data['print']:
+					sys.exit(msg)
 				return {'access_id': myshare['globus_rid'], 'share_url': myshare['globus_url']}
 			share_data = {'dsid': dsid}
 			path = construct_share_path(2, share_data)
 			share_data.update({'email': email})
 		except KeyError as err:
-			return handle_error(err, name="[add_endpoint_acl_rule]")
+			return handle_error(err, name="[add_endpoint_acl_rule]", print=print_stdout)
 
 	rda_identity = "{0}@rda.ucar.edu".format(email)
 	identity_id = get_user_id(rda_identity)
@@ -118,9 +134,15 @@ def add_endpoint_acl_rule(action, data):
 		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
     
-	my_logger.info("[add_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}. Access ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id']))
+    msg = "[add_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}. Access ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
+	if 'print' in data and data['print']:
+		print msg
+	my_logger.info(msg)
 	my_logger.info("[add_endpoint_acl_rule] User email: {0}".format(email))
-		
+	
+	if 'print' in data and data['print']:
+		share_data.update({'print': True})
+	
 	url = construct_share_url(action, share_data)
 	share_data.update({'globus_rid': result['access_id'],'globus_url': url})	
 	update_share_record(action, share_data)
@@ -128,7 +150,14 @@ def add_endpoint_acl_rule(action, data):
 	return {'access_id': result["access_id"], 'share_url': url}
 
 def delete_endpoint_acl_rule(action, data):
-	""" Delete a specific endpoint access rule """ 
+	""" Delete a specific endpoint access rule
+	    action = 1: dsrqst share
+	           = 2: standard dataset share
+	""" 
+	if 'print' in data:
+		print_stdout = data['print']
+	else:
+		print_stdout = False
 
 	if (action == 1):
 		try:
@@ -138,16 +167,20 @@ def delete_endpoint_acl_rule(action, data):
 			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) == 0):
 				msg = "[delete_endpoint_acl_rule] Request index not on file"
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
 			if not myrqst['globus_rid']:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
 			else:
 				rule_id = myrqst['globus_rid']
 		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]")
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print=print_stdout)
 
 	elif (action == 2):
 		try:
@@ -158,10 +191,14 @@ def delete_endpoint_acl_rule(action, data):
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) == 0):
 				msg = "[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
 			if not myrqst['globus_rid']:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
 			else:
@@ -172,7 +209,7 @@ def delete_endpoint_acl_rule(action, data):
 				               })
 				myupdt('goshare', record[0], cond)
 		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]")
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print=print_stdout)
 
 	try:
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
@@ -192,6 +229,8 @@ def delete_endpoint_acl_rule(action, data):
 		raise
     
 	msg = "[delete_endpoint_acl_rule] {0}. Resource: {1}. Request ID: {2}.".format(result['message'], result['resource'], result['request_id'])
+	if 'print' in data and data['print']:
+		print msg
 	my_logger.info(msg)
 	
 	return msg
@@ -203,6 +242,11 @@ def construct_share_path(action, data):
 	    action = 1: dsrqst share
 	           = 2: standard dataset share
 	"""
+	if 'print' in data:
+		print_stdout = data['print']
+	else:
+		print_stdout = False
+
 	if (action == 1):
 		try:
 			ridx = data['ridx']
@@ -221,15 +265,17 @@ def construct_share_path(action, data):
 					path = "/download.auto/{0}/".format(myrqst['rqstid'])
 			else:
 				msg = "[construct_share_path] Request index {0} not found or request ID not defined".format(ridx)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				my_logger.error(msg)
 				return {'Error': msg}
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_path]")
+			return handle_error(err, name="[construct_share_path]", print=print_stdout)
 	elif (action == 2):
 		try:
 			path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_path]")
+			return handle_error(err, name="[construct_share_path]", print=print_stdout)
 
 	my_logger.info("[construct_share_path] Path to shared data: {0}".format(path))
 	return path
@@ -240,6 +286,11 @@ def construct_share_url(action, data):
 		action = 1: dsrqst shares
 		       = 2: standard dataset share
 	"""
+	if 'print' in data:
+		print_stdout = data['print']
+	else:
+		print_stdout = False
+
 	if (action == 1):
 		try:
 			ridx = data['ridx']
@@ -250,17 +301,19 @@ def construct_share_url(action, data):
 				origin_path = construct_share_path(1, {'ridx': ridx})
 			else:
 				msg = "[construct_share_url] Request {0} not found in RDADB".format(ridx)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_url]")
+			return handle_error(err, name="[construct_share_url]", print=print_stdout)
 
 	if (action == 2):
 		try:
 			origin_id = MyGlobus['datashare_ep']
 			origin_path = construct_share_path(2, {'dsid': data['dsid']})
 		except KeyError as err:
-			return handle_error(err, name="[construct_share_url]")
+			return handle_error(err, name="[construct_share_url]", print=print_stdout)
 
 	params = {'origin_id': origin_id, 'origin_path': origin_path}
 	if 'identity' in data:
@@ -300,7 +353,14 @@ def get_user_id(identity):
 	return uuid
 
 def query_acl_rule(action, data):
-	""" Check if an active ACL rule exists for a given RDA user """
+	""" Check if an active ACL rule exists for a given RDA user
+	    action = 1: dsrqst share
+	           = 2: standard dataset share
+	"""
+	if 'print' in data:
+		print_stdout = data['print']
+	else:
+		print_stdout = False
 	
 	if (action == 1):
 		""" dsrqst shares """
@@ -319,7 +379,10 @@ def query_acl_rule(action, data):
 		return None
 	
 def update_share_record(action, data):
-	""" Update the user's Globus share in RDADB """
+	""" Update the user's Globus share in RDADB
+	    action = 1: dsrqst share
+	           = 2: standard dataset share
+	"""
 	from datetime import datetime
 	from time import strftime
 	
@@ -327,7 +390,7 @@ def update_share_record(action, data):
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
 	except KeyError as err:
-		return handle_error(err, name="[update_share_record]")
+		return handle_error(err, name="[update_share_record]", print=print_stdout)
 	
 	record = []
 	
@@ -341,7 +404,7 @@ def update_share_record(action, data):
 			myupdt('dsrqst', record[0], cond)
 			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid)) 
 		except KeyError as err:
-			return handle_error(err, name="[update_share_record]") 
+			return handle_error(err, name="[update_share_record]", print=print_stdout) 
 	elif (action == 2):
 		try:
 			dsid = data['dsid']
@@ -366,7 +429,7 @@ def update_share_record(action, data):
 			myadd('goshare', record)
 			my_logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid)) 
 		except KeyError as err:
-			return handle_error(err, name="[update_share_record]")
+			return handle_error(err, name="[update_share_record]", print=print_stdout)
 
 	return
 	
@@ -375,7 +438,7 @@ def parse_input():
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
 	epilog = textwrap.dedent('''\
 	Examples:
-	  - Grant permission to a user for dsrqst index 1234:
+	  - Grant share permission to a user for dsrqst index 1234:
 	              dsglobus -ap -ri 1234
 	
 	  - Delete permission from a user and delete the access share rule for dsrqst index 1234:
@@ -451,6 +514,7 @@ def parse_input():
 		parser.print_help()
 		sys.exit(1)
 
+	opts['print'] = True
 	return opts
 	
 def configure_log(**kwargs):
@@ -488,6 +552,9 @@ def handle_error(err, **kwargs):
 	
 	msg = "{0} {1}".format(name, err)
 	my_logger.error(msg, exc_info=True)
+	
+	if 'print' in kwargs and kwargs['print']:
+		sys.exit(msg)
 	
 	return {'Error': msg}
 
