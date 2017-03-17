@@ -460,9 +460,9 @@ def parse_input():
 	parser.add_argument('-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
 	
 	if len(sys.argv)==1:
-    	parser.print_help()
-    	sys.exit(1)
-    
+		parser.print_help()
+		sys.exit(1)
+	
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	
