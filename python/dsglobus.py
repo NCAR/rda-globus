@@ -134,10 +134,10 @@ def add_endpoint_acl_rule(action, data):
 		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
 	
-	msg = "[add_endpoint_acl_rule] {0}\nResource: {1}\nRequest ID: {2}\nAccess ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
+	msg = "{0}\nResource: {1}\nRequest ID: {2}\nAccess ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
 	if 'print' in data and data['print']:
 		print msg
-	my_logger.info(msg)
+	my_logger.info("[add_endpoint_acl_rule] {0}".format(msg))
 	my_logger.info("[add_endpoint_acl_rule] User email: {0}".format(email))
 	
 	if 'print' in data and data['print']:
@@ -228,10 +228,10 @@ def delete_endpoint_acl_rule(action, data):
 		logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
     
-	msg = "[delete_endpoint_acl_rule] {0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
+	msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
 	if 'print' in data and data['print']:
 		print msg
-	my_logger.info(msg)
+	my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
 	
 	return msg
 
