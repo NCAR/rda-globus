@@ -195,7 +195,7 @@ def delete_endpoint_acl_rule(action, data):
 					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
-			if not myrqst['globus_rid']:
+			if not myshare['globus_rid']:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
