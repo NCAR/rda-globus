@@ -15,7 +15,6 @@ import os, sys
 
 sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/rdadata/bin")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
@@ -198,8 +197,7 @@ def transfer_status(task_id, new=False):
     params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
     if new:
     	params.update({'new': 'true'})
-    protocol = 'https://'
-    display_status = protocol + 'rda.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
+    display_status = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?'
     qs = urlencode(params)
     print "Location: %s%s\r\n" % (display_status, qs)
 
