@@ -197,8 +197,7 @@ def transfer_status(task_id, new=False):
     params = {'method': 'POST', 'action': 'display_status', 'task_id': task_id}
     if new:
     	params.update({'new': 'true'})
-    protocol = 'https://'
-    display_status = protocol + 'rda.ucar.edu/#!cgi-bin/rdaGlobusTransfer?'
+    display_status = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?'
     qs = urlencode(params)
     print "Location: %s%s\r\n" % (display_status, qs)
 
