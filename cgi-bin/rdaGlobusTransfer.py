@@ -15,7 +15,6 @@ import os, sys
 
 sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
 sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/rdadata/bin")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
