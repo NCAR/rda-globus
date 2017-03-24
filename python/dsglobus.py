@@ -16,6 +16,7 @@
 
 import os, sys
 
+sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/site-packages")
 sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
