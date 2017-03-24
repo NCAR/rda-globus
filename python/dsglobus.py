@@ -20,20 +20,28 @@ sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packa
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
+import logging
+import logging.handlers
+try:
+	from logging import NullHandler
+except ImportError:
+	class NullHandler(logging.Handler):
+		def emit(self, record):
+			pass
+
+import json
+import argparse
+import textwrap
+import re
+from datetime import datetime
+from time import strftime	
+
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt, myadd
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient, GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
 from MyLOG import show_usage
-import json
-import logging
-import logging.handlers
-import argparse
-import textwrap
-import re
-from datetime import datetime
-from time import strftime	
 
 try:
     from urllib.parse import urlencode
