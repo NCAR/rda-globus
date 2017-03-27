@@ -62,8 +62,8 @@ MyGlobus = {
 def load_environ():
 	""" Load paths required on ys/geyser nodes """
 
-	"""	
 	sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7")
+	"""	
 	sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/site-packages")
 	sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/logging")
 	"""
