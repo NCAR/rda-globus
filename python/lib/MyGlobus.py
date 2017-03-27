@@ -13,6 +13,8 @@
 #
 ##################################################################################
 
+import os, sys
+
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 GLOBUS_APP_URL = 'https://www.globus.org/app/'
@@ -56,3 +58,18 @@ MyGlobus = {
    'redirect_uri': REDIRECT_URI,
    'globusURL': GLOBUS_APP_URL
 }
+
+def load_environ():
+	""" Load paths required on ys/geyser nodes """
+	
+	sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/site-packages")
+	sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
+	sys.path.append("/glade/u/home/rdadata/lib/python")
+	sys.path.append("/glade/u/home/tcram/lib/python")
+	os.environ['MANPATH'] = "/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/share/man:{0}".format(os.environ['MANPATH'])
+	os.environ['PATH'] = "/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/bin:{0}".format(os.environ['PATH'])
+	os.environ['INC_NCAR'] = "-I/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/include/python2.7 {0}".format(os.environ['INC_NCAR'])
+	os.environ['MODULEPATH'] = "{0}:/glade/apps/opt/modulefiles/ys/pythonpkgs".format(os.environ['MODULEPATH'])
+	os.environ['LIB_NCAR'] = "-L/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib -lpython2.7 -Wl,-rpath,/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib {0}".format(os.environ['LIB_NCAR'])
+	
+	return
