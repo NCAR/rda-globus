@@ -16,6 +16,8 @@
 
 import os, sys
 
+sys.path.append("/glade/u/home/rdadata/lib/python")
+
 from MyGlobus import headers, MyGlobus, load_environ
 load_environ()
 
