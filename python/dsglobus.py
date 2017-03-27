@@ -23,13 +23,6 @@ load_environ()
 
 import logging
 import logging.handlers
-try:
-	from logging import NullHandler
-except ImportError:
-	class NullHandler(logging.Handler):
-		def emit(self, record):
-			pass
-
 import json
 import argparse
 import textwrap
