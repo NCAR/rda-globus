@@ -14,11 +14,10 @@
 #
 ##################################################################################
 
-import os, sys
+import argparse
 import logging
 import logging.handlers
 import json
-import argparse
 import textwrap
 import re
 from datetime import datetime
@@ -27,6 +26,8 @@ try:
     from urllib.parse import urlencode
 except:
     from urllib import urlencode
+
+import os, sys
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
