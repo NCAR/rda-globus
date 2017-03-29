@@ -67,7 +67,6 @@ def load_environ():
 	sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/logging")
 	"""
 	sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
-	sys.path.append("/glade/u/home/tcram/lib/python")
 	os.environ['MANPATH'] = "/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/share/man:{0}".format(os.environ['MANPATH'])
 	os.environ['PATH'] = "/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/bin:{0}".format(os.environ['PATH'])
 	os.environ['INC_NCAR'] = "-I/glade/apps/opt/python/2.7.7/gnu-westmere/4.8.2/include/python2.7 {0}".format(os.environ['INC_NCAR'])

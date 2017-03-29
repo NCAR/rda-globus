@@ -15,12 +15,6 @@
 ##################################################################################
 
 import os, sys
-
-sys.path.append("/glade/u/home/rdadata/lib/python")
-
-from MyGlobus import headers, MyGlobus, load_environ
-load_environ()
-
 import logging
 import logging.handlers
 import json
@@ -29,17 +23,24 @@ import textwrap
 import re
 from datetime import datetime
 from time import strftime	
-
-from PyDBI import myget, myupdt, myadd
-from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
-                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
-from globus_utils import load_app_client
-from MyLOG import show_usage
-
 try:
     from urllib.parse import urlencode
 except:
     from urllib import urlencode
+
+sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.append("/glade/u/home/tcram/lib/python")
+
+from MyLOG import show_usage
+from PyDBI import myget, myupdt, myadd
+
+from MyGlobus import headers, MyGlobus, load_environ
+load_environ()
+
+from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
+from globus_utils import load_app_client
+
 
 def main():
 	opts = parse_input()
