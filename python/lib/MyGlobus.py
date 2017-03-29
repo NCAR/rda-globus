@@ -13,8 +13,6 @@
 #
 ##################################################################################
 
-import os, sys
-
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 GLOBUS_APP_URL = 'https://www.globus.org/app/'
@@ -60,7 +58,8 @@ MyGlobus = {
 }
 
 def load_environ():
-	""" Load paths required on ys/geyser nodes """
+	""" Set up environment required to import globus_sdk on ys/geyser nodes """
+	import os, sys
 
 	"""	
 	sys.path.append("/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7")
