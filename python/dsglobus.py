@@ -14,6 +14,12 @@
 #
 ##################################################################################
 
+import os, sys
+
+sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.append("/glade/u/home/tcram/lib/python")
+sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
+
 import argparse
 import logging
 import logging.handlers
@@ -27,16 +33,9 @@ try:
 except:
     from urllib import urlencode
 
-import os, sys
-
-sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/tcram/lib/python")
-
 from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd
-
-from MyGlobus import headers, MyGlobus, load_environ
-load_environ()
+from MyGlobus import headers, MyGlobus
 
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient, GlobusError, GlobusAPIError, NetworkError)
