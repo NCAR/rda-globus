@@ -8,13 +8,22 @@
 #   Purpose : Python module to create and manage shared endpoints to facilitate
 #             Globus data transfers from the RDA.
 #
+#             *** NOTE: Python 2.7 or later required ***
+#
 # Work File : $DSSHOME/lib/python/dsglobus.py*
 # Test File : $DSSHOME/lib/python/dsglobus_test.py*
 # Github    : https://github.com/NCAR/rda-globus/python/dsglobus.py
 #
 ##################################################################################
 
-import os, sys
+import sys
+
+""" Check Python version (2.7 or later required) """
+try:
+	assert sys.version_info >= (2, 7)
+except AssertionError:
+	print "Error: Python version 2.7 or later required.  Please include /glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/bin at the beginning of your $PATH (*before* /usr/bin is included)."
+	raise
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
@@ -36,7 +45,6 @@ except:
 from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd
 from MyGlobus import headers, MyGlobus
-
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient, GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
