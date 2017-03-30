@@ -27,7 +27,7 @@ except AssertionError:
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
-sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
+sys.path.append("/glade/u/apps/contrib/globus-sdk/0.6.0")
 
 import argparse
 import logging
