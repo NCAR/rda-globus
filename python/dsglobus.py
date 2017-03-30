@@ -22,7 +22,7 @@ import sys
 try:
 	assert sys.version_info >= (2, 7)
 except AssertionError:
-	print "Error: Python version 2.7 or later required.  Please include /glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/bin at the beginning of your $PATH (*before* /usr/bin is included)."
+	print "Error: Python version 2.7 or later required."
 	raise
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
