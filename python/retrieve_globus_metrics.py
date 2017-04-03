@@ -16,7 +16,6 @@
 import requests
 import os, sys
 from PyDBI import myget, mymget, myadd, myupdt
-import globusonline.transfer.api_client
 from datetime import datetime, tzinfo
 import pytz
 import logging
