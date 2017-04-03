@@ -13,35 +13,23 @@
 #
 ##################################################################################
 
-import requests
 import os, sys
+
+sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.append("/glade/u/home/tcram/lib/python")
+sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
+
+from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
-import globusonline.transfer.api_client
+from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
+
 from datetime import datetime, tzinfo
 import pytz
 import logging
 import logging.handlers
 import re
 import urllib
-
-LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
-LOGFILE = 'retrieve_globus_metrics.log'
-loglevel = 'INFO'
-loggerName = 'GlobusMetricsLog'
-
-my_logger = logging.getLogger(loggerName)
-num_level = getattr(logging, loglevel.upper())
-my_logger.setLevel(num_level)
-handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=1000000000,backupCount=10)
-handler.setLevel(num_level)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-my_logger.addHandler(handler)
-
-url = 'https://transfer.api.globusonline.org/v0.10/'
-token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/globus.transfer-token', 'r')
-gotoken = token_file.read().rstrip()
-headers = {'Authorization':'Bearer '+gotoken}
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -55,21 +43,21 @@ task_keys = ['status','bytes_transferred','task_id','username',\
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
 
 # Endpoint UUIDs
-data_requestID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
-datashareID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
+data_requestID = MyGlobus['data_request_ep']
+datashareID = MyGlobus['datashare_ep']
                  
 #=========================================================================================
 def main(filters):
 
 # Get Globus transfer tasks
-	my_logger.info(__name__+': Getting tasks')
+	my_logger.debug(__name__+': Getting tasks')
 	data_tasks = get_tasks(filters)
 	if doprint: print_doc(data_tasks, task_keys)
-	my_logger.info(__name__+': Adding/updating tasks in RDA DB')
+	my_logger.debug(__name__+': Adding/updating tasks in RDA DB')
 	add_tasks('gotask', data_tasks)
 
 # Get list of successful transfers for each Globus task id.
-	my_logger.info(__name__+': Getting and adding Globus transfers')
+	my_logger.debug(__name__+': Getting and adding Globus transfers')
 	for i in range(len(data_tasks['DATA'])):
 		task_id = data_tasks['DATA'][i]['task_id']
 		bytes = data_tasks['DATA'][i]['bytes_transferred']
@@ -77,14 +65,33 @@ def main(filters):
 		if (len(data_transfers) > 0):
 			add_successful_transfers('gofile', data_transfers, task_id, bytes, filters['filter_endpoint'])
 
-	my_logger.info(__name__+': END')
+	my_logger.debug(__name__+': END')
 
 #=========================================================================================
-# Get Globus transfer tasks
 
 def get_tasks(filters):
-	resource = 'endpoint_manager/task_list'
-	r = requests.get(url+resource, headers=headers, params=filters)
+""" Get list of successful transfer tasks """
+	try:
+		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		result = tc.endpoint_manager_task_list(num_results=None, params=filters)
+	except GlobusAPIError as e:
+		msg = ("[get_tasks] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		raise e
+	except NetworkError:
+		my_logger.error(("[get_tasks] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[get_tasks] Totally unexpected GlobusError!")
+		raise
+
+
+
+
 	data = r.json()
 	if (r.status_code >= 400):
 		handle_error(r, data)
@@ -392,8 +399,9 @@ def update_allusage(task_id):
 # Define filters to apply in API requests
 
 def set_filters(args):
-	my_logger.info('[set_filters] Defining Globus API filters')
+	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
+	filters['filter_status'] = 'SUCCEEDED'
 	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']		
 	if (args['user'] != ''): filters['filter_username'] = args['user']
 	if (args['start'] != ''):
@@ -543,6 +551,36 @@ def print_doc(data, keys):
 				continue
 
 #=========================================================================================
+# Configure log file
+
+def configure_log(**kwargs):
+	""" Set up log file """
+	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
+	LOGFILE = 'retrieve_globus_metrics.log'
+
+	if 'level' in kwargs:
+		loglevel = kwargs['level']
+	else:
+		loglevel = 'info'
+
+	LEVELS = { 'debug':logging.DEBUG,
+               'info':logging.INFO,
+               'warning':logging.WARNING,
+               'error':logging.ERROR,
+               'critical':logging.CRITICAL,
+             }
+
+	level = LEVELS.get(loglevel, logging.INFO)
+	my_logger.setLevel(level)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler.setLevel(level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	my_logger.addHandler(handler)
+	
+	return
+
+#=========================================================================================
 # Open debug log file
 
 def mydbg(logpath):
@@ -561,6 +599,9 @@ def mydbg(logpath):
 	return my_debug
 
 #=========================================================================================
+""" Set up logging """
+my_logger = logging.getLogger(__name__)
+configure_log(level='info')
 
 if __name__ == "__main__":
 	args = parse_opts(sys.argv[1:])
