@@ -17,7 +17,7 @@ import os, sys
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
-sys.path.append("/glade/u/apps/contrib/globus-sdk/0.4.3/lib/python2.7/site-packages")
+sys.path.append("/glade/u/apps/contrib/globus-sdk/0.6.0")
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
@@ -51,16 +51,16 @@ def main(filters):
 
 # Get Globus transfer tasks
 	my_logger.debug(__name__+': Getting tasks')
-	data_tasks = get_tasks(filters)
-	if doprint: print_doc(data_tasks, task_keys)
+	transfer_tasks = get_tasks(filters)
+	if doprint: print_doc(transfer_tasks, task_keys)
 	my_logger.debug(__name__+': Adding/updating tasks in RDA DB')
-	add_tasks('gotask', data_tasks)
+	add_tasks('gotask', transfer_tasks)
 
 # Get list of successful transfers for each Globus task id.
 	my_logger.debug(__name__+': Getting and adding Globus transfers')
-	for i in range(len(data_tasks['DATA'])):
-		task_id = data_tasks['DATA'][i]['task_id']
-		bytes = data_tasks['DATA'][i]['bytes_transferred']
+	for i in range(len(transfer_tasks)):
+		task_id = transfer_tasks[i]['task_id']
+		bytes = transfer_tasks[i]['bytes_transferred']
 		data_transfers = get_successful_transfers(task_id)
 		if (len(data_transfers) > 0):
 			add_successful_transfers('gofile', data_transfers, task_id, bytes, filters['filter_endpoint'])
@@ -72,8 +72,10 @@ def main(filters):
 def get_tasks(filters):
 """ Get list of successful transfer tasks """
 	try:
+		tasks = []
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
-		result = tc.endpoint_manager_task_list(num_results=None, params=filters)
+		for task in tc.endpoint_manager_task_list(num_results=None, **filters):
+			tasks.append(task)
 	except GlobusAPIError as e:
 		msg = ("[get_tasks] Globus API Error\n"
 		       "HTTP status: {}\n"
@@ -89,29 +91,7 @@ def get_tasks(filters):
 		logging.exception("[get_tasks] Totally unexpected GlobusError!")
 		raise
 
-
-
-
-	data = r.json()
-	if (r.status_code >= 400):
-		handle_error(r, data)
-	else:
-		data_tasks = {}
-		data_tasks.update(data)
-
-# Check for additional pages in task_list response. Rinse and repeat until 'has_next_page'
-# is false.
-	filters_next = filters
-	while (data['has_next_page']):
-		filters_next['last_key'] = str(data['last_key']).encode('utf8')
-		r = requests.get(url+resource, headers=headers, params=filters_next)
-		data = r.json()
-		if (r.status_code >= 400):
-			handle_error(r, data)
-		else:
-			data_tasks['DATA'].extend(data['DATA'])
-
-	return data_tasks
+	return tasks
 	
 #=========================================================================================
 # Insert/update Globus transfer tasks
@@ -119,10 +99,10 @@ def get_tasks(filters):
 def add_tasks(go_table, data):
 	
 # Prepare database records
-	if (len(data['DATA']) >= 1):
+	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
 		emails = check_email(data)
-		records = update_records(records,emails)
+		records = update_records(records, emails)
 	else:
 		my_logger.warning("[add_tasks] There is no data in the return document.")
 		sys.exit()
@@ -149,10 +129,17 @@ def add_tasks(go_table, data):
 			records[i]['completion_time'] = records[i]['completion_time'][:19]
 			myadd(go_table, records[i])
 
+	return
+
 #=========================================================================================
 # Get list of files transferred successfully
 
 def get_successful_transfers(task_id):
+	import requests
+	
+	bearer = "Bearer {}".format(MyGlobus['transfer_token'])
+	headers = {'Authorization': bearer}
+	
 	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
 	r = requests.get(url+resource, headers=headers)
 	data = r.json()
@@ -406,12 +393,12 @@ def set_filters(args):
 	if (args['user'] != ''): filters['filter_username'] = args['user']
 	if (args['start'] != ''):
 		if (args['end'] != ''):
-			filters['filter_completion_time'] = args['start'] + ',' + args['end']
+			filters['filter_completion_time'] = "{0},{1}".format(args['start'], args['end'])
 		else:
-			filters['filter_completion_time'] = args['start']
+			filters['filter_completion_time'] = "{0}".format(args['start'])
 	else:
 		if (args['end'] !=''):
-			filters['filter_completion_time'] = ',' + args['end']
+			filters['filter_completion_time'] = ",{0}".format(args['end'])
 
 	my_logger.info('FILTERS   :',filters)
 	for key in filters:
@@ -422,67 +409,77 @@ def set_filters(args):
 #=========================================================================================
 # Parse the command line arguments
 
-def parse_opts(argv):
-	import getopt
+def parse_opts():
+	import argparse
+	import textwrap
+	
 	from datetime import timedelta
 	global doprint
-	global my_debug
 
-	my_logger.info('[parse_opts] Parsing command line arguments')
-	usg = 'Usage: retrieve_globus_metrics.py -n ENDPOINT -u USERNAME -s STARTDATE -e ENDDATE'	
+	""" Parse command line arguments """
+	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
+	epilog = textwrap.dedent('''\
+	Example:
+	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
+	              retrieve_globus_metrics.py -n rda#datashare -s 2017-01-01 -e 2017-01-31	
+	''')
+
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
+	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. rda#datashare')
+	parser.add_argument('-u', action="store", dest="USERNAME", help='GlobusID username')
+	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
+	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
+	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
+	
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+
+	args = parser.parse_args(sys.argv[1:])
+	my_logger.info("{0}: {1}".format(sys.argv[0], args))
+	opts = vars(args)
+
 	date_fmt = "%Y-%m-%d"
-	thirtyDays = timedelta(days=30)
-	thirtyDaysAgo = datetime.now(tz=pytz.utc) - thirtyDays
 
 	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
-	endpoint = 'rda#data_request'
-	endpointID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
+	endpoint = MyGlobus['data_request_legacy']
+	endpointID = MyGlobus['data_request_ep']
 	user = ''
-	start_date = thirtyDaysAgo.isoformat()
-	end_date = datetime.now(tz=pytz.utc).isoformat()
+	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
+	end_date = datetime.utcnow().isoformat()
 	doprint = bool(False)
-	rem = ''
 
-	opts, rem = getopt.getopt(argv, 'n:u:s:e:p:b', ['endpoint=','user=','startdate=','enddate=','print','debug'])
-	
-	for opt, arg in opts:
-		if opt in ('-n', '--endpoint'):
-			if(arg == 'rda#datashare'):
-				endpoint = arg
-				endpointID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
-			my_logger.info('ENDPOINT  : {0}'.format(endpoint))
-			my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
-		elif opt in ('-u', '--user'):
-			user = arg
-			my_logger.info('USER      : {0}'.format(user))
-		elif opt in ('-s', '--startdate'):
-			start_date = format_date(arg, date_fmt)
-			my_logger.info('START     : {0}'.format(start_date))
-		elif opt in ('-e', '--enddate'):
-			end_date = format_date(arg, date_fmt)
-			my_logger.info('END       : {0}'.format(end_date))
-		elif opt in ('-p', '--print'):
-			doprint = bool(True)
-		elif opt in ('-b', '--debug'):
-			my_debug = mydbg(LOGPATH)
-		elif opt in ('-h', '--help'):
-			print usg
-	
+	if opts['ENDPOINT']:
+		if(opts['ENDPOINT'] == 'rda#datashare'):
+			endpoint = opts['ENDPOINT']
+			endpointID = MyGlobus['datashare_ep']
+		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
+		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
+	if opts['USERNAME']:
+		user = opts['USERNAME']
+		my_logger.info('USER      : {0}'.format(user))
+	if opts['STARTDATE']:
+		start_date = format_date(opts['STARTDATE'], date_fmt)
+		my_logger.info('START     : {0}'.format(start_date))
+	if opts['ENDDATE']:
+		end_date = format_date(opts['ENDDATE'], date_fmt)
+		my_logger.info('END       : {0}'.format(end_date))
+	if opts['PRINTINFO']:
+		doprint = bool(True)
+			
 	print 'ENDPOINT   :', endpoint
 	print 'ENDPOINT ID:', endpointID
 	print 'USER       :', user
 	print 'START      :', start_date
 	print 'END        :', end_date
 	print 'PRINT      :', doprint
-	print 'REMAINING  :', rem
 
 	return {'endpoint': endpoint, \
 	        'endpointID': endpointID, \
             'user': user, \
             'start': start_date, \
-            'end': end_date, \
-            'rem': rem}
+            'end': end_date}
 
 #=========================================================================================
 # Convert date string into ISO 8601 format (YYYY-MM-DDTHH:MM:SS)
@@ -502,10 +499,10 @@ def format_date(date_str, fmt):
 def create_recs(data, keys):
 	records = []
 	go_dict = {}
-	for i in range(len(data['DATA'])):
-		for key in data['DATA'][i]:
+	for i in range(len(data)):
+		for key in data[i]:
 			if key in keys:
-				go_dict[key] = data['DATA'][i][key]
+				go_dict[key] = data[i][key]
 			else:
 				continue
 		records.append(go_dict)
@@ -517,8 +514,8 @@ def create_recs(data, keys):
 
 def check_email(data):
 	emails = []
-	for i in range(len(data['DATA'])):
-		condition = " WHERE {0}='{1}' AND {2}='{3}'".format("username", data['DATA'][i]['username'],"status","ACTIVE")
+	for i in range(len(data)):
+		condition = " WHERE {0}='{1}' AND {2}='{3}'".format("username", data[i]['username'],"status","ACTIVE")
 		myrec = myget('gouser', ['email'], condition)
 		if (myrec.has_key('email')):
 			emails.append(myrec)
@@ -542,11 +539,11 @@ def update_records(list1,list2):
 # Print output from the 'DATA' task document
 
 def print_doc(data, keys):
-	for i in range(len(data['DATA'])):
+	for i in range(len(data)):
 		print '\n'
-		for key in data['DATA'][i]:
+		for key in data[i]:
 			if key in keys:
-				print key, '\t', data['DATA'][i][key]
+				print key, '\t', data[i][key]
 			else:
 				continue
 
@@ -581,30 +578,12 @@ def configure_log(**kwargs):
 	return
 
 #=========================================================================================
-# Open debug log file
-
-def mydbg(logpath):
-	logfile = 'retrieve_globus_metrics.dbg'
-	loglevel = 'DEBUG'
-	loggerName = 'GlobusMetricsDebug'
-
-	my_debug = logging.getLogger(loggerName)
-	num_level = getattr(logging, loglevel.upper())
-	my_debug.setLevel(num_level)
-	handler = logging.handlers.RotatingFileHandler(logpath+'/'+logfile,maxBytes=1000000000,backupCount=10)
-	handler.setLevel(num_level)
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-	handler.setFormatter(formatter)
-	my_debug.addHandler(handler)
-	return my_debug
-
-#=========================================================================================
 """ Set up logging """
 my_logger = logging.getLogger(__name__)
 configure_log(level='info')
 
 if __name__ == "__main__":
-	args = parse_opts(sys.argv[1:])
+	args = parse_opts()
 	filters = set_filters(args)
 	main(filters)
 	
