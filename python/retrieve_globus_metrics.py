@@ -70,7 +70,7 @@ def main(filters):
 #=========================================================================================
 
 def get_tasks(filters):
-""" Get list of successful transfer tasks """
+	""" Get list of successful transfer tasks """
 	try:
 		tasks = []
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
