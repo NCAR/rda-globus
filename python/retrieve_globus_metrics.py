@@ -22,7 +22,7 @@ sys.path.append("/glade/u/apps/contrib/globus-sdk/0.6.0")
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
-                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
+                        GlobusError, GlobusAPIError, NetworkError)
 
 from datetime import datetime, tzinfo
 import pytz
@@ -137,6 +137,7 @@ def add_tasks(go_table, data):
 def get_successful_transfers(task_id):
 	import requests
 	
+	url = MyGlobus['url']
 	bearer = "Bearer {}".format(MyGlobus['transfer_token'])
 	headers = {'Authorization': bearer}
 	
