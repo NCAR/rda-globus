@@ -9,8 +9,8 @@
 #
 #      Note : If running on the geyser nodes, load the required environment modules with 
 #             the following commands:
-#             ml use /glade/u/apps/contrib/modulefiles/
-#             ml globus-sdk
+#             module use /glade/u/apps/contrib/modulefiles/
+#             module load globus-sdk
 #
 # Work File : $DSSHOME/bin/retrieve_globus_metrics.py*
 # Test File : $DSSHOME/bin/retrieve_globus_metrics_test.py*
@@ -19,13 +19,9 @@
 ##################################################################################
 
 import os, sys
-import socket
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
-
-if (socket.gethostname().find('geyser') != -1):
-	sys.path.append("/glade/u/apps/contrib/globus-sdk/0.6.0")
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
