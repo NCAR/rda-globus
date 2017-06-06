@@ -354,7 +354,7 @@ def get_user_id(identity):
 	"""
 	try:
 		ac = AuthClient(authorizer=AccessTokenAuthorizer(MyGlobus['auth_token']))
-		result = ac.get_identities(usernames=identity)
+		result = ac.get_identities(usernames=identity, provision=True)
 		uuid = result.data['identities'][0]['id']
 	except GlobusAPIError as e:
 		my_logger.error(("[get_user_id] Globus API Error\n"
