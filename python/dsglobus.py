@@ -17,7 +17,6 @@
 ##################################################################################
 
 import sys
-import socket
 
 """ Check Python version (2.7 or later required) """
 try:
@@ -29,8 +28,7 @@ except AssertionError:
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
-if (socket.gethostname().find('rda-data') == -1):
-	sys.path.append("/glade/u/apps/contrib/globus-sdk/0.6.0")
+sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
 
 import argparse
 import logging
