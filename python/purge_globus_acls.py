@@ -31,7 +31,8 @@ from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
 def main():
 
 	rqst_acls = get_acls(MyGlobus['data_request_ep'])
-	delete_rqst_acls(rqst_acls, MyGlobus['data_request_ep'])
+	if (len(rqst_acls) > 0):
+		delete_rqst_acls(rqst_acls, MyGlobus['data_request_ep'])
 	
 #=========================================================================================
 def get_acls(endpoint_id):
@@ -75,7 +76,7 @@ def delete_rqst_acls(acl_list, endpoint_id):
 		# Query request record.  Delete ACL if record doesn't exist.
 		condition = " WHERE {0}={1}".format('rindex', ridx)
 		myrec = myget('dsrqst', ['globus_rid'], condition)
-		if (len(myrec) == 0):
+		if (len(myrec) == 0 and acl_id):
 			print "ACL path: {0}\nACL id: {1}\n".format(path, acl_id)
 		"""
 			try:
