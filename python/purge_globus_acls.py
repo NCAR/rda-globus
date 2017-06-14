@@ -65,6 +65,8 @@ def delete_rqst_acls(acl_list, endpoint_id):
 	
 	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 	
+	count = 0
+	
 	for i in range(len(acl_list)):
 		path = acl_list[i]['path']
 		acl_id = acl_list[i]['id']
@@ -77,7 +79,8 @@ def delete_rqst_acls(acl_list, endpoint_id):
 		condition = " WHERE {0}={1}".format('rindex', ridx)
 		myrec = myget('dsrqst', ['globus_rid'], condition)
 		if (len(myrec) == 0 and acl_id):
-			print "ACL path: {0}\nACL id: {1}\n".format(path, acl_id)
+			count += 1
+			print "ACL path: {0}\nACL id: {1}\nACL count: {2}".format(path, acl_id, count)
 		"""
 			try:
 				result = tc.delete_endpoint_acl_rule(endpoint_id, acl_id)
