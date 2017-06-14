@@ -31,7 +31,7 @@ from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
 def main():
 
 	rqst_acls = get_acls(MyGlobus['data_request_ep'])
-	delete_rqst_acls(acl_list, MyGlobus['data_request_ep'])
+	delete_rqst_acls(rqst_acls, MyGlobus['data_request_ep'])
 	
 #=========================================================================================
 def get_acls(endpoint_id):
