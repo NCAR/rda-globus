@@ -28,7 +28,7 @@ from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
 #=========================================================================================
-def main(filters):
+def main():
 
 	rqst_acls = get_acls(MyGlobus['data_request_ep'])
 	delete_rqst_acls(acl_list, MyGlobus['data_request_ep'])
@@ -36,8 +36,9 @@ def main(filters):
 #=========================================================================================
 def get_acls(endpoint_id):
 
+	acl_list = []
+
 	try:
-		acl_list = []
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 		for acl in tc.endpoint_acl_list(endpoint_id):
 			acl_list.append(acl)
@@ -122,7 +123,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=3)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
