@@ -58,6 +58,7 @@ def get_acls(endpoint_id):
 		logging.exception("[get_acls] Totally unexpected GlobusError!")
 		raise
 
+	my_logger.info("[get_acls] {0} ACLs retrieved from endpoint {1}".format(len(acl_list), endpoint_id))
 	return acl_list
 
 #=========================================================================================
@@ -79,11 +80,9 @@ def delete_rqst_acls(acl_list, endpoint_id):
 		condition = " WHERE {0}={1}".format('rindex', ridx)
 		myrec = myget('dsrqst', ['globus_rid'], condition)
 		if (len(myrec) == 0 and acl_id):
-			count += 1
-			print "ACL path: {0}\nACL id: {1}\nACL count: {2}".format(path, acl_id, count)
-		"""
 			try:
 				result = tc.delete_endpoint_acl_rule(endpoint_id, acl_id)
+				count += 1
 			except GlobusAPIError as e:
 				my_logger.error(("[delete_rqst_acls] Globus API Error\n"
 		                 "HTTP status: {}\n"
@@ -102,7 +101,9 @@ def delete_rqst_acls(acl_list, endpoint_id):
 			if 'print' in data and data['print']:
 				print msg
 			my_logger.info("[delete_rqst_acls] {0}".format(msg))
-		"""
+
+	my_logger.info("[delete_rqst_acls] {0} ACLs purged from endpoint rda#data_request ({1})".format(count, endpoint_id))
+
 	return
 	
 #=========================================================================================
