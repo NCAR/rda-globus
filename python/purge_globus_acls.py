@@ -98,11 +98,10 @@ def delete_rqst_acls(acl_list, endpoint_id):
 				raise
     
 			msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
-			if 'print' in data and data['print']:
-				print msg
 			my_logger.info("[delete_rqst_acls] {0}".format(msg))
 
-	my_logger.info("[delete_rqst_acls] {0} ACLs purged from endpoint rda#data_request ({1})".format(count, endpoint_id))
+	msg = "{0} ACLs purged from endpoint rda#data_request ({1})".format(count, endpoint_id)
+	my_logger.info("[delete_rqst_acls] {0}".format(msg))
 
 	return
 	
