@@ -43,7 +43,7 @@ def main():
     # print_info(form)
     
     if 'endpoint_id' in form:
-    	submit_transfer(form)
+    	browsecallback(form)
     elif 'action' in form:
     	try:
     		task_id = form.getvalue('task_id')
@@ -126,17 +126,32 @@ def transfer(form):
 
     return
 
-def submit_transfer(form):
+def browsecallback(form):
+	""" Handles the interaction with the Browse Endpoint helper page API """
+
+	""" Get session data """
+	session = get_session_data()
+	
+	""" Redirect to dsrqst.php if user has requested a dsrqst push transfer """
+	if session['dsrqst']:
+		sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+		params = "{0}&globus=yes&sid={1}".format(session['rqstParams'], sid)
+		redirect_uri = 'https://{0}dsrqst.php?{}'.format(os.environ['HTTP_HOST'], urlencode(params))
+		print "Location: {0}\r\n".format(redirect_uri)
+	else:
+		submit_transfer(session, form)
+	return
+
+def submit_transfer(session, form):
     """
     - Take the data returned by the Browse Endpoint helper page
       and make a Globus transfer request.
     - Send the user to the transfer status page with the task id
       from the transfer.
+    - Input argument 'session' is the user's session data retrieved from the
+      sessions DB table
     """
 
-    """ Get session data from database """
-    session = get_session_data()
-    
     email = session['email']
     gtype = session['gtype']
     dsid = session['dsid']
