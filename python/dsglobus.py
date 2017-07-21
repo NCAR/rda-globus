@@ -59,6 +59,8 @@ def main():
 		result = delete_endpoint_acl_rule(action, opts)
 	elif opts['addPermission']:
 		result = add_endpoint_acl_rule(action, opts)
+	elif opts['submitTransfer']:
+		result = submit_dsrqst_transfer(opts)
 	
 	return result
 
@@ -252,6 +254,60 @@ def delete_endpoint_acl_rule(action, data):
 	my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
 	
 	return msg
+
+def submit_dsrqst_transfer(data):
+	""" Submit a Globus transfer on behalf of the user.  For dsrqst 'push' transfers. """
+
+	""" Get session ID from dsrqst record """
+	ridx = data['ridx']
+	cond = " WHERE rindex={0}".format(ridx)
+	myrqst = myget('dsrqst', ['*'], cond)
+	if (len(myrqst) == 0):
+		msg = "[submit_dsrqst_transfer] Request index not found in DB"
+		my_logger.warning(msg)
+		sys.exit(1)
+
+	session = get_session(myrqst['sid'])
+	email = session['email']
+	dsid = session['dsid']
+	selected = session['files']
+
+	""" Define source endpoint ID and paths """
+	host_endpoint = MyGlobus['host_endpoint_id']
+	source_endpoint_id = MyGlobus['data_request_ep']
+	destination_endpoint_id = session['endpoint_id']
+
+	""" Check if user has a share set up for this endpoint & path """
+	share_data = {'ridx': ridx, 'notify': True}
+	if not query_acl_rule(1, share_data):
+		data = add_endpoint_acl_rule(1, share_data)
+	directory = construct_share_path(1, share_data)
+
+	""" Instantiate the Globus SDK transfer client """
+	transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
+		session['transfer.api.globus.org']['refresh_token'], load_app_client()))
+        
+	""" Instantiate TransferData object """
+	transfer_data = TransferData(transfer_client=transfer,
+								 source_endpoint=source_endpoint_id,
+								 destination_endpoint=destination_endpoint_id,
+								 label=session['label'])
+
+	""" Add files to be transferred.  Note source_path is relative to the source
+		endpoint base path. """
+	for file in selected:
+		source_path = directory + selected[file]
+		dest_path = form.getvalue('path') + selected[file]
+		transfer_data.add_item(source_path, dest_path)
+
+	transfer.endpoint_autoactivate(source_endpoint_id)
+	transfer.endpoint_autoactivate(destination_endpoint_id)
+	task_id = transfer.submit_transfer(transfer_data)['task_id']
+
+	""" Store task_id in request record?  
+		Create share record in goshare """
+
+	return task_id
 
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
@@ -448,6 +504,21 @@ def update_share_record(action, data):
 
 	return
 	
+def get_session(sid):
+    """ 
+    - Retrieve session data from RDADB.
+    """
+    keys = ['id','access','data']
+    condition = " WHERE {0} = '{1}'".format("id", sid)
+    myrec = myget('sessions', keys, condition)
+    
+	if (len(myrec) == 0):
+		msg = "[get_session] Session ID not found in DB"
+		my_logger.warning(msg)
+		sys.exit(1)
+
+    return unserialize(myrec['data'])
+
 def parse_input():
 	""" Parse command line arguments """
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
@@ -468,6 +539,7 @@ def parse_input():
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('-ap', action="store_true", default=False, help='Add endpoint permission')
 	group.add_argument('-rp', action="store_true", default=False, help='Delete endpoint permission')
+	group.add_argument('-st', action="store_true", default=False, help='Submit Globus transfer on behalf of user.  For dsrqst push transfers.')
 
 	parser.add_argument('-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
@@ -484,6 +556,7 @@ def parse_input():
 	opts = vars(args)
 	opts['addPermission'] = opts.pop('ap')
 	opts['removePermission'] = opts.pop('rp')
+	opts['submitTransfer'] = opts.pop('st')
 	
 	if opts['ne']:
 		opts['notify'] = False
@@ -495,7 +568,11 @@ def parse_input():
 		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
 		sys.exit(msg)
- 	if opts['REQUESTINDEX']:
+	if (opts['submitTransfer'] and not opts['REQUESTINDEX']):
+		msg = "Please specify the dsrqst index (-ri) with the -st flag."
+		my_logger.error(msg)
+		sys.exit(msg)
+	if opts['REQUESTINDEX']:
 		opts['ridx'] = opts.pop('REQUESTINDEX')
 		opts.update({'action': 1})
 	elif opts['DATASETID']:
