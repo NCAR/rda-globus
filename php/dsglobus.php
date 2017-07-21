@@ -39,11 +39,11 @@ function manage_acl() {
    elseif ($gtype == 2) {
      acl_dataset($msg, $gtype, $email);
    } 
-   elseif ($gtype == 3) {
+   elseif ($gtype == 3) or ($gtype == 4) {
      globus_browseEndpoint($msg, $gtype, $email);
    }
    else {
-     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share, 3=custom file list)", true);
+     return pmessage("Globus request gtype ". $gtype . " not valid (1=dsrqst, 2=dataset share, 3=custom file list, 4=dsrqst push transfer)", true);
    }
 }
 
@@ -164,10 +164,21 @@ function globus_browseEndpoint($msg, $gtype, $email) {
    $_SESSION['gtype'] = $gtype;
    if(empty($_POST['dsid'])) return pmessage("Missing dataset ID (dsnnn.n)", true);
    $_SESSION['dsid'] = $_POST['dsid'];
-   if(empty($_POST['directory'])) return pmessage("Missing path to web files", true);
-   $_SESSION['directory'] = $_POST['directory'];
-   if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
-   $_SESSION['files'] = $_POST['globusFile'];
+   
+   if ($gtype == 3) {
+      if(empty($_POST['directory'])) return pmessage("Missing path to web files", true);
+      $_SESSION['directory'] = $_POST['directory'];
+      if(empty($_POST['globusFile'])) return pmessage("Missing selected web files", true);
+      $_SESSION['files'] = $_POST['globusFile'];
+   }
+   
+   if ($gtype == 4) {
+      $_SESSION['dsrqst'] = True;
+      if(empty($_POST['rqstParams'])) return pmessage("Missing dsrqst parameters", true);
+      $_SESSION['rqstParams'] = $_POST['rqstParams'];
+   } else {
+      $_SESSION['dsrqst'] = False;
+   }
 
 # URL if user cancels endpoint selection on the Globus Browse Endpoint web app
    if(empty($_POST['cancelurl'])) {
