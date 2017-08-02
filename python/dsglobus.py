@@ -297,7 +297,7 @@ def submit_dsrqst_transfer(data):
 		endpoint base path. """
 	for file in selected:
 		source_path = directory + selected[file]
-		dest_path = form.getvalue('path') + selected[file]
+		dest_path = session['dest_path'] + selected[file]
 		transfer_data.add_item(source_path, dest_path)
 
 	transfer.endpoint_autoactivate(source_endpoint_id)
