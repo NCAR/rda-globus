@@ -135,7 +135,15 @@ def browsecallback(form):
 	""" Redirect to dsrqst.php if user has requested a dsrqst push transfer """
 	if session['dsrqst']:
 		sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
-		params = "{0}&globus=yes&sid={1}".format(session['rqstParams'], sid)
+		endpoint_id = form.getvalue('endpoint_id')
+		dest_path = form.getvalue('path')
+		data = {
+		    'endpoint_id': endpoint_id, 
+		    'dest_path': dest_path,
+		    'label': form.getvalue('label')
+		}
+		update_session_data(data)
+		params = "{0}&method=POST&globus=Y&sid={1}&endpoint_id={2}&dest_path={3}".format(session['rqstParams'], sid, endpoint_id, dest_path)
 		redirect_uri = 'https://{0}dsrqst.php?{}'.format(os.environ['HTTP_HOST'], urlencode(params))
 		print "Location: {0}\r\n".format(redirect_uri)
 	else:
