@@ -39,7 +39,7 @@ function manage_acl() {
    elseif ($gtype == 2) {
      acl_dataset($msg, $gtype, $email);
    } 
-   elseif ($gtype == 3) or ($gtype == 4) {
+   elseif ($gtype == 3 or $gtype == 4) {
      globus_browseEndpoint($msg, $gtype, $email);
    }
    else {
