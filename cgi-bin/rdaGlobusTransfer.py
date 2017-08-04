@@ -40,7 +40,8 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    # print_info(form)
+    print_info(form)
+    return
     
     if 'endpoint_id' in form:
     	browsecallback(form)
