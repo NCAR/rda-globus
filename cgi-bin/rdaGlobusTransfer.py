@@ -40,8 +40,7 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    print_info(form)
-    return
+    # print_info(form)
     
     if 'endpoint_id' in form:
     	browsecallback(form)
@@ -84,6 +83,10 @@ def authcallback(form):
     # starting a Globus Auth login flow.
     if 'code' not in form:
         auth_uri = client.oauth2_get_authorize_url()
+        print "<h3>Auth URI:</h3>"
+        print "{}".format(auth_uri)
+        sys.exit()
+
         print "Location: {0}\r\n".format(auth_uri)
     else:
         # If we do have a "code" param, we're coming back from Globus Auth
