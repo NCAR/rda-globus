@@ -143,8 +143,17 @@ def browsecallback(form):
 		    'label': form.getvalue('label')
 		}
 		update_session_data(data)
-		params = "{0}&method=POST&globus=Y&sid={1}&endpoint_id={2}&dest_path={3}".format(session['rqstParams'], sid, endpoint_id, dest_path)
-		redirect_uri = 'https://{0}dsrqst.php?{}'.format(os.environ['HTTP_HOST'], urlencode(params))
+		
+		# split rqstParams into Python dict key-value pairs
+		params = dict(x.split('=') for x in session['rqstParams'].split('&'))
+		params.update({'method': 'POST',
+		               'globus': 'Y',
+		               'sid': sid,
+		               'endpoint_id': endpoint_id,
+		               'dest_path': dest_path
+		               })
+		
+		redirect_uri = '/php/dsrqst.php?{0}'.format(urlencode(params))
 		print "Location: {0}\r\n".format(redirect_uri)
 	else:
 		submit_transfer(session, form)
