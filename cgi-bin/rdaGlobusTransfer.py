@@ -154,6 +154,9 @@ def browsecallback(form):
 		               })
 		
 		redirect_uri = '/php/dsrqst.php?{0}'.format(urlencode(params))
+		
+		print_header()
+		
 		print "Location: {0}\r\n".format(redirect_uri)
 	else:
 		submit_transfer(session, form)
