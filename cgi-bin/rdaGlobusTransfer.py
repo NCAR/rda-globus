@@ -153,7 +153,7 @@ def browsecallback(form):
 		               'dest_path': dest_path
 		               })
 		
-		redirect_uri = 'https://{0}/php/dsrqst.php?{0}'.format(os.environ['HTTP_HOST'], urlencode(params))
+		redirect_uri = 'https://{0}/php/dsrqst.php?{1}'.format(os.environ['HTTP_HOST'], urlencode(params))
 		print "Location: {0}\r\n".format(redirect_uri)
 	else:
 		submit_transfer(session, form)
