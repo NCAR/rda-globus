@@ -23,6 +23,7 @@ import json
 import hmac
 from base64 import b64encode
 import hashlib
+import requests
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myupdt
@@ -129,35 +130,13 @@ def transfer(form):
 def browsecallback(form):
 	""" Handles the interaction with the Browse Endpoint helper page API """
 
-	""" Get session data """
 	session = get_session_data()
 	
-	""" Redirect to dsrqst.php if user has requested a dsrqst push transfer """
 	if session['dsrqst']:
-		sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
-		endpoint_id = form.getvalue('endpoint_id')
-		dest_path = form.getvalue('path')
-		data = {
-		    'endpoint_id': endpoint_id, 
-		    'dest_path': dest_path,
-		    'label': form.getvalue('label')
-		}
-		update_session_data(data)
-		
-		# split rqstParams into Python dict key-value pairs
-		params = dict(x.split('=') for x in session['rqstParams'].split('&'))
-		params.update({'method': 'POST',
-		               'globus': 'Y',
-		               'sid': sid,
-		               'endpoint_id': endpoint_id,
-		               'dest_path': dest_path
-		               })
-		
-		redirect_uri = 'https://{0}/#!php/dsrqst.php?'.format(os.environ['HTTP_HOST'])
-		qs = urlencode(params)
-		print "Location: %s%s\r\n" % (redirect_uri, qs)
+		submit_request(form)
 	else:
 		submit_transfer(session, form)
+	
 	return
 
 def submit_transfer(session, form):
@@ -303,6 +282,46 @@ def display_transfer_status(task_id, new=False):
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
     
+def submit_request(form):
+	""" Submit request parameters to dsrqst.php and display request message """
+	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	endpoint_id = form.getvalue('endpoint_id')
+	dest_path = form.getvalue('path')
+	data = {
+		'endpoint_id': endpoint_id, 
+		'dest_path': dest_path,
+		'label': form.getvalue('label')
+	}
+	update_session_data(data)
+		
+	""" split rqstParams into Python dict key-value pairs """
+	params = dict(x.split('=') for x in session['rqstParams'].split('&'))
+	params.update({'method': 'POST',
+				'globus': 'Y',
+				'sid': sid,
+				'endpoint_id': endpoint_id,
+				'dest_path': dest_path
+		        })
+		
+	redirect_uri = 'https://{0}/#!php/dsrqst.php?'.format(os.environ['HTTP_HOST'])
+	r = requests.post(redirect_uri, data=params)
+	if (r.status_code == requests.codes.ok):
+		display_request_message(r, params['dsid'])
+	
+	return
+
+def display_request_message(response, dsid):
+	""" Display content returned by dsrqst.php """
+	
+	print_header()
+    print "<script id=\"globus_script\" language=\"JavaScript\" type=\"text/javascript\" src=\"/js/rda_globus.js\"></script>\n"
+    print "<div id=\"requestDetails\" style=\"margin-left: 10px\">\n"
+    print "{0}\n".format(response.text)
+    print "</div>\n"
+    print "<div style=\"margin-left: 10px\">\n"
+    print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
+    print "</div>\n"
+
 def get_session_data():
     """ 
     - Retrieve session data from RDADB.
