@@ -314,13 +314,13 @@ def display_request_message(response, dsid):
 	""" Display content returned by dsrqst.php """
 	
 	print_header()
-    print "<script id=\"globus_script\" language=\"JavaScript\" type=\"text/javascript\" src=\"/js/rda_globus.js\"></script>\n"
-    print "<div id=\"requestDetails\" style=\"margin-left: 10px\">\n"
-    print "{0}\n".format(response.text)
-    print "</div>\n"
-    print "<div style=\"margin-left: 10px\">\n"
-    print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
-    print "</div>\n"
+	print "<script id=\"globus_script\" language=\"JavaScript\" type=\"text/javascript\" src=\"/js/rda_globus.js\"></script>\n"
+	print "<div id=\"requestDetails\" style=\"margin-left: 10px\">\n"
+	print "{0}\n".format(response.text)
+	print "</div>\n"
+	print "<div style=\"margin-left: 10px\">\n"
+	print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
+	print "</div>\n"
 
 def get_session_data():
     """ 
