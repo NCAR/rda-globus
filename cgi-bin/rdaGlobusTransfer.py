@@ -302,8 +302,9 @@ def submit_request(session, form):
 				'endpoint_id': endpoint_id,
 				'dest_path': dest_path
 		        })
-		
-	r = requests.post('/php/dsrqst.php', data=params)
+
+	redirect_uri = "{0}/php/dsrqst.php".format(os.environ['HTTP_HOST'])
+	r = requests.post(redirect_uri, data=params)
 	if (r.status_code == requests.codes.ok):
 		display_request_message(r, params['dsid'])
 	
