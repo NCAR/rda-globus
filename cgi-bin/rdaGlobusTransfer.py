@@ -133,7 +133,7 @@ def browsecallback(form):
 	session = get_session_data()
 	
 	if session['dsrqst']:
-		submit_request(form)
+		submit_request(session, form)
 	else:
 		submit_transfer(session, form)
 	
@@ -282,7 +282,7 @@ def display_transfer_status(task_id, new=False):
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
     
-def submit_request(form):
+def submit_request(session, form):
 	""" Submit request parameters to dsrqst.php and display request message """
 	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	endpoint_id = form.getvalue('endpoint_id')
