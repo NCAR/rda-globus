@@ -33,9 +33,9 @@ from globus_sdk import (TransferClient, TransferAPIError,
 from dsglobus import *
 
 try:
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, unquote
 except:
-    from urllib import urlencode
+    from urllib import urlencode, unquote
 
 def main():
     form = cgi.FieldStorage()
@@ -297,6 +297,7 @@ def submit_request(session, form):
 		
 	""" split rqstParams into Python dict key-value pairs """
 	params = dict(x.split('=') for x in session['rqstParams'].split('&'))
+	params['rinfo'] = unquote(params['rinfo'])
 	params.update({'method': 'POST',
 				'globus': 'Y',
 				'sid': sid,
