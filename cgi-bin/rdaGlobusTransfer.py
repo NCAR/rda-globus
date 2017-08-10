@@ -41,7 +41,7 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    print_info(form)
+    # print_info(form)
     
     if 'endpoint_id' in form:
     	browsecallback(form)
@@ -293,6 +293,7 @@ def submit_request(session, form):
 		'label': form.getvalue('label')
 	}
 	update_session_data(data)
+	cookie = get_cookie()
 		
 	""" split rqstParams into Python dict key-value pairs """
 	params = dict(x.split('=') for x in session['rqstParams'].split('&'))
@@ -304,7 +305,7 @@ def submit_request(session, form):
 		        })
 
 	redirect_uri = "https://{0}/php/dsrqst.php".format(os.environ['HTTP_HOST'])
-	r = requests.post(redirect_uri, data=params)
+	r = requests.post(redirect_uri, data=params, cookies=cookie)
 	if (r.status_code == requests.codes.ok):
 		display_request_message(r, params['dsid'])
 	
@@ -352,6 +353,19 @@ def update_session_data(data):
     myupdt('sessions', {'data': serialize(session_data)}, condition)
     
     return
+
+def get_cookie():
+	""" Get a user's cookie and load key-value pairs into a dict """
+	if 'HTTP_COOKIE' in os.environ:
+		crumbs = os.environ['HTTP_COOKIE']
+		crumbs = crumbs.split('; ')
+		cookie = {}
+		for crumb in crumbs:
+			crumb = crumb.split('=')
+			cookie.update({crumb[0]: crumb[1]})
+		return cookie
+	else:
+		return null
 
 def set_environ():
     """ Define environment variables required by this script """
