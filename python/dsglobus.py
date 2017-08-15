@@ -270,7 +270,15 @@ def submit_dsrqst_transfer(data):
 	session = get_session(myrqst['sid'])
 	email = session['email']
 	dsid = session['dsid']
-	selected = session['files']
+	
+	# Get request files from wfrqst
+	files = mymget('wfrqst', ['wfile'], cond)
+	if (len(files) > 0):
+		selected = {}
+		for i in range(len(files)):
+			selected.append({i: files[i]['wfile']})
+	else:
+		return null
 
 	""" Define source endpoint ID and paths """
 	host_endpoint = MyGlobus['host_endpoint_id']
@@ -304,8 +312,11 @@ def submit_dsrqst_transfer(data):
 	transfer.endpoint_autoactivate(destination_endpoint_id)
 	task_id = transfer.submit_transfer(transfer_data)['task_id']
 
-	""" Store task_id in request record?  
-		Create share record in goshare """
+	""" Store task_id in request record """
+	record = [{unicode('task_id'): task_id}]
+	myupdt('dsrqst', record[0], cond)
+
+	"""	Create share record in goshare """
 
 	return task_id
 
