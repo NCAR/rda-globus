@@ -277,7 +277,7 @@ def submit_dsrqst_transfer(data):
 	if (len(files) > 0):
 		selected = {}
 		for i in range(len(files)):
-			selected.append({i: files[i]['wfile']})
+			selected.update({i: files[i]['wfile']})
 	else:
 		return null
 
