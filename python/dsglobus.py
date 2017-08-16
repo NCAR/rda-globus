@@ -267,7 +267,7 @@ def submit_dsrqst_transfer(data):
 		my_logger.warning(msg)
 		sys.exit(1)
 
-	session = get_session(myrqst['sid'])
+	session = get_session(myrqst['session_id'])
 	email = session['email']
 	dsid = session['dsid']
 	
