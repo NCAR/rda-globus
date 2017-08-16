@@ -516,19 +516,17 @@ def update_share_record(action, data):
 	return
 	
 def get_session(sid):
-    """ 
-    - Retrieve session data from RDADB.
-    """
-    keys = ['id','access','data']
-    condition = " WHERE {0} = '{1}'".format("id", sid)
-    myrec = myget('sessions', keys, condition)
-    
+	""" Retrieve session data from RDADB """
+	keys = ['id','access','data']
+	condition = " WHERE {0} = '{1}'".format("id", sid)
+	myrec = myget('sessions', keys, condition)
+	
 	if (len(myrec) == 0):
 		msg = "[get_session] Session ID not found in DB"
 		my_logger.warning(msg)
 		sys.exit(1)
 
-    return unserialize(myrec['data'])
+	return unserialize(myrec['data'])
 
 def parse_input():
 	""" Parse command line arguments """
