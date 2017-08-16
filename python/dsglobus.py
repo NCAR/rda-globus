@@ -48,9 +48,9 @@ from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import headers, MyGlobus
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
-                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
+                        TransferData, RefreshTokenAuthorizer, AuthClient, 
+                        GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
-
 
 def main():
 	opts = parse_input()
