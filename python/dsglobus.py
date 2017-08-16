@@ -457,13 +457,17 @@ def query_acl_rule(action, data):
 		""" standard dataset shares """
 		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
 		myrule = myget('goshare', ['*'], cond)
-	
-	if 'globus_rid' in myrule:
+
+	try:
 		rule_id = myrule['globus_rid']
+	except KeyError:
+		rule_id = None
+
+	if rule_id:
 		return {'acl_rule': rule_id}
 	else:
 		return None
-	
+
 def update_share_record(action, data):
 	""" Update the user's Globus share in RDADB
 	    action = 1: dsrqst share
