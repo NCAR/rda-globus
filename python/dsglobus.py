@@ -45,7 +45,7 @@ except:
     from urllib import urlencode
 
 from MyLOG import show_usage
-from PyDBI import myget, myupdt, myadd
+from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import headers, MyGlobus
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         AuthClient, GlobusError, GlobusAPIError, NetworkError)
