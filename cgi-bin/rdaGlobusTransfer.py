@@ -13,7 +13,7 @@
 
 import os, sys
 
-sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.insert(1, "/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
