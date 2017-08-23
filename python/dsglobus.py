@@ -273,7 +273,7 @@ def submit_dsrqst_transfer(data):
 	dsid = session['dsid']
 	
 	# Get request files from wfrqst
-	files = mymget('wfrqst', ['wfile'], cond)
+	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
 	if (len(files) > 0):
 		selected = {}
 		for i in range(len(files)):
