@@ -317,6 +317,9 @@ def submit_dsrqst_transfer(data):
 	record = [{unicode('task_id'): task_id}]
 	myupdt('dsrqst', record[0], cond)
 
+	if 'print' in data and data['print']:
+		print "{}".format(task_id)
+
 	"""	Create share record in goshare """
 
 	return task_id
