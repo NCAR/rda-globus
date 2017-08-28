@@ -289,7 +289,7 @@ def submit_dsrqst_transfer(data):
 	""" Check if user has a share set up for this endpoint & path """
 	share_data = {'ridx': ridx, 'notify': True}
 	if not query_acl_rule(1, share_data):
-		data = add_endpoint_acl_rule(1, share_data)
+		acl_data = add_endpoint_acl_rule(1, share_data)
 	directory = construct_share_path(1, share_data)
 
 	""" Instantiate the Globus SDK transfer client """
