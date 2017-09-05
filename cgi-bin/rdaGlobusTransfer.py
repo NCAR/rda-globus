@@ -293,7 +293,6 @@ def submit_request(session, form):
 		'label': form.getvalue('label')
 	}
 	update_session_data(data)
-	cookie = get_cookie()
 		
 	""" split rqstParams into Python dict key-value pairs """
 	params = dict(x.split('=') for x in session['rqstParams'].split('&'))
@@ -306,12 +305,12 @@ def submit_request(session, form):
 				'dest_path': dest_path
 		        })
 
-	redirect_uri = "https://{0}/php/dsrqst.php".format(os.environ['HTTP_HOST'])
-	r = requests.post(redirect_uri, data=params, cookies=cookie)
-	if (r.status_code == requests.codes.ok):
-		display_request_message(r, params['dsid'])
-	
-	return
+	print_header()
+	print "<form name=\"globus_request\" action=\"/datasets/{0}/index.html#!null\" method=\"POST\">\n".format(params['dsid'])
+	for key in params:
+		print "<input type=\"hidden\" name=\"{0}\" value=\"{1}\" />\n".format(key,params[key])
+	print "</form>\n"
+	print "<img src=\"/images/transpace.gif\" onLoad=\"document.globus_request.submit()\" />\n"
 
 def display_request_message(response, dsid):
 	""" Display content returned by dsrqst.php """
