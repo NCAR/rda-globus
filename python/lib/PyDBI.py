@@ -14,10 +14,11 @@
 ##################################################################################
 
 import os, sys
+sys.path.append("/glade/u/home/tcram/lib/python")
+sys.path.append("/glade/u/home/rdadata/lib/python2.7/site-packages")
+
 import mysql.connector
 from mysql.connector import errorcode
-
-sys.path.append("/glade/u/home/tcram/lib/python")
 from dbconfig import dbconfig
 
 #=========================================================================================
