@@ -197,8 +197,7 @@ def delete_endpoint_acl_rule(action, data):
 			else:
 				rule_id = myrqst['globus_rid']
 				record = {unicode('globus_rid'): None,
-				          unicode('globus_url'): None
-				         })
+				          unicode('globus_url'): None}
 				myupdt('dsrqst', record, rqst_cond)
 				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
 				myshare = myget('goshare', ['*'], share_cond)
@@ -230,11 +229,9 @@ def delete_endpoint_acl_rule(action, data):
 				return {'Error': msg}
 			else:
 				rule_id = myshare['globus_rid']
-				record = []
-				record.append({unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
-				               unicode('status'): 'DELETED'
-				               })
-				myupdt('goshare', record[0], cond)
+				record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
+				          unicode('status'): 'DELETED'}
+				myupdt('goshare', record, cond)
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 
