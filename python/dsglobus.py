@@ -96,7 +96,7 @@ def add_endpoint_acl_rule(action, data):
 				if 'print' in data and data['print']:
 					sys.exit(msg)
 				return {'access_id': myrqst['globus_rid'], 'share_url': myrqst['globus_url']}
-			share_data = {'ridx': ridx, 'dsid': dsid}
+			share_data = {'ridx': ridx, 'dsid': dsid, 'email': email}
 			path = construct_share_path(1, share_data)
 		except KeyError as err:
 			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
