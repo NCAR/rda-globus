@@ -479,6 +479,11 @@ def update_share_record(action, data):
 	    action = 1: dsrqst share
 	           = 2: standard dataset share
 	"""
+	if ('print' in data):
+		print_stdout = data['print']
+	else:
+		print_stdout = False
+	
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
