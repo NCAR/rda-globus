@@ -21,33 +21,13 @@ import logging
 import logging.handlers
 
 url = 'https://transfer.api.globusonline.org/v0.10/'
-
 token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/globus.transfer-token', 'r')
 gotoken = token_file.read().rstrip('\\n')
 headers = {'Authorization':'Bearer '+gotoken}
 
-# headers = {'Authorization':'Globus-Goauthtoken ' + os.environ['GOTOKENRDA']}
-go_table = 'gouser'
-
-datestamp = date.today().isoformat()
-
-LOGPATH = '/glade/u/home/tcram/log/'
-LOGFILE = 'update_globus_users.log'
-loglevel = 'INFO'
-loggerName = 'GlobusUsersLog'
-logfmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-
-my_logger = logging.getLogger(loggerName)
-num_level = getattr(logging, loglevel.upper())
-my_logger.setLevel(num_level)
-handler = logging.handlers.RotatingFileHandler(LOGPATH+LOGFILE,maxBytes=1000000,backupCount=5)
-handler.setLevel(num_level)
-formatter = logging.Formatter(logfmt)
-handler.setFormatter(formatter)
-my_logger.addHandler(handler)
-
 #=========================================================================================
 def main(args):
+	datestamp = date.today().isoformat()
 	my_logger.info('Getting ACL list')
 	resource = 'endpoint/' + args['endpointID'] + '/access_list'
 	r = requests.get(url+resource, headers=headers)
@@ -62,7 +42,7 @@ def main(args):
 	if (len(data['DATA']) >= 1):
 		records = create_recs(data, task_keys)
 	else:
-		my_logger.warning('There is no data in the return document.')
+		my_logger.warning('[main] There is no data in the return document.')
 		sys.exit()
 		
 	# Get user e-mail address for corresponding ACL rule ID and Globus user
@@ -103,14 +83,14 @@ def main(args):
 						my_logger.info("Updating Globus user record ({0}) to 'ACTIVE'".format(mygouser['username']))
 						myupdt('gouser', {'status': 'ACTIVE'}, gocond)						
 					else:
-						my_logger.info('Globus user name {0} is up to date in the gouser table'.format(mygouser['username']))
+						my_logger.info('[main] Globus user name {0} is up to date in the gouser table'.format(mygouser['username']))
 
 			# Update Globus user name in goshare record
 				if (tablename == 'goshare'):
 					if (myrec['username'] == None or cmp(myrec['username'],principal) != 0):
 						myupdt(tablename, rec, condition)
 					else:
-						my_logger.info('Globus user name {0} is up to date in the goshare table.'.format(myrec['username']))
+						my_logger.info('[main] Globus user name {0} is up to date in the goshare table.'.format(myrec['username']))
 	
 #=========================================================================================
 # Parse the command line arguments
@@ -189,8 +169,40 @@ def print_doc(data, keys):
 				continue
 
 #=========================================================================================
+# Configure log file
+
+def configure_log(**kwargs):
+	""" Set up log file """
+	LOGPATH = '/glade/scratch/tcram/logs/'
+	LOGFILE = 'update_globus_users.log'
+
+	if 'level' in kwargs:
+		loglevel = kwargs['level']
+	else:
+		loglevel = 'info'
+
+	LEVELS = { 'debug':logging.DEBUG,
+               'info':logging.INFO,
+               'warning':logging.WARNING,
+               'error':logging.ERROR,
+               'critical':logging.CRITICAL,
+             }
+
+	level = LEVELS.get(loglevel, logging.INFO)
+	my_logger.setLevel(level)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler.setLevel(level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	my_logger.addHandler(handler)
+	
+	return
+
+#=========================================================================================
+""" Set up logging """
+my_logger = logging.getLogger(__name__)
+configure_log(level='info')
 
 if __name__ == "__main__":
 	args = parse_opts(sys.argv[1:])
 	main(args)
-	
