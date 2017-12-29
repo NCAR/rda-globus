@@ -25,7 +25,7 @@ sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 if (socket.gethostname().find('geyser') != -1):
-	sys.path.append("/glade/u/apps/contrib/globus-sdk/0.6.0")
+	sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
