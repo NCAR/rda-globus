@@ -15,6 +15,10 @@
 
 import requests
 import os, sys
+
+sys.path.append("/glade/u/home/rdadata/lib/python")
+sys.path.append("/glade/u/home/tcram/lib/python")
+
 from PyDBI import myget, myadd, myupdt
 from datetime import date
 import logging
