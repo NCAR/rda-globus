@@ -16,6 +16,7 @@ use strict;
 use lib "/glade/u/home/rdadata/lib/perl";
 use MyDBI;
 use MyLOG;
+use MyUtil;
 
 my $myrec;
 my ($myrecs, $mytasks, $myuser);
