@@ -14,21 +14,18 @@
 ##################################################################################
 use strict;
 use lib "/glade/u/home/rdadata/lib/perl";
-use lib "/glade/u/home/rdadata/perl5/lib/perl5";
-use lib "/usr/local/lib64";
 use MyDBI;
 use MyLOG;
-use Date::Manip;
 
 my $myrec;
 my ($myrecs, $mytasks, $myuser);
 my ($sharecnt, $taskcnt);
-my ($then, $sixMonthsAgo, $i, $err, $cmd);
+my ($offset, $then, $i, $err, $cmd);
 my ($email, $completion_time);
 
-# Get date from six months ago
-$sixMonthsAgo = DateCalc("today", "-6 months", \$err);
-$then = UnixDate("$sixMonthsAgo", "%Y-%m-%d%n");
+# Get date from ~six months (180 days) ago
+$offset = -180;
+$then = offset_date($offset);
 print "$then\n";
 
 # Query active Globus shares greater than six months old
@@ -48,7 +45,7 @@ if($sharecnt > 0) {
       print "task count: $taskcnt\n";
       $completion_time = $mytasks ? $mytasks->{completion_time}[0] : "n/a";
       print "completion time: $completion_time\n";
-      print "six months ago: $then\n";
+      print "$offset days ago: $then\n";
       $cmd = "dsglobus -rp -ds $myrecs->{dsid}[$i] -em $myrecs->{email}[$i]";
       print "$cmd\n\n";
       mysystem($cmd, LGWNEX, 7, __FILE__, __LINE__);
