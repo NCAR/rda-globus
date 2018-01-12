@@ -77,7 +77,7 @@ def check_timestamp(limit):
 def refresh_tokens():
 	import requests, subprocess, stat
 
-	url = '{}v2/oauth2/token'.format(GLOBUS_AUTH_BASE_URL)
+	url = GLOBUS_AUTH_BASE_URL + 'oauth2/token'
 	tmpdir = '/glade/u/home/tcram/tmp/.globus'
 	transfer_token_file_tmp = tmpdir + '/' + 'globus.transfer-token-tmp'
 	auth_token_file_tmp = tmpdir + '/' + 'globus.auth-token-tmp'

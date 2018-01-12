@@ -16,7 +16,7 @@
 
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
-GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/'
+GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://www.globus.org/app/'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 TRANSFER_TOKEN_FILE = 'globus.transfer-token'
