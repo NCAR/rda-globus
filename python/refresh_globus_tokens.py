@@ -33,8 +33,9 @@ def main():
 
 #=========================================================================================
 def check_timestamp(limit):
-''' Check timestamp of token files.  Refresh if > 46 hours old.  Input parameter 
-	limit is provided in units of seconds. '''
+	""" Check timestamp of token files.  Refresh if > 46 hours old.  Input parameter 
+	    limit is provided in units of seconds.
+	"""
 
 	import time
 
@@ -66,7 +67,8 @@ def check_timestamp(limit):
 	my_logger.info("[check_timestamp] {}".format(msg))
 
 	if (max(delta_auth, delta_transfer) > limit):
-		refresh_tokens()
+		print "Refreshing tokens"
+		# refresh_tokens()
 	else:
 		msg = "Tokens are up to date.  Refresh not required."
 		print msg
