@@ -18,7 +18,7 @@
 ##################################################################################
 
 import os, sys
-import logging
+import logging, logging.handlers
 
 sys.path.append("/glade/u/home/tcram/lib/python")
 
@@ -176,7 +176,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=20000000,backupCount=1)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
