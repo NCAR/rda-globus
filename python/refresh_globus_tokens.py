@@ -49,9 +49,9 @@ def check_timestamp(limit):
 	auth_mod_time = time.ctime(auth_mod_epoch)
 	transfer_mod_time = time.ctime(transfer_mod_epoch)
 
-	msg = "Auth file last modified (epoch): {}".format(auth_epoch)
+	msg = "Auth file last modified (epoch): {}".format(auth_mod_epoch)
 	my_logger.info("[check_timestamp] {}".format(msg))
-	msg = "Transfer file last modified (epoch): {}".format(transfer_epoch)
+	msg = "Transfer file last modified (epoch): {}".format(transfer_mod_epoch)
 	my_logger.info("[check_timestamp] {}".format(msg))
 	msg = "Auth token file last modified: {}".format(auth_mod_time) 
 	my_logger.info("[check_timestamp] {}".format(msg))
