@@ -67,8 +67,7 @@ def check_timestamp(limit):
 	my_logger.info("[check_timestamp] {}".format(msg))
 
 	if (max(delta_auth, delta_transfer) > limit):
-		print "Refreshing tokens"
-		# refresh_tokens()
+		refresh_tokens()
 	else:
 		msg = "Tokens are up to date.  Refresh not required."
 		print msg
