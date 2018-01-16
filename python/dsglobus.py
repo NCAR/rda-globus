@@ -46,6 +46,9 @@ except:
 from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import headers, MyGlobus
+
+print "sys.path: {}".format(sys.path)
+
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         TransferData, RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
