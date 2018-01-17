@@ -21,6 +21,7 @@ import os, sys
 import logging, logging.handlers
 
 sys.path.append("/glade/u/home/tcram/lib/python")
+sys.path.append("/glade/u/home/rdadata/lib/python")
 
 from MyGlobus import (CLIENT_BASE, GLOBUS_AUTH_BASE_URL, TRANSFER_TOKEN_FILE, 
                       AUTH_TOKEN_FILE, MyGlobus)
