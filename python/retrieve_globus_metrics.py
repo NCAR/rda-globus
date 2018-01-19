@@ -561,7 +561,7 @@ def print_doc(data, keys):
 
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
+	LOGPATH = '/glade/scratch/tcram/logs/globus/'
 	LOGFILE = 'retrieve_globus_metrics.log'
 
 	if 'level' in kwargs:
@@ -578,7 +578,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=1)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)

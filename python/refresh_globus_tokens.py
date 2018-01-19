@@ -138,7 +138,7 @@ def refresh_tokens():
 	
 	msg = "Transfer and auth tokens have been successfully updated."
 	print msg
-	my_logger.info(msg)
+	my_logger.info("[refresh_tokens] {}".format(msg))
 
 	return
 
@@ -159,7 +159,7 @@ def handle_error(r, data):
 
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs'
+	LOGPATH = '/glade/scratch/tcram/logs/globus'
 	LOGFILE = 'refresh_globus_tokens.log'
 
 	if 'level' in kwargs:
@@ -176,7 +176,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=20000000,backupCount=1)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000,backupCount=1)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)

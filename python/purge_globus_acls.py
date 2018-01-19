@@ -30,9 +30,15 @@ from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
 #=========================================================================================
 def main():
 
-	rqst_acls = get_acls(MyGlobus['data_request_ep'])
+	endpoint_id = MyGlobus['data_request_ep']
+	rqst_acls = get_acls(endpoint_id)
 	if (len(rqst_acls) > 0):
-		delete_rqst_acls(rqst_acls, MyGlobus['data_request_ep'])
+		purge_rqst_acls(rqst_acls, endpoint_id)
+	
+	endpoint_id = MyGlobus['datashare_ep']
+	dataset_acls = get_acls(endpoint_id)
+	if (len(dataset_acls > 0):
+		purge_dataset_acls(dataset_acls, endpoint_id)
 	
 #=========================================================================================
 def get_acls(endpoint_id):
@@ -62,7 +68,7 @@ def get_acls(endpoint_id):
 	return acl_list
 
 #=========================================================================================
-def delete_rqst_acls(acl_list, endpoint_id):
+def purge_rqst_acls(acl_list, endpoint_id):
 	
 	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 	
@@ -106,11 +112,19 @@ def delete_rqst_acls(acl_list, endpoint_id):
 	return
 	
 #=========================================================================================
+def purge_dataset_acls(acl_list, endpoint_id):
+
+	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+	
+	count = 0
+
+
+#=========================================================================================
 # Configure log file
 
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
+	LOGPATH = '/glade/scratch/tcram/logs/globus'
 	LOGFILE = 'purge_globus_acls.log'
 
 	if 'level' in kwargs:
@@ -127,7 +141,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=3)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000,backupCount=2)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
