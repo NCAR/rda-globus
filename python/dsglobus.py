@@ -1,4 +1,4 @@
-#!/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/bin/python
+#!/usr/bin/env python
 #
 ##################################################################################
 #
@@ -17,8 +17,10 @@
 ##################################################################################
 
 import sys
+import subprocess
+import socket, re
 
-""" Check Python version (2.7 or later required) """
+""" Python version 2.7 or later required """
 try:
 	assert sys.version_info >= (2, 7)
 except AssertionError:
@@ -27,14 +29,20 @@ except AssertionError:
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
-sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
+
+hostname = socket.gethostname()
+if ((hostname.find('geyser') != -1) or (hostname.find('caldera') != -1) or (hostname.find('pronghorn') != -1)):
+	sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
+elif ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
+else:
+	pass
 
 import argparse
 import logging
 import logging.handlers
 import json
 import textwrap
-import re
 from datetime import datetime
 from time import strftime
 from phpserialize import unserialize
@@ -47,13 +55,12 @@ from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import headers, MyGlobus
 
-print "sys.path: {}".format(sys.path)
-
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         TransferData, RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
 
+#=========================================================================================
 def main():
 	opts = parse_input()
 	action = opts['action']
@@ -67,6 +74,7 @@ def main():
 	
 	return result
 
+#=========================================================================================
 def add_endpoint_acl_rule(action, data):
 	""" Create a new endpoint access rule
 	    action = 1: dsrqst share
@@ -168,6 +176,7 @@ def add_endpoint_acl_rule(action, data):
 	
 	return {'access_id': result["access_id"], 'share_url': url}
 
+#=========================================================================================
 def delete_endpoint_acl_rule(action, data):
 	""" Delete a specific endpoint access rule
 	    action = 1: dsrqst share
@@ -261,6 +270,7 @@ def delete_endpoint_acl_rule(action, data):
 	
 	return msg
 
+#=========================================================================================
 def submit_dsrqst_transfer(data):
 	""" Submit a Globus transfer on behalf of the user.  For dsrqst 'push' transfers. """
 
@@ -329,6 +339,7 @@ def submit_dsrqst_transfer(data):
 
 	return task_id
 
+#=========================================================================================
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
 	    shared endpoint base path.
@@ -374,6 +385,7 @@ def construct_share_path(action, data):
 	my_logger.info("[construct_share_path] Path to shared data: {0}".format(path))
 	return path
 
+#=========================================================================================
 def construct_share_url(action, data):
 	""" Construct the URL to the shared data on the Globus web app 
 	
@@ -418,6 +430,7 @@ def construct_share_url(action, data):
 	my_logger.info("[construct_share_url] Globus share URL created: {0}".format(url))
 	return url
 	
+#=========================================================================================
 def get_user_id(identity):
 	""" Get the UUID assigned by Globus Auth. Input argument 'identity' can be one of
 	    the following:
@@ -446,6 +459,7 @@ def get_user_id(identity):
 
 	return uuid
 
+#=========================================================================================
 def query_acl_rule(action, data):
 	""" Check if an active ACL rule exists for a given RDA user
 	    action = 1: dsrqst share
@@ -476,6 +490,7 @@ def query_acl_rule(action, data):
 	else:
 		return None
 
+#=========================================================================================
 def update_share_record(action, data):
 	""" Update the user's Globus share in RDADB
 	    action = 1: dsrqst share
@@ -540,6 +555,7 @@ def update_share_record(action, data):
 
 	return
 	
+#=========================================================================================
 def get_session(sid):
 	""" Retrieve session data from RDADB """
 	keys = ['id','access','data']
@@ -553,6 +569,7 @@ def get_session(sid):
 
 	return unserialize(myrec['data'])
 
+#=========================================================================================
 def parse_input():
 	""" Parse command line arguments """
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
@@ -636,9 +653,10 @@ def parse_input():
 	opts['print'] = True
 	return opts
 	
+#=========================================================================================
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
+	LOGPATH = '/glade/scratch/tcram/logs/globus'
 	LOGFILE = 'dsglobus.log'
 
 	if 'level' in kwargs:
@@ -655,7 +673,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=10000000,backupCount=5)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
@@ -663,6 +681,7 @@ def configure_log(**kwargs):
 	
 	return
 
+#=========================================================================================
 def handle_error(err, **kwargs):
 	if 'name' in kwargs:
 		name = kwargs['name']
