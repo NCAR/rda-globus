@@ -312,6 +312,9 @@ def submit_request(session, form):
 				'dest_path': dest_path
 		        })
 
+	msg = "[submit_request] Submitting request for Session ID: {0}\ndsid: {1}\nUser e-mail: {2}".format(sid, session['dsid'], session['email'])
+	my_logger.info(msg)
+	
 	print_header()
 	print "<form name=\"globus_request\" action=\"/datasets/{0}/index.html#!null\" method=\"POST\">\n".format(params['dsid'])
 	for key in params:
@@ -500,6 +503,37 @@ def print_info(form):
     sys.exit()
 
 #=========================================================================================
+def configure_log(**kwargs):
+	""" Set up log file """
+	LOGPATH = '/glade/scratch/tcram/logs/globus'
+	LOGFILE = 'rdaGlobusTransfer.log'
+
+	if 'level' in kwargs:
+		loglevel = kwargs['level']
+	else:
+		loglevel = 'info'
+
+	LEVELS = { 'debug':logging.DEBUG,
+               'info':logging.INFO,
+               'warning':logging.WARNING,
+               'error':logging.ERROR,
+               'critical':logging.CRITICAL,
+             }
+
+	level = LEVELS.get(loglevel, logging.INFO)
+	my_logger.setLevel(level)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=10000000,backupCount=5)
+	handler.setLevel(level)
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	my_logger.addHandler(handler)
+	
+	return
+
+#=========================================================================================
+""" Set up logging """
+my_logger = logging.getLogger(__name__)
+configure_log(level='info')
 
 if __name__ == "__main__":
     set_environ()
