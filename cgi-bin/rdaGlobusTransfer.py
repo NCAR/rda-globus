@@ -295,7 +295,14 @@ def submit_request(session, form):
 	update_session_data(data)
 		
 	""" split rqstParams into Python dict key-value pairs """
-	params = dict(x.split('=') for x in session['rqstParams'].split('&'))
+	keys = []
+	vals = []
+	rqstparams = session['rqstParams'].split('&')
+	for i in range(len(rqstparams)):
+		pair = rqstparams[i].split('=')
+		keys.append(pair[0])
+		vals.append(pair[1])
+	params = dict(zip(keys, vals))
 	if 'rinfo' in params:
 		params['rinfo'] = unquote(params['rinfo'])
 	params.update({'method': 'POST',
