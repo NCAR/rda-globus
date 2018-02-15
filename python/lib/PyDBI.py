@@ -15,6 +15,7 @@
 
 import os, sys
 import socket
+import re
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 hostname = socket.gethostname()
