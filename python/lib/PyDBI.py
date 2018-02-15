@@ -14,8 +14,16 @@
 ##################################################################################
 
 import os, sys
+import socket
 sys.path.append("/glade/u/home/tcram/lib/python")
-sys.path.append("/glade/u/home/rdadata/lib/python2.7/site-packages")
+
+hostname = socket.gethostname()
+if ((hostname.find('geyser') != -1) or (hostname.find('caldera') != -1) or (hostname.find('pronghorn') != -1)):
+	sys.path.append("/glade/apps/opt/mysql-connector/8.0.5/gnu/6.1.0/lib/python2.7/site-packages")
+elif ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/mysql-connector/8.0.5/gnu/6.3.0/lib/python2.7/site-packages")
+else:
+	pass
 
 import mysql.connector
 from mysql.connector import errorcode
