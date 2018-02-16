@@ -31,12 +31,8 @@ sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 hostname = socket.gethostname()
-if ((hostname.find('geyser') != -1) or (hostname.find('caldera') != -1) or (hostname.find('pronghorn') != -1)):
-	sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
-elif ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
 	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
-else:
-	pass
 
 import argparse
 import logging
