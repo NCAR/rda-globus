@@ -130,7 +130,8 @@ def purge_dataset_acls(acl_list, endpoint_id):
 		myrec = myget('goshare', ['email', 'globus_rid', 'delete_date', 'dsid', 'acl_path', 'status'], condition)
 
 		if (len(myrec) == 0 or myrec['status'] == 'DELETED'):
-			print "email: {0}, dsid: {1}, id: {2}".format(myrec['email'],myrec['dsid'], acl_id)
+			print "id: {0}".format(acl_id)
+			print "email: {0}, dsid: {1}".format(myrec['email'],myrec['dsid'])
 			"""
 			try:
 				result = tc.delete_endpoint_acl_rule(endpoint_id, acl_id)
