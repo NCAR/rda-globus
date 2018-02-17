@@ -131,7 +131,8 @@ def purge_dataset_acls(acl_list, endpoint_id):
 
 		if (len(myrec) == 0 or myrec['status'] == 'DELETED'):
 			print "id: {0}".format(acl_id)
-			print "email: {0}, dsid: {1}".format(myrec['email'],myrec['dsid'])
+			if (len(myrec) > 0):
+				print "email: {0}, dsid: {1}".format(myrec['email'],myrec['dsid'])
 			"""
 			try:
 				result = tc.delete_endpoint_acl_rule(endpoint_id, acl_id)
