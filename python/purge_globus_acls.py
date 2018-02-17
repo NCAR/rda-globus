@@ -116,24 +116,18 @@ def purge_rqst_acls(acl_list, endpoint_id):
 	
 #=========================================================================================
 def purge_dataset_acls(acl_list, endpoint_id):
+	""" Query Globus share record.  Delete ACL if record doesn't exist or share is
+		marked as deleted. """
 
 	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 	count = 0
 
 	for i in range(len(acl_list)):
-		path = acl_list[i]['path']
 		acl_id = acl_list[i]['id']
-		
-		""" Query Globus share record.  Delete ACL if record doesn't exist or share is
-		    marked as deleted. """
 		condition = " WHERE {0}='{1}'".format('globus_rid', acl_id)
 		myrec = myget('goshare', ['email', 'globus_rid', 'delete_date', 'dsid', 'acl_path', 'status'], condition)
 
 		if (acl_id and (len(myrec) == 0 or myrec['status'] == 'DELETED')):
-			print "id: {0}".format(acl_id)
-			if (len(myrec) > 0):
-				print "email: {0}, dsid: {1}".format(myrec['email'],myrec['dsid'])
-			"""
 			try:
 				result = tc.delete_endpoint_acl_rule(endpoint_id, acl_id)
 				count += 1
@@ -152,7 +146,6 @@ def purge_dataset_acls(acl_list, endpoint_id):
 				raise
 			msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
 			my_logger.info("[delete_rqst_acls] {0}".format(msg))
-			"""
 			
 	msg = "{0} ACLs purged from endpoint rda#datashare ({1})".format(count, endpoint_id)
 	my_logger.info("[purge_dataset_acls] {0}".format(msg))
