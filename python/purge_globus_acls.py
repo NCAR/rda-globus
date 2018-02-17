@@ -41,7 +41,7 @@ def main():
 	"""
 	endpoint_id = MyGlobus['datashare_ep']
 	dataset_acls = get_acls(endpoint_id)
-	if (len(dataset_acls > 0):
+	if (len(dataset_acls > 0)):
 		purge_dataset_acls(dataset_acls, endpoint_id)
 	
 #=========================================================================================
