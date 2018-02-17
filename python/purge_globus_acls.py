@@ -129,7 +129,7 @@ def purge_dataset_acls(acl_list, endpoint_id):
 		condition = " WHERE {0}='{1}'".format('globus_rid', acl_id)
 		myrec = myget('goshare', ['email', 'globus_rid', 'delete_date', 'dsid', 'acl_path', 'status'], condition)
 
-		if (len(myrec) == 0 or myrec['status'] == 'DELETED'):
+		if (acl_id and (len(myrec) == 0 or myrec['status'] == 'DELETED')):
 			print "id: {0}".format(acl_id)
 			if (len(myrec) > 0):
 				print "email: {0}, dsid: {1}".format(myrec['email'],myrec['dsid'])
