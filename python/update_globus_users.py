@@ -62,7 +62,7 @@ def main(args):
 		if (records[i]['principal_type'] == 'identity'):
 			id = records[i]['id']
 			principal = records[i]['principal']
-			condition = " WHERE {0}={1}".format("globus_rid", id)
+			condition = " WHERE {0}='{1}'".format("globus_rid", id)
 			print "[myrec] condition: {}".format(condition)
 			myrec = myget(tablename, fieldlist, condition)
 			
