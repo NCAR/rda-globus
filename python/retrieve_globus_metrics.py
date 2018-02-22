@@ -1,4 +1,4 @@
-#!/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/bin/python
+#!/usr/bin/env python
 #
 ##################################################################################
 #
@@ -19,13 +19,16 @@
 ##################################################################################
 
 import os, sys
-import socket
+import socket, re
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
-# if (socket.gethostname().find('geyser') != -1):
-sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
+""" Include path to Globus SDK if on cheyenne login or compute nodes (alternatively: 
+    module load globus_sdk) """
+hostname = socket.gethostname()
+if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
@@ -36,7 +39,6 @@ from datetime import datetime, tzinfo
 import pytz
 import logging
 import logging.handlers
-import re
 import urllib
 
 # Task list keys to retain
