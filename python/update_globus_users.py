@@ -19,14 +19,14 @@ import os, sys
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
+from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myadd, myupdt
 from datetime import date
 import logging
 import logging.handlers
 
-url = 'https://transfer.api.globusonline.org/v0.10/'
-token_file = open('/glade/u/home/rdadata/dssdb/tmp/.globus/globus.transfer-token', 'r')
-gotoken = token_file.read().rstrip('\\n')
+url = MyGlobus['url']
+gotoken = MyGlobus['transfer_token']
 headers = {'Authorization':'Bearer '+gotoken}
 
 #=========================================================================================
@@ -59,7 +59,7 @@ def main(args):
 	
 	rec = {}
 	for i in range(len(records)):
-		if (records[i]['principal_type'] == 'user'):
+		if (records[i]['principal_type'] == 'identity'):
 			id = records[i]['id']
 			principal = records[i]['principal']
 			condition = " WHERE {0}={1}".format("globus_rid", id)
@@ -125,9 +125,9 @@ def parse_opts(argv):
 			print usg
 	
 	if (endpoint == 'rda%23data_request'):
-		endpointID = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
+		endpointID = MyGlobus['data_request_ep']
 	elif (endpoint == 'rda%23datashare'):
-		endpointID = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
+		endpointID = MyGlobus['datashare_ep']
 	else:
 		msg = 'Globus endpoint {0} not found.'.format(endpoint)
 		print msg
