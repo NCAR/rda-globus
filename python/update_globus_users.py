@@ -63,6 +63,7 @@ def main(args):
 			id = records[i]['id']
 			principal = records[i]['principal']
 			condition = " WHERE {0}={1}".format("globus_rid", id)
+			print "[myrec] condition: {}".format(condition)
 			myrec = myget(tablename, fieldlist, condition)
 			
 			if (len(myrec) > 0 and myrec['email'] != None):
@@ -71,6 +72,7 @@ def main(args):
 
 				# Insert/Update gouser record
 				user_cond = " WHERE {0}='{1}' AND {2} {3}".format("email",email,"end_date",'IS NULL')
+				print "[main] user_cond: {}".format(user_cond)
 				myruser = myget('ruser', ['id'], user_cond)
 				if (len(myruser) > 0):
 					gorec = {'email': email, 'id': myruser['id'], 'username': principal, 
@@ -78,6 +80,7 @@ def main(args):
 
 					# Check if record already exists in gouser table
 					gocond = " WHERE {0}='{1}' AND {2}={3} AND {4}='{5}'".format("email",email,"id",myruser['id'],"username",principal)
+					print "[main] gocond: {}".format(gocond)
 					mygouser = myget('gouser', ['*'], gocond)
 					
 					# Add if no record
