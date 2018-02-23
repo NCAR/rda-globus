@@ -5,7 +5,7 @@
 #     Title : MyGlobus.py
 #    Author : Thomas Cram, tcram@ucar.edu
 #      Date : 11/10/2016
-#   Purpose : Python module defining Globus endpoint ID, access tokens, and
+#   Purpose : Python module defining Globus endpoint IDs, access tokens, and
 #             API base URLs.
 #
 # Work File : $DSSHOME/lib/python/MyGlobus.py*
@@ -13,6 +13,15 @@
 # Github    : https://github.com/NCAR/rda-globus/python/lib/MyGlobus.py
 #
 ##################################################################################
+
+""" 
+Include path to Globus SDK if on cheyenne login or compute nodes 
+(or load globus_sdk via the command 'module load globus_sdk')
+"""
+import sys, socket, re
+hostname = socket.gethostname()
+if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
 
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
