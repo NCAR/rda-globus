@@ -15,6 +15,7 @@
 
 import requests
 import os, sys
+import socket, re
 
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
