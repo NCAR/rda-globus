@@ -161,7 +161,7 @@ def parse_opts(argv):
 	print 'REMAINING  : {}'.format(rem)
 
 	return {'endpoint': endpoint, \
-	        'endpointID': endpoint_id, \
+	        'endpoint_id': endpoint_id, \
             'rem': rem}
 
 #=========================================================================================
