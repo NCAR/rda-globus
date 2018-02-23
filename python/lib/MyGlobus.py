@@ -16,7 +16,7 @@
 
 """ 
 Include path to Globus SDK if on cheyenne login or compute nodes 
-(or load the globus_sdk environment module via the command 'module load globus_sdk')
+(or load the globus-sdk environment module via the command 'module load globus-sdk')
 """
 import sys, socket, re
 hostname = socket.gethostname()
@@ -24,6 +24,8 @@ if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
 	sdk_path_ch = "/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages"
 	if (sdk_path_ch not in sys.path):
 		sys.path.append(sdk_path_ch)
+
+#=========================================================================================
 
 CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
