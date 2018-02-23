@@ -18,7 +18,6 @@
 
 import sys
 import subprocess
-import socket, re
 
 """ Python version 2.7 or later required """
 try:
@@ -27,12 +26,12 @@ except AssertionError:
 	print "Error: Python version 2.7 or later required."
 	raise
 
-sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/tcram/lib/python")
-
-hostname = socket.gethostname()
-if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
-	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
 
 import argparse
 import logging
@@ -49,7 +48,7 @@ except:
 
 from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd, mymget
-from MyGlobus import headers, MyGlobus
+from MyGlobus import MyGlobus
 
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         TransferData, RefreshTokenAuthorizer, AuthClient, 
@@ -568,6 +567,7 @@ def get_session(sid):
 #=========================================================================================
 def parse_input():
 	""" Parse command line arguments """
+	import re
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
 	epilog = textwrap.dedent('''\
 	Examples:
