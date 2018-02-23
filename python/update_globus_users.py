@@ -59,10 +59,10 @@ def update_users(data):
 
 	datestamp = date.today().isoformat()
 	rec = {}
-	for i in range(len(records)):
-		if (records[i]['principal_type'] == 'identity'):
-			id = records[i]['id']
-			principal = records[i]['principal']
+	for i in range(len(data)):
+		if (data[i]['principal_type'] == 'identity'):
+			id = data[i]['id']
+			principal = data[i]['principal']
 			condition = " WHERE {0}='{1}'".format("globus_rid", id)
 			myrec = myget('goshare', ['email','username'], condition)
 			
