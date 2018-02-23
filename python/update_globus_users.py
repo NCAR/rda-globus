@@ -13,22 +13,16 @@
 #
 ##################################################################################
 
-import requests
-import os, sys
-import socket, re
+import sys
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
 
-sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/tcram/lib/python")
-
-""" Include path to Globus SDK if on cheyenne login or compute nodes (alternatively: 
-    module load globus_sdk) """
-hostname = socket.gethostname()
-if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
-	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
-
-from MyGlobus import headers, MyGlobus
+from MyGlobus import MyGlobus
 from PyDBI import myget, myadd, myupdt
-from datetime import date
 import logging
 import logging.handlers
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
@@ -54,9 +48,35 @@ def main(args):
 		update_users(records)
 		
 #=========================================================================================
+def get_acls(endpoint_id):
+	""" Get list of access rules in the ACL for a specified endpoint """
+	try:
+		acls = []
+		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		for rule in tc.endpoint_manager_acl_list(endpoint_id, num_results=None):
+			acls.append(rule)
+	except GlobusAPIError as e:
+		msg = ("[get_acls] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		raise e
+	except NetworkError:
+		my_logger.error(("[get_acls] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[get_acls] Totally unexpected GlobusError!")
+		raise
+
+	return acls
+	
+#=========================================================================================
 def update_users(data):
 	""" Insert/update user records in gouser and goshare """
 
+	from datetime import date
 	datestamp = date.today().isoformat()
 	rec = {}
 	for i in range(len(data)):
@@ -100,31 +120,6 @@ def update_users(data):
 					my_logger.info('[main] Globus user name {0} is up to date in the goshare table.'.format(myrec['username']))
 
 	return
-	
-#=========================================================================================
-def get_acls(endpoint_id):
-	""" Get list of access rules in the ACL for a specified endpoint """
-	try:
-		acls = []
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
-		for rule in tc.endpoint_manager_acl_list(endpoint_id, num_results=None):
-			acls.append(rule)
-	except GlobusAPIError as e:
-		msg = ("[get_acls] Globus API Error\n"
-		       "HTTP status: {}\n"
-		       "Error code: {}\n"
-		       "Error message: {}").format(e.http_status, e.code, e.message)
-		my_logger.error(msg)
-		raise e
-	except NetworkError:
-		my_logger.error(("[get_acls] Network Failure. "
-                   "Possibly a firewall or connectivity issue"))
-		raise
-	except GlobusError:
-		logging.exception("[get_acls] Totally unexpected GlobusError!")
-		raise
-
-	return acls
 	
 #=========================================================================================
 # Parse the command line arguments
