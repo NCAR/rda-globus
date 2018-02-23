@@ -25,46 +25,37 @@ from datetime import date
 import logging
 import logging.handlers
 
-url = MyGlobus['url']
-gotoken = MyGlobus['transfer_token']
-headers = {'Authorization':'Bearer '+gotoken}
-
 #=========================================================================================
 def main(args):
-	datestamp = date.today().isoformat()
 	my_logger.info('Getting ACL list')
-	resource = 'endpoint/' + args['endpointID'] + '/access_list'
-	r = requests.get(url+resource, headers=headers)
-	data = r.json()
-
+	acls = get_acls(args['endpoint_id'])
+	
 	# Resource document data key/value pairs to retain
 	task_keys = ['id','path','principal','principal_type']
 
-	if doprint: print_doc(data, task_keys)
+	if doprint: print_doc(acls, task_keys)
 
-	# Prepare database records
-	if (len(data['DATA']) >= 1):
-		records = create_recs(data, task_keys)
+	# Prepare database records and insert records
+	if (len(acls) == 0):
+		msg = "[main] There is no data in the return document."
+		print msg
+		my_logger.warning(msg)
 	else:
-		my_logger.warning('[main] There is no data in the return document.')
-		sys.exit()
+		records = create_recs(acls, task_keys)
+		update_users(records)
 		
-	# Get user e-mail address for corresponding ACL rule ID and Globus user
-	if (args['endpoint'] == 'rda%23datashare'):
-		tablename = 'goshare'
-		fieldlist = ['email','username']
-	elif (args['endpoint'] == 'rda%23data_request'):
-		tablename = 'dsrqst'
-		fieldlist = ['email']
-	
+#=========================================================================================
+def update_users(data):
+	""" Insert/update user records in gouser and goshare """
+
+	datestamp = date.today().isoformat()
 	rec = {}
 	for i in range(len(records)):
 		if (records[i]['principal_type'] == 'identity'):
 			id = records[i]['id']
 			principal = records[i]['principal']
 			condition = " WHERE {0}='{1}'".format("globus_rid", id)
-			print "[myrec] condition: {}".format(condition)
-			myrec = myget(tablename, fieldlist, condition)
+			myrec = myget('goshare', ['email','username'], condition)
 			
 			if (len(myrec) > 0 and myrec['email'] != None):
 				email = myrec['email']
@@ -72,15 +63,16 @@ def main(args):
 
 				# Insert/Update gouser record
 				user_cond = " WHERE {0}='{1}' AND {2} {3}".format("email",email,"end_date",'IS NULL')
-				print "[main] user_cond: {}".format(user_cond)
 				myruser = myget('ruser', ['id'], user_cond)
 				if (len(myruser) > 0):
-					gorec = {'email': email, 'id': myruser['id'], 'username': principal, 
-					'creation_date': datestamp, 'status': 'ACTIVE'}
+					gorec = {'email'        : email,
+					         'id'           : myruser['id'],
+					         'username'     : principal,
+					         'creation_date': datestamp, \
+					         'status'       : 'ACTIVE'}
 
 					# Check if record already exists in gouser table
-					gocond = " WHERE {0}='{1}' AND {2}={3} AND {4}='{5}'".format("email",email,"id",myruser['id'],"username",principal)
-					print "[main] gocond: {}".format(gocond)
+					gocond = " WHERE email='{0}' AND id={1} AND username='{2}'".format(email,myruser['id'],principal)
 					mygouser = myget('gouser', ['*'], gocond)
 					
 					# Add if no record
@@ -93,11 +85,37 @@ def main(args):
 						my_logger.info('[main] Globus user name {0} is up to date in the gouser table'.format(mygouser['username']))
 
 			# Update Globus user name in goshare record
-				if (tablename == 'goshare'):
-					if (myrec['username'] == None or cmp(myrec['username'],principal) != 0):
-						myupdt(tablename, rec, condition)
-					else:
-						my_logger.info('[main] Globus user name {0} is up to date in the goshare table.'.format(myrec['username']))
+				if (myrec['username'] == None or cmp(myrec['username'],principal) != 0):
+					myupdt('goshare', rec, condition)
+				else:
+					my_logger.info('[main] Globus user name {0} is up to date in the goshare table.'.format(myrec['username']))
+
+	return
+	
+#=========================================================================================
+def get_acls(endpoint_id):
+	""" Get list of access rules in the ACL for a specified endpoint """
+	try:
+		acls = []
+		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		for rule in tc.endpoint_manager_acl_list(endpoint_id, num_results=None):
+			acls.append(rule)
+	except GlobusAPIError as e:
+		msg = ("[get_acls] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		raise e
+	except NetworkError:
+		my_logger.error(("[get_acls] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[get_acls] Totally unexpected GlobusError!")
+		raise
+
+	return acls
 	
 #=========================================================================================
 # Parse the command line arguments
@@ -110,7 +128,7 @@ def parse_opts(argv):
 	usg = 'Usage: update_globus_users.py -n ENDPOINT'	
 
 	# Default arguments
-	endpoint = 'rda%23data_request'
+	endpoint = 'rda#data_request'
 	doprint = bool(False)
 	rem = ''
 	
@@ -121,29 +139,29 @@ def parse_opts(argv):
 	
 	for opt, arg in opts:
 		if opt in ('-n', '--endpoint'):
-			endpoint = arg.replace("#","%23")
+			endpoint = arg
 		elif opt in ('-p', '--print'):
 			doprint = bool(True)
 		elif opt in ('-h', '--help'):
 			print usg
 	
-	if (endpoint == 'rda%23data_request'):
-		endpointID = MyGlobus['data_request_ep']
-	elif (endpoint == 'rda%23datashare'):
-		endpointID = MyGlobus['datashare_ep']
+	if (endpoint == 'rda#data_request'):
+		endpoint_id = MyGlobus['data_request_ep']
+	elif (endpoint == 'rda#datashare'):
+		endpoint_id = MyGlobus['datashare_ep']
 	else:
-		msg = 'Globus endpoint {0} not found.'.format(endpoint)
+		msg = "[parse_opts] Globus endpoint {0} not found.".format(endpoint)
 		print msg
 		my_logger.warning(msg)
 		sys.exit()
 
-	print 'ENDPOINT   :', endpoint
-	print 'ENDPOINT ID:', endpointID
-	print 'PRINT      :', doprint
-	print 'REMAINING  :', rem
+	print 'ENDPOINT   : {}'.format(endpoint)
+	print 'ENDPOINT ID: {}'.format(endpoint_id)
+	print 'PRINT      : {}'.format(doprint)
+	print 'REMAINING  : {}'.format(rem)
 
 	return {'endpoint': endpoint, \
-	        'endpointID': endpointID, \
+	        'endpointID': endpoint_id, \
             'rem': rem}
 
 #=========================================================================================
@@ -153,10 +171,10 @@ def parse_opts(argv):
 def create_recs(data, keys):
 	records = []
 	go_dict = {}
-	for i in range(len(data['DATA'])):
-		for key in data['DATA'][i]:
+	for i in range(len(data)):
+		for key in data[i].keys():
 			if key in keys:
-				go_dict[key] = data['DATA'][i][key]
+				go_dict[key] = data[i][key]
 			else:
 				continue
 		records.append(go_dict)
@@ -164,14 +182,14 @@ def create_recs(data, keys):
 	return records
 	
 #=========================================================================================
-# Print output from the 'DATA' task document
+# Print output from the response object
 
 def print_doc(data, keys):
-	for i in range(len(data['DATA'])):
+	for i in range(len(data)):
 		print '\n'
-		for key in data['DATA'][i]:
+		for key in data[i].keys():
 			if key in keys:
-				print key, '\t', data['DATA'][i][key]
+				print key, '\t', data[i][key]
 			else:
 				continue
 
