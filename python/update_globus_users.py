@@ -19,11 +19,19 @@ import os, sys
 sys.path.append("/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
+""" Include path to Globus SDK if on cheyenne login or compute nodes (alternatively: 
+    module load globus_sdk) """
+hostname = socket.gethostname()
+if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
+
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, myadd, myupdt
 from datetime import date
 import logging
 import logging.handlers
+from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+                        GlobusError, GlobusAPIError, NetworkError)
 
 #=========================================================================================
 def main(args):
