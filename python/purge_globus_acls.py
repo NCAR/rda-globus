@@ -16,11 +16,14 @@
 #
 ##################################################################################
 
-import os, sys
+import sys
 
-sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/tcram/lib/python")
-sys.path.append("/glade/u/apps/contrib/globus-sdk/1.1.0")
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
 
 import logging
 import logging.handlers
@@ -33,12 +36,11 @@ from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
 
 #=========================================================================================
 def main():
-	"""
 	endpoint_id = MyGlobus['data_request_ep']
 	rqst_acls = get_acls(endpoint_id)
 	if (len(rqst_acls) > 0):
 		purge_rqst_acls(rqst_acls, endpoint_id)
-	"""
+
 	endpoint_id = MyGlobus['datashare_ep']
 	dataset_acls = get_acls(endpoint_id)
 	if (len(dataset_acls) > 0):
