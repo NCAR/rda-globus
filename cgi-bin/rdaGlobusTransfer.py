@@ -23,9 +23,8 @@ import json
 import hmac
 from base64 import b64encode
 import hashlib
-import requests
 
-from MyGlobus import headers, MyGlobus
+from MyGlobus import MyGlobus
 from PyDBI import myget, myupdt
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError,
@@ -37,6 +36,7 @@ try:
 except:
     from urllib import urlencode, unquote
 
+#=========================================================================================
 def main():
     form = cgi.FieldStorage()
 
@@ -64,6 +64,7 @@ def main():
     else:
     	authcallback(form)
 
+#=========================================================================================
 def authcallback(form):
     """Handles the interaction with Globus Auth."""
 
@@ -103,6 +104,7 @@ def authcallback(form):
         
         return
 
+#=========================================================================================
 def transfer(form):
     """
     - Send user to Globus to select a destination endpoint using the
@@ -127,6 +129,7 @@ def transfer(form):
 
     return
 
+#=========================================================================================
 def browsecallback(form):
 	""" Handles the interaction with the Browse Endpoint helper page API """
 
@@ -139,6 +142,7 @@ def browsecallback(form):
 	
 	return
 
+#=========================================================================================
 def submit_transfer(session, form):
     """
     - Take the data returned by the Browse Endpoint helper page
@@ -199,6 +203,7 @@ def submit_transfer(session, form):
     
     return
     
+#=========================================================================================
 def transfer_status(task_id, new=False):
     """
     Call Globus to get status/details of transfer associated with the given task_id.
@@ -212,6 +217,7 @@ def transfer_status(task_id, new=False):
     qs = urlencode(params)
     print "Location: %s%s\r\n" % (display_status, qs)
 
+#=========================================================================================
 def update_transfer_status(task_id):
     """ Update the Globus transfer status in the database """
 
@@ -235,6 +241,7 @@ def update_transfer_status(task_id):
     update_session_data(task_data)
     return
     
+#=========================================================================================
 def display_transfer_status(task_id, new=False):
     """ Display Globus transfer status """
     session = get_session_data()
@@ -282,6 +289,7 @@ def display_transfer_status(task_id, new=False):
     print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
     print "</div>\n"
     
+#=========================================================================================
 def submit_request(session, form):
 	""" Submit request parameters to dsrqst.php and display request message """
 	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
@@ -322,6 +330,7 @@ def submit_request(session, form):
 	print "</form>\n"
 	print "<img src=\"/images/transpace.gif\" onLoad=\"document.globus_request.submit()\" />\n"
 
+#=========================================================================================
 def get_session_data():
     """ 
     - Retrieve session data from RDADB.
@@ -336,6 +345,7 @@ def get_session_data():
     """ Return unserialized session data """
     return unserialize(myrec['data'])
 
+#=========================================================================================
 def update_session_data(data):
     """ 
     - Update session data in RDADB
@@ -353,6 +363,7 @@ def update_session_data(data):
     
     return
 
+#=========================================================================================
 def get_cookie():
 	""" Get a user's cookie and load key-value pairs into a dict """
 	if 'HTTP_COOKIE' in os.environ:
@@ -366,6 +377,7 @@ def get_cookie():
 	else:
 		return null
 
+#=========================================================================================
 def set_environ():
     """ Define environment variables required by this script """
     os.environ['REQUEST_METHOD'] = 'POST'
@@ -374,6 +386,7 @@ def set_environ():
     
     return
 
+#=========================================================================================
 def get_protocol():
     """ Return the web server protocol """
     server_protocol = os.environ['SERVER_PROTOCOL']
@@ -386,14 +399,17 @@ def get_protocol():
 
     return protocol
 
+#=========================================================================================
 def print_header():
     print "Content-type: text/html\r\n\r\n"
     return
 
+#=========================================================================================
 def print_http_status(msg):
     print "Status: " + msg + "\r\n\r\n"
     return
 
+#=========================================================================================
 def generate_state_parameter(client_id, private_key):
 	""" Generate a state parameter for OAuth2 requests """
 	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
@@ -402,6 +418,7 @@ def generate_state_parameter(client_id, private_key):
 	state = b64encode(hashed.digest())
 	return (state)
 
+#=========================================================================================
 def is_valid_state(state):
 	""" Validate the OAuth2 state parameter """
 	recreated_state = generate_state_parameter(MyGlobus['client_id'], MyGlobus['private_key'])
@@ -410,9 +427,11 @@ def is_valid_state(state):
 	else:
 		return False
 
+#=========================================================================================
 # Test/debug code
 # ===============
 
+#=========================================================================================
 def print_environ(environ=os.environ):
     """Dump the shell environment as HTML."""
     keys = environ.keys()
@@ -425,6 +444,7 @@ def print_environ(environ=os.environ):
     print "</dl>"
     print
 
+#=========================================================================================
 def print_form(form):
     keys = form.keys()
     keys.sort()
@@ -441,6 +461,7 @@ def print_form(form):
     print "</dl>"
     print
 
+#=========================================================================================
 def print_directory():
     """Dump the current directory as HTML."""
     print
@@ -453,6 +474,7 @@ def print_directory():
         print escape(pwd)
     print
 
+#=========================================================================================
 def print_arguments():
     print
     print "<h3>Command Line Arguments:</h3>"
@@ -460,6 +482,7 @@ def print_arguments():
     print sys.argv
     print
 
+#=========================================================================================
 def escape(s, quote=None):
     """
     Replace special characters "&", "<" and ">" to HTML-safe sequences.
@@ -473,6 +496,7 @@ def escape(s, quote=None):
         s = s.replace('"', "&quot;")
     return s
 
+#=========================================================================================
 def print_session_data():
     """ Print session data """
     session = get_session_data()
@@ -481,6 +505,7 @@ def print_session_data():
     print_dict(session)
     print "</p>\n"
 
+#=========================================================================================
 def print_dict(mydict):
     """ Print contents of a dictionary """
     print "<dl>\n"
@@ -492,6 +517,7 @@ def print_dict(mydict):
             print "<dt><strong>{0} :</strong> <dd>{1}".format(key, val)
     print "</dl>\n"
 
+#=========================================================================================
 def print_info(form):
     """ Print debug info """
     print_header()
