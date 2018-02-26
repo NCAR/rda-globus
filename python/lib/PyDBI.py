@@ -13,10 +13,13 @@
 #
 ##################################################################################
 
-import os, sys
+import sys
 import socket
 import re
-sys.path.append("/glade/u/home/tcram/lib/python")
+
+path1 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
 
 hostname = socket.gethostname()
 if ((hostname.find('geyser') != -1) or (hostname.find('caldera') != -1) or (hostname.find('pronghorn') != -1)):
