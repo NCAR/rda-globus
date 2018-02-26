@@ -18,17 +18,15 @@
 #
 ##################################################################################
 
-import os, sys
+import sys
 import socket, re
 
-sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/tcram/lib/python")
-
-""" Include path to Globus SDK if on cheyenne login or compute nodes (alternatively: 
-    module load globus_sdk) """
-hostname = socket.gethostname()
-if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
-	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages")
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt

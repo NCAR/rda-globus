@@ -20,8 +20,12 @@
 import os, sys
 import logging, logging.handlers
 
-sys.path.append("/glade/u/home/tcram/lib/python")
-sys.path.append("/glade/u/home/rdadata/lib/python")
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
 
 from MyGlobus import (CLIENT_BASE, GLOBUS_AUTH_BASE_URL, TRANSFER_TOKEN_FILE, 
                       AUTH_TOKEN_FILE, MyGlobus)
