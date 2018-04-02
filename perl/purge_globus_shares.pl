@@ -25,12 +25,12 @@ my ($offset, $then, $i, $err, $cmd);
 my ($email, $completion_time);
 
 # Get date from ~six months (180 days) ago
-$offset = -90;
+$offset = -120;
 $then = offset_date($offset);
 print "$then\n";
 
 # Query active Globus shares greater than six months old
-$myrecs = mymget("goshare", "email,dsid", "request_date < '$then' AND status='ACTIVE' ORDER BY request_date ASC");
+$myrecs = mymget("goshare", "email,dsid", "request_date < '$then' AND status='ACTIVE' AND source_endpoint='rda#datashare' ORDER BY request_date ASC");
 $sharecnt = $myrecs ? @{$myrecs->{email}} : 0;
 print "share count: $sharecnt\n";
 if($sharecnt > 0) {
