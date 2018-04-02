@@ -35,6 +35,8 @@ REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 TRANSFER_TOKEN_FILE = 'globus.transfer-token'
 AUTH_TOKEN_FILE = 'globus.auth-token'
 
+DSS_DATA_PATH = '/glade2/collections/rda'
+
 transfer_tokenf = open(CLIENT_BASE+TRANSFER_TOKEN_FILE, 'r')
 auth_tokenf = open(CLIENT_BASE+AUTH_TOKEN_FILE, 'r')
 transfer_refresh_tokenf = open(CLIENT_BASE+'globus.transfer-refresh-token', 'r')
@@ -67,12 +69,14 @@ MyGlobus = {
    'auth_token': AUTH_TOKEN,
    'transfer_refresh_token': TRANSFER_REFRESH_TOKEN,
    'auth_refresh_token': AUTH_REFRESH_TOKEN,
-   'datashare_ep': 'db57de42-6d04-11e5-ba46-22000b92c6ec',
-   'data_request_ep' : 'd20e610e-6d04-11e5-ba46-22000b92c6ec',
+   'datashare_ep_old': 'db57de42-6d04-11e5-ba46-22000b92c6ec',
+   'datashare_ep': '2869611a-36aa-11e8-b95e-0ac6873fc732',
+   'data_request_ep_old' : 'd20e610e-6d04-11e5-ba46-22000b92c6ec',
+   'data_request_ep' : '68823254-36aa-11e8-b95e-0ac6873fc732',
    'datashare_legacy' : 'rda#datashare',
    'data_request_legacy' : 'rda#data_request',
-   'datashare_ep_base' : '/glade/p/rda/data/',
-   'data_request_ep_base' : '/glade/p/rda/transfer/',
+   'datashare_ep_base' : DSS_DATA_PATH + '/data/',
+   'data_request_ep_base' : DSS_DATA_PATH + '/transfer/',
    'host_endpoint_id' : 'd33b3614-6d04-11e5-ba46-22000b92c6ec',
    'client_id': CLIENT_ID,
    'client_secret': CLIENT_SECRET,
