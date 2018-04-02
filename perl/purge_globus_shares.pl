@@ -25,7 +25,7 @@ my ($offset, $then, $i, $err, $cmd);
 my ($email, $completion_time);
 
 # Get date from ~six months (180 days) ago
-$offset = -180;
+$offset = -90;
 $then = offset_date($offset);
 print "$then\n";
 
