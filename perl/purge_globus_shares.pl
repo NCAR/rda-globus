@@ -24,15 +24,18 @@ my ($sharecnt, $taskcnt);
 my ($offset, $then, $i, $err, $cmd);
 my ($email, $completion_time);
 
+$MYLOG{LOGPATH} = "/glade2/scratch2/tcram/logs/globus";
+$MYLOG{LOGFILE} = "purge_globus_shares.log";
+
 # Get date from ~six months (180 days) ago
 $offset = -120;
 $then = offset_date($offset);
-print "$then\n";
+mylog("Purging ACLs prior to: $then", LOGWRN);
 
 # Query active Globus shares greater than six months old
 $myrecs = mymget("goshare", "email,dsid", "request_date < '$then' AND status='ACTIVE' AND source_endpoint='rda#datashare' ORDER BY request_date ASC");
 $sharecnt = $myrecs ? @{$myrecs->{email}} : 0;
-print "share count: $sharecnt\n";
+mylog("Number of active ACLs: $sharecnt", LOGWRN);
 if($sharecnt > 0) {
   for($i = 0; $i<$sharecnt; $i++) {
     $email = $myrecs->{email}[$i];
@@ -43,12 +46,12 @@ if($sharecnt > 0) {
     $mytasks = mymget("gotask", "email,completion_time", "email='$email' AND source_endpoint='rda#datashare' ORDER BY completion_time DESC");
     $taskcnt = $mytasks ? @{$mytasks->{email}} : 0;
     if($taskcnt == 0 || $mytasks->{completion_time}[0] lt $then) {
-      print "task count: $taskcnt\n";
+      mylog("task count: $taskcnt", LOGWRN);
       $completion_time = $mytasks ? $mytasks->{completion_time}[0] : "n/a";
-      print "completion time: $completion_time\n";
-      print "$offset days ago: $then\n";
+      mylog("completion time: $completion_time", LOGWRN);
+      mylog("$offset days ago: $then", LOGWRN);
       $cmd = "dsglobus -rp -ds $myrecs->{dsid}[$i] -em $myrecs->{email}[$i]";
-      print "$cmd\n\n";
+      mylog("$cmd", LOGWRN);
       mysystem($cmd, LGWNEX, 7, __FILE__, __LINE__);
     }
   }
