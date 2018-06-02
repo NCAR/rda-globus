@@ -16,14 +16,23 @@
 
 """ 
 Include path to Globus SDK if on cheyenne login or compute nodes 
-(or load the globus-sdk environment module via the command 'module load globus-sdk')
+(or load the globus-sdk environment module via the command 'module load globus-sdk'),
+or on DAV CentOS 7 system
 """
-import sys, socket, re
+import sys, socket, re, platform
 hostname = socket.gethostname()
 if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
 	sdk_path_ch = "/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages"
 	if (sdk_path_ch not in sys.path):
 		sys.path.append(sdk_path_ch)
+elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostname.find('pronghorn') != -1) ):
+	os_dist = platform.linux_distribution()[0]
+	if (re.match(r'^CentOS', os_dist)):
+		sdk_path_centos = '/glade/u/apps/dav/opt/python/2.7.14/intel/17.0.1/pkg-library/20180510/lib/python2.7/site-packages'
+		if (sdk_path_centos not in sys.path):
+			sys.path.append(sdk_path_centos)
+else:
+	pass
 
 #=========================================================================================
 
