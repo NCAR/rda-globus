@@ -13,19 +13,28 @@
 #
 ##################################################################################
 
-import sys
-import socket
-import re
+import sys, socket, re, platform
+hostname = socket.gethostname()
 
 path1 = "/glade/u/home/tcram/lib/python"
 if (path1 not in sys.path):
 	sys.path.append(path1)
 
-hostname = socket.gethostname()
-if ((hostname.find('geyser') != -1) or (hostname.find('caldera') != -1) or (hostname.find('pronghorn') != -1)):
-	sys.path.append("/glade/apps/opt/mysql-connector/8.0.5/gnu/6.1.0/lib/python2.7/site-packages")
-elif ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
-	sys.path.append("/glade/u/apps/ch/opt/pythonpkgs/2.7/mysql-connector/8.0.5/gnu/6.3.0/lib/python2.7/site-packages")
+mysql_path_ch = "/glade/u/apps/ch/opt/pythonpkgs/2.7/mysql-connector/8.0.5/gnu/6.3.0/lib/python2.7/site-packages"
+mysql_path_dav = "/glade/apps/opt/mysql-connector/8.0.5/gnu/6.1.0/lib/python2.7/site-packages"
+mysql_path_centos = '/glade/u/apps/dav/opt/python/2.7.14/intel/17.0.1/pkg-library/20180510/lib/python2.7/site-packages'
+
+if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
+	if (mysql_path_ch not in sys.path):
+		sys.path.append(mysql_path_ch)
+elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostname.find('pronghorn') != -1) ):
+	os_dist = platform.linux_distribution()[0]
+	if (re.match(r'^CentOS', os_dist)):
+		if (mysql_path_centos not in sys.path):
+			sys.path.append(mysql_path_centos)
+	else:
+		if (mysql_path_dav not in sys.path):
+			sys.path.append(mysql_path_dav)
 else:
 	pass
 
