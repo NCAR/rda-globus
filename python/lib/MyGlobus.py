@@ -17,7 +17,7 @@
 """ 
 Include path to Globus SDK if on cheyenne login or compute nodes 
 (or load the globus-sdk environment module via the command 'module load globus-sdk'),
-or on DAV CentOS 7 system
+or on DAV systems
 """
 import sys, socket, re, platform
 hostname = socket.gethostname()
@@ -31,6 +31,10 @@ elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostn
 		sdk_path_centos = '/glade/u/apps/dav/opt/python/2.7.14/intel/17.0.1/pkg-library/20180510/lib/python2.7/site-packages'
 		if (sdk_path_centos not in sys.path):
 			sys.path.append(sdk_path_centos)
+	else:
+		sdk_path_dav = '/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/site-packages'
+		if (sdk_path_dav not in sys.path):
+			sys.path.append(sdk_path_dav)
 else:
 	pass
 
