@@ -186,33 +186,49 @@ def delete_endpoint_acl_rule(action, data):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
+		except KeyError as err:
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
+		else:
 			rqst_cond = " WHERE rindex='{0}'".format(ridx)
+
+			""" Try the dsrqst record first, then try dspurge """
 			myrqst = myget('dsrqst', ['*'], rqst_cond)
-			if (len(myrqst) == 0):
-				msg = "[delete_endpoint_acl_rule] Request index not on file"
-				if 'print' in data and data['print']:
-					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
-				return {'Error': msg}
-			if not myrqst['globus_rid']:
+			mypurge = myget('dspurge', ['*'], rqst_cond)
+			
+			try:
+				rqst_rid = myrqst['globus_rid']
+			except KeyError:
+				try:
+					purge_rid = mypurge['globus_rid']
+				except KeyError:
+					msg = "[delete_endpoint_acl_rule] Request record not found in dsrqst or dspurge (request index {0}).".format(ridx)
+					if 'print' in data and data['print']:
+						sys.exit("Error: {0}".format(msg))
+					my_logger.warning(msg)
+					return {'Error': msg}
+
+			rule_id = rqst_id if rqst_id else purge_rid
+			
+			if not rule_rid:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
 				my_logger.warning(msg)
 				return {'Error': msg}
 			else:
-				rule_id = myrqst['globus_rid']
 				record = {unicode('globus_rid'): None,
 				          unicode('globus_url'): None}
-				myupdt('dsrqst', record, rqst_cond)
+				if rqst_rid:
+					myupdt('dsrqst', record, rqst_cond)
+				else:
+					myupdt('dspurge', record, rqst_cond)
+				
 				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
 				myshare = myget('goshare', ['*'], share_cond)
 				if (len(myshare) > 0):
 					share_record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
 				                    unicode('status'): 'DELETED'}
 					myupdt('goshare', share_record, share_cond)
-		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	elif (action == 2):
 		try:
