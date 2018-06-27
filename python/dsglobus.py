@@ -211,7 +211,7 @@ def delete_endpoint_acl_rule(action, data):
 
 			rule_id = rqst_rid if rqst_rid else purge_rid
 			
-			if not rule_rid:
+			if not rule_id:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
