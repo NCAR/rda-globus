@@ -194,6 +194,8 @@ def delete_endpoint_acl_rule(action, data):
 			""" Try the dsrqst record first, then try dspurge """
 			myrqst = myget('dsrqst', ['*'], rqst_cond)
 			mypurge = myget('dspurge', ['*'], rqst_cond)
+			rqst_rid = None
+			purge_rid = None
 			
 			try:
 				rqst_rid = myrqst['globus_rid']
