@@ -237,6 +237,9 @@ def delete_endpoint_acl_rule(action, data):
 			endpoint_id = MyGlobus['datashare_ep']
 			email = data['email']
 			dsid = data['dsid']
+		except KeyError as err:
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
+		else:
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) == 0):
@@ -256,8 +259,6 @@ def delete_endpoint_acl_rule(action, data):
 				record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
 				          unicode('status'): 'DELETED'}
 				myupdt('goshare', record, cond)
-		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	try:
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
