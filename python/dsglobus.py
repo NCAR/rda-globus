@@ -204,18 +204,18 @@ def delete_endpoint_acl_rule(action, data):
 					purge_rid = mypurge['globus_rid']
 				except KeyError:
 					msg = "[delete_endpoint_acl_rule] Request record not found in dsrqst or dspurge (request index {0}).".format(ridx)
+					my_logger.warning(msg)
 					if 'print' in data and data['print']:
 						sys.exit("Error: {0}".format(msg))
-					my_logger.warning(msg)
 					return {'Error': msg}
 
 			rule_id = rqst_rid if rqst_rid else purge_rid
 			
 			if not rule_id:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 			else:
 				record = {unicode('globus_rid'): None,
@@ -241,15 +241,15 @@ def delete_endpoint_acl_rule(action, data):
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) == 0):
 				msg = "[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 			if not myshare['globus_rid']:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 			else:
 				rule_id = myshare['globus_rid']
@@ -383,9 +383,9 @@ def construct_share_path(action, data):
 					path = "/download.auto/{0}/".format(myrqst['rqstid'])
 			else:
 				msg = "[construct_share_path] Request index {0} not found or request ID not defined".format(ridx)
+				my_logger.error(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.error(msg)
 				return {'Error': msg}
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_path]", print_stdout=print_stdout)
@@ -420,9 +420,9 @@ def construct_share_url(action, data):
 				origin_path = construct_share_path(1, {'ridx': ridx})
 			else:
 				msg = "[construct_share_url] Request {0} not found in RDADB".format(ridx)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
@@ -616,7 +616,7 @@ def parse_input():
 		sys.exit(1)
 	
 	args = parser.parse_args(sys.argv[1:])
-	my_logger.info("{0}: {1}".format(sys.argv[0], args))
+	my_logger.info("[parse_input] {0}: {1}".format(sys.argv[0], args))
 	
 	opts = vars(args)
 	opts['addPermission'] = opts.pop('ap')
