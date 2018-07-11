@@ -45,10 +45,7 @@ def main(args):
 
 	db_acls = get_db_acls()
 	acls = get_acls(args['endpoint_id_legacy'])
-
-	"""
 	create_new_acls(db_acls, args['action'])
-	"""
 	
 #=========================================================================================
 def get_db_acls():
@@ -382,10 +379,10 @@ def parse_opts(argv):
 		my_logger.warning(msg)
 		sys.exit()
 
-	print 'ENDPOINT   : {}'.format(endpoint)
-	print 'ENDPOINT ID: {}'.format(endpoint_id)
-	print 'PRINT      : {}'.format(doprint)
-	print 'REMAINING  : {}'.format(rem)
+	print 'ENDPOINT          : {}'.format(endpoint)
+	print 'LEGACY ENDPOINT ID: {}'.format(endpoint_id)
+	print 'PRINT             : {}'.format(doprint)
+	print 'REMAINING         : {}'.format(rem)
 
 	return {'endpoint': endpoint, \
 	        'endpoint_id_legacy': endpoint_id, \
