@@ -45,7 +45,10 @@ def main(args):
 
 	db_acls = get_db_acls()
 	acls = get_acls(args['endpoint_id_legacy'])
+
+	"""
 	create_new_acls(db_acls, args['action'])
+	"""
 	
 #=========================================================================================
 def get_db_acls():
