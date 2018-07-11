@@ -43,20 +43,19 @@ except:
 def main(args):
 	my_logger.info('Getting ACL list')
 
-	db_acls = get_db_acls()
+	db_acls = get_db_acls(args['action'])
 	acls = get_acls(args['endpoint_id_legacy'])
 	create_new_acls(db_acls, args['action'])
 	
 #=========================================================================================
-def get_db_acls():
+def get_db_acls(action):
 
-	cond = " WHERE source_endpoint='rda#data_request' AND status='ACTIVE' and delete_date IS NULL"
-	db_acls = mymget('goshare', ['email','dsid','globus_rid', 'acl_path', 'rindex'], cond)
-
-	"""	
-	cond = " WHERE source_endpoint='rda#datashare' AND status='ACTIVE' and delete_date IS NULL"
-	db_acls = mymget('goshare', ['email','dsid','globus_rid', 'acl_path'], cond)
-	"""
+	if (action == 1):
+		cond = " WHERE source_endpoint='rda#data_request' AND status='ACTIVE' and delete_date IS NULL"
+		db_acls = mymget('goshare', ['email','dsid','globus_rid', 'acl_path', 'rindex'], cond)
+	elif (action == 2):
+		cond = " WHERE source_endpoint='rda#datashare' AND status='ACTIVE' and delete_date IS NULL"
+		db_acls = mymget('goshare', ['email','dsid','globus_rid', 'acl_path'], cond)
 	
 	return db_acls
 
