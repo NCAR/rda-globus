@@ -40,6 +40,14 @@ def main(args):
 	my_logger.info('Getting ACL list')
 
 	endpoint_id_legacy = args['endpoint_id_legacy']
+	endpoint = tc.get_endpoint(endpoint_id)
+
+	msg = "Endpoint: {0}".format(endpoint['display_name'])
+	print msg
+	my_logger.info("[main] {0}".format(msg))
+	msg =  "Endpoint ID: {0}".format(endpoint['id'])
+	print msg
+	my_logger.info("[main] {0}".format(msg))
 
 	if (endpoint_id_legacy == MyGlobus['datashare_ep'] or endpoint_id_legacy == MyGlobus['data_request_ep']):
 		msg = "[main] Endpoint ID {0} is an active endpoint!".format(endpoint_id_legacy)
@@ -48,7 +56,16 @@ def main(args):
 	
 	acls = get_acls(endpoint_id_legacy)
 	
-	# delete_acls(endpoint_id_legacy, acls)
+	msg = "Number of ACLs on endpoint {0}: {1}".format(endpoint['display_name'], len(acls))
+	print msg
+	my_logger.info("[main] {0}".format(msg))
+	
+	count = delete_acls(endpoint_id_legacy, acls)
+
+	msg = "{0} legacy ACLs deleted successfully from endpoint {1}".format(count, endpoint['display_name'])
+	print msg
+	my_logger.info("[main] {0}".format(msg))
+	
 	
 #=========================================================================================
 def get_acls(endpoint_id):
@@ -73,17 +90,13 @@ def get_acls(endpoint_id):
 		logging.exception("[get_acls] Totally unexpected GlobusError!")
 		raise
 
-	endpoint = tc.get_endpoint(endpoint_id)
-	print "Endpoint: {0}".format(endpoint['display_name'])
-	print "Endpoint ID: {0}".format(endpoint['id'])
-	print "Number of ACLs: {0}".format(len(acls))
-	
 	return acls
 
 #=========================================================================================
 def delete_acls(endpoint_id, acl_list):
 
 	rda_identity = get_user_id('rda@globusid.org')
+	count = 0
 	
 	for i in range(len(acl_list)):
 		rule_id = acl_list[i]['id']
@@ -112,8 +125,11 @@ def delete_acls(endpoint_id, acl_list):
 		msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
 		print msg
 		my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
+		
+		if result['code'] == "Deleted":
+			count = count + 1
 
-	return
+	return count
 		
 #=========================================================================================
 # Parse the command line arguments
