@@ -42,7 +42,7 @@ def main(args):
 	endpoint_id_legacy = args['endpoint_id_legacy']
 
 	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
-	endpoint = tc.get_endpoint(endpoint_id)
+	endpoint = tc.get_endpoint(endpoint_id_legacy)
 
 	msg = "Endpoint: {0}".format(endpoint['display_name'])
 	print msg
