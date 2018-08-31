@@ -40,6 +40,8 @@ def main(args):
 	my_logger.info('Getting ACL list')
 
 	endpoint_id_legacy = args['endpoint_id_legacy']
+
+	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
 	endpoint = tc.get_endpoint(endpoint_id)
 
 	msg = "Endpoint: {0}".format(endpoint['display_name'])
