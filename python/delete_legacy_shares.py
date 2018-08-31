@@ -104,7 +104,7 @@ def delete_acls(endpoint_id, acl_list):
 		rule_id = acl_list[i]['id']
 		
 		""" Skip ACL assigned to RDA identity """
-		if acls[i]['principal'] == rda_identity or not acls[i]['id']:
+		if acl_list[i]['principal'] == rda_identity or not acl_list[i]['id']:
 			continue
 			
 		try:
