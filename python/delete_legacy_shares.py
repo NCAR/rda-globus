@@ -162,9 +162,9 @@ def parse_opts(argv):
 			print usg
 	
 	if (endpoint == 'rda#data_request'):
-		endpoint_id_legacy = MyGlobus['data_request_ep_legacy']
+		endpoint_id_legacy = MyGlobus['data_request_ep_legacy2']
 	elif (endpoint == 'rda#datashare'):
-		endpoint_id_legacy = MyGlobus['datashare_ep_legacy']
+		endpoint_id_legacy = MyGlobus['datashare_ep_legacy2']
 	else:
 		msg = "[parse_opts] Globus endpoint {0} not found.".format(endpoint)
 		print msg
