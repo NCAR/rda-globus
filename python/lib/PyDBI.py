@@ -27,7 +27,7 @@ mysql_path_centos = '/glade/u/apps/dav/opt/python/2.7.14/intel/17.0.1/pkg-librar
 if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
 	if (mysql_path_ch not in sys.path):
 		sys.path.append(mysql_path_ch)
-elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostname.find('pronghorn') != -1) ):
+elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostname.find('pronghorn') != -1 or hostname.find('casper') != -1) ):
 	os_dist = platform.linux_distribution()[0]
 	if (re.match(r'^CentOS', os_dist)):
 		if (mysql_path_centos not in sys.path):
