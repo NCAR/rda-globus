@@ -8,38 +8,54 @@
 #   Purpose : Python module to create and manage shared endpoints to facilitate
 #             Globus data transfers from the RDA.
 #
+#             *** NOTE: Python 2.7 or later required ***
+#
 # Work File : $DSSHOME/lib/python/dsglobus.py*
 # Test File : $DSSHOME/lib/python/dsglobus_test.py*
 # Github    : https://github.com/NCAR/rda-globus/python/dsglobus.py
 #
 ##################################################################################
 
-import os, sys
+import sys
+import subprocess
 
-sys.path.append("/glade/u/apps/contrib/modulefiles/globus-sdk")
-sys.path.append("/glade/u/home/rdadata/lib/python")
-sys.path.append("/glade/u/home/tcram/lib/python")
+""" Python version 2.7 or later required """
+try:
+	assert sys.version_info >= (2, 7)
+except AssertionError:
+	print "Error: Python version 2.7 or later required."
+	raise
 
-from MyGlobus import headers, MyGlobus
-from PyDBI import myget, myupdt, myadd
-from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
-                        AuthClient, GlobusError, GlobusAPIError, NetworkError)
-from globus_utils import load_app_client
-from MyLOG import show_usage
-import json
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
+
+import argparse
 import logging
 import logging.handlers
-import argparse
+import json
 import textwrap
-import re
 from datetime import datetime
-from time import strftime	
-
+from time import strftime
+from phpserialize import unserialize
 try:
     from urllib.parse import urlencode
 except:
     from urllib import urlencode
 
+from MyLOG import show_usage
+from PyDBI import myget, myupdt, myadd, mymget
+from MyGlobus import MyGlobus
+
+from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+                        TransferData, RefreshTokenAuthorizer, AuthClient, 
+                        GlobusError, GlobusAPIError, NetworkError)
+from globus_utils import load_app_client
+
+#=========================================================================================
 def main():
 	opts = parse_input()
 	action = opts['action']
@@ -48,9 +64,12 @@ def main():
 		result = delete_endpoint_acl_rule(action, opts)
 	elif opts['addPermission']:
 		result = add_endpoint_acl_rule(action, opts)
+	elif opts['submitTransfer']:
+		result = submit_dsrqst_transfer(opts)
 	
 	return result
 
+#=========================================================================================
 def add_endpoint_acl_rule(action, data):
 	""" Create a new endpoint access rule
 	    action = 1: dsrqst share
@@ -75,13 +94,14 @@ def add_endpoint_acl_rule(action, data):
 				return {'Error': msg}
 			rqstid = myrqst['rqstid']
 			email = myrqst['email']
+			dsid = myrqst['dsid']
 			if myrqst['globus_rid']:
 				msg = "[add_endpoint_acl_rule] Globus ACL rule has already been created for request {0}.".format(ridx)
 				my_logger.info("msg")
 				if 'print' in data and data['print']:
 					sys.exit(msg)
 				return {'access_id': myrqst['globus_rid'], 'share_url': myrqst['globus_url']}
-			share_data = {'ridx': ridx}
+			share_data = {'ridx': ridx, 'dsid': dsid, 'email': email}
 			path = construct_share_path(1, share_data)
 		except KeyError as err:
 			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
@@ -151,6 +171,7 @@ def add_endpoint_acl_rule(action, data):
 	
 	return {'access_id': result["access_id"], 'share_url': url}
 
+#=========================================================================================
 def delete_endpoint_acl_rule(action, data):
 	""" Delete a specific endpoint access rule
 	    action = 1: dsrqst share
@@ -165,58 +186,79 @@ def delete_endpoint_acl_rule(action, data):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
-			cond = " WHERE rindex='{0}'".format(ridx)
-			myrqst = myget('dsrqst', ['*'], cond)
-			if (len(myrqst) == 0):
-				msg = "[delete_endpoint_acl_rule] Request index not on file"
-				if 'print' in data and data['print']:
-					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
-				return {'Error': msg}
-			if not myrqst['globus_rid']:
-				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
-				if 'print' in data and data['print']:
-					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
-				return {'Error': msg}
-			else:
-				rule_id = myrqst['globus_rid']
-				record = []
-				record.append({unicode('globus_rid'): None,
-				               unicode('globus_url'): None
-				               })
-				myupdt('dsrqst', record[0], cond)
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
+		else:
+			rqst_cond = " WHERE rindex='{0}'".format(ridx)
+
+			""" Try the dsrqst record first, then try dspurge """
+			myrqst = myget('dsrqst', ['*'], rqst_cond)
+			mypurge = myget('dspurge', ['*'], rqst_cond)
+			rqst_rid = None
+			purge_rid = None
+			
+			try:
+				rqst_rid = myrqst['globus_rid']
+			except KeyError:
+				try:
+					purge_rid = mypurge['globus_rid']
+				except KeyError:
+					msg = "[delete_endpoint_acl_rule] Request record not found in dsrqst or dspurge (request index {0}).".format(ridx)
+					my_logger.warning(msg)
+					if 'print' in data and data['print']:
+						sys.exit("Error: {0}".format(msg))
+					return {'Error': msg}
+
+			rule_id = rqst_rid if rqst_rid else purge_rid
+			
+			if not rule_id:
+				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
+				my_logger.warning(msg)
+				if 'print' in data and data['print']:
+					sys.exit("Error: {0}".format(msg))
+				return {'Error': msg}
+			else:
+				record = {unicode('globus_rid'): None,
+				          unicode('globus_url'): None}
+				if rqst_rid:
+					myupdt('dsrqst', record, rqst_cond)
+				else:
+					myupdt('dspurge', record, rqst_cond)
+				
+				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
+				myshare = myget('goshare', ['*'], share_cond)
+				if (len(myshare) > 0):
+					share_record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
+				                    unicode('status'): 'DELETED'}
+					myupdt('goshare', share_record, share_cond)
 
 	elif (action == 2):
 		try:
 			endpoint_id = MyGlobus['datashare_ep']
 			email = data['email']
 			dsid = data['dsid']
+		except KeyError as err:
+			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
+		else:
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) == 0):
 				msg = "[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 			if not myshare['globus_rid']:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 			else:
 				rule_id = myshare['globus_rid']
-				record = []
-				record.append({unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
-				               unicode('status'): 'DELETED'
-				               })
-				myupdt('goshare', record[0], cond)
-		except KeyError as err:
-			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
+				record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
+				          unicode('status'): 'DELETED'}
+				myupdt('goshare', record, cond)
 
 	try:
 		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
@@ -242,6 +284,76 @@ def delete_endpoint_acl_rule(action, data):
 	
 	return msg
 
+#=========================================================================================
+def submit_dsrqst_transfer(data):
+	""" Submit a Globus transfer on behalf of the user.  For dsrqst 'push' transfers. """
+
+	""" Get session ID from dsrqst record """
+	ridx = data['ridx']
+	cond = " WHERE rindex={0}".format(ridx)
+	myrqst = myget('dsrqst', ['*'], cond)
+	if (len(myrqst) == 0):
+		msg = "[submit_dsrqst_transfer] Request index not found in DB"
+		my_logger.warning(msg)
+		sys.exit(1)
+
+	session = get_session(myrqst['session_id'])
+	email = session['email']
+	dsid = session['dsid']
+	
+	# Get request files from wfrqst
+	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
+	if (len(files) > 0):
+		selected = {}
+		for i in range(len(files)):
+			selected.update({i: files[i]['wfile']})
+	else:
+		return null
+
+	""" Define source endpoint ID and paths """
+	host_endpoint = MyGlobus['host_endpoint_id']
+	source_endpoint_id = MyGlobus['data_request_ep']
+	destination_endpoint_id = session['endpoint_id']
+
+	""" Check if user has a share set up for this endpoint & path """
+	share_data = {'ridx': ridx, 'notify': True}
+	if not query_acl_rule(1, share_data):
+		acl_data = add_endpoint_acl_rule(1, share_data)
+	directory = construct_share_path(1, share_data)
+
+	""" Instantiate the Globus SDK transfer client """
+	transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
+		session['transfer.api.globus.org']['refresh_token'], load_app_client()))
+        
+	""" Instantiate TransferData object """
+	transfer_data = TransferData(transfer_client=transfer,
+								 source_endpoint=source_endpoint_id,
+								 destination_endpoint=destination_endpoint_id,
+								 label=session['label'])
+
+	""" Add files to be transferred.  Note source_path is relative to the source
+		endpoint base path. """
+	for file in selected:
+		source_path = directory + selected[file]
+		dest_path = session['dest_path'] + selected[file]
+		transfer_data.add_item(source_path, dest_path)
+
+	transfer.endpoint_autoactivate(source_endpoint_id)
+	transfer.endpoint_autoactivate(destination_endpoint_id)
+	task_id = transfer.submit_transfer(transfer_data)['task_id']
+
+	""" Store task_id in request record """
+	record = [{unicode('task_id'): task_id}]
+	myupdt('dsrqst', record[0], cond)
+
+	if 'print' in data and data['print']:
+		print "{}".format(task_id)
+
+	"""	Create share record in goshare """
+
+	return task_id
+
+#=========================================================================================
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
 	    shared endpoint base path.
@@ -272,9 +384,9 @@ def construct_share_path(action, data):
 					path = "/download.auto/{0}/".format(myrqst['rqstid'])
 			else:
 				msg = "[construct_share_path] Request index {0} not found or request ID not defined".format(ridx)
+				my_logger.error(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.error(msg)
 				return {'Error': msg}
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_path]", print_stdout=print_stdout)
@@ -287,6 +399,7 @@ def construct_share_path(action, data):
 	my_logger.info("[construct_share_path] Path to shared data: {0}".format(path))
 	return path
 
+#=========================================================================================
 def construct_share_url(action, data):
 	""" Construct the URL to the shared data on the Globus web app 
 	
@@ -308,9 +421,9 @@ def construct_share_url(action, data):
 				origin_path = construct_share_path(1, {'ridx': ridx})
 			else:
 				msg = "[construct_share_url] Request {0} not found in RDADB".format(ridx)
+				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
-				my_logger.warning(msg)
 				return {'Error': msg}
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
@@ -331,6 +444,7 @@ def construct_share_url(action, data):
 	my_logger.info("[construct_share_url] Globus share URL created: {0}".format(url))
 	return url
 	
+#=========================================================================================
 def get_user_id(identity):
 	""" Get the UUID assigned by Globus Auth. Input argument 'identity' can be one of
 	    the following:
@@ -341,7 +455,7 @@ def get_user_id(identity):
 	"""
 	try:
 		ac = AuthClient(authorizer=AccessTokenAuthorizer(MyGlobus['auth_token']))
-		result = ac.get_identities(usernames=identity)
+		result = ac.get_identities(usernames=identity, provision=True)
 		uuid = result.data['identities'][0]['id']
 	except GlobusAPIError as e:
 		my_logger.error(("[get_user_id] Globus API Error\n"
@@ -359,6 +473,7 @@ def get_user_id(identity):
 
 	return uuid
 
+#=========================================================================================
 def query_acl_rule(action, data):
 	""" Check if an active ACL rule exists for a given RDA user
 	    action = 1: dsrqst share
@@ -378,67 +493,100 @@ def query_acl_rule(action, data):
 		""" standard dataset shares """
 		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
 		myrule = myget('goshare', ['*'], cond)
-	
-	if 'globus_rid' in myrule:
+
+	try:
 		rule_id = myrule['globus_rid']
+	except KeyError:
+		rule_id = None
+
+	if rule_id:
 		return {'acl_rule': rule_id}
 	else:
 		return None
-	
+
+#=========================================================================================
 def update_share_record(action, data):
 	""" Update the user's Globus share in RDADB
 	    action = 1: dsrqst share
 	           = 2: standard dataset share
 	"""
+	if ('print' in data):
+		print_stdout = data['print']
+	else:
+		print_stdout = False
+	
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
+		dsid = data['dsid']
+		email = data['email']
+		cond = " WHERE email='{0}' AND end_date IS NULL".format(email)
+		myuser = myget('ruser', ['id'], cond)
+		if 'id' not in myuser:
+			msg = "[update_share_record] email {0} not in RDADB table ruser".format(email)
+			my_logger.warning(msg)
+			return {'Error': msg}
 	except KeyError as err:
 		return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
 	
-	record = []
+	share_record = {'globus_rid': '{0}'.format(globus_rid),
+                    'globus_url': '{0}'.format(globus_url),
+                    'email': '{0}'.format(email),
+                    'user_id': '{0}'.format(myuser['id']),
+                    'username': None,
+                    'request_date': datetime.now().strftime("%Y-%m-%d"),
+                    'dsid': '{0}'.format(dsid),
+                    'status': 'ACTIVE'}
 	
 	if (action == 1):
 		try:
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
-			record.append({unicode('globus_rid'): data['globus_rid'],
+			rqst_record = {unicode('globus_rid'): data['globus_rid'],
 			               unicode('globus_url'): data['globus_url']
-			              })
-			myupdt('dsrqst', record[0], cond)
-			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid)) 
+			              }
+			myupdt('dsrqst', rqst_record, cond)
+			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid))
+			path = construct_share_path(1, {'ridx': ridx})
+			share_record.update({'source_endpoint': '{0}'.format(MyGlobus['data_request_legacy']),
+			                     'acl_path': '{0}'.format(path),
+			                     'rindex': '{0}'.format(ridx)
+			                    })
+			myadd('goshare', share_record)
+			my_logger.info("[update_share_record] Record added to goshare. Request index: {0}, ACL rule ID: {1}.".format(ridx, globus_rid)) 
 		except KeyError as err:
 			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout) 
 	elif (action == 2):
 		try:
-			dsid = data['dsid']
-			email = data['email']
-			cond = " WHERE email='{0}' AND end_date IS NULL".format(email)
-			myuser = myget('ruser', ['id'], cond)
-			if 'id' not in myuser:
-				msg = "[update_share_record] email {0} not in RDADB table ruser".format(email)
-				my_logger.warning(msg)
-				return {'Error': msg}
 			path = construct_share_path(2, {'dsid': dsid})
-			record = {'globus_rid': '{0}'.format(data['globus_rid']),
-                      'globus_url': '{0}'.format(data['globus_url']),
-                      'email': email,
-                      'user_id': '{0}'.format(myuser['id']),
-                      'username': None,
-                      'request_date': datetime.now().strftime("%Y-%m-%d"),
-                      'source_endpoint': MyGlobus['datashare_legacy'],
-                      'dsid': '{0}'.format(dsid),
-                      'acl_path': '{0}'.format(path),
-                      'status': 'ACTIVE'}
-			myadd('goshare', record)
+			share_record.update({'source_endpoint': '{0}'.format(MyGlobus['datashare_legacy']),
+			                     'acl_path': '{0}'.format(path)
+			                    })
+			myadd('goshare', share_record)
 			my_logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid)) 
 		except KeyError as err:
 			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
 
 	return
 	
+#=========================================================================================
+def get_session(sid):
+	""" Retrieve session data from RDADB """
+	keys = ['id','access','data']
+	condition = " WHERE {0} = '{1}'".format("id", sid)
+	myrec = myget('sessions', keys, condition)
+	
+	if (len(myrec) == 0):
+		msg = "[get_session] Session ID not found in DB"
+		my_logger.warning(msg)
+		sys.exit(1)
+
+	return unserialize(myrec['data'])
+
+#=========================================================================================
 def parse_input():
 	""" Parse command line arguments """
+	import re
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
 	epilog = textwrap.dedent('''\
 	Examples:
@@ -457,6 +605,7 @@ def parse_input():
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('-ap', action="store_true", default=False, help='Add endpoint permission')
 	group.add_argument('-rp', action="store_true", default=False, help='Delete endpoint permission')
+	group.add_argument('-st', action="store_true", default=False, help='Submit Globus transfer on behalf of user.  For dsrqst push transfers.')
 
 	parser.add_argument('-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
@@ -468,11 +617,12 @@ def parse_input():
 		sys.exit(1)
 	
 	args = parser.parse_args(sys.argv[1:])
-	my_logger.info("{0}: {1}".format(sys.argv[0], args))
+	my_logger.info("[parse_input] {0}: {1}".format(sys.argv[0], args))
 	
 	opts = vars(args)
 	opts['addPermission'] = opts.pop('ap')
 	opts['removePermission'] = opts.pop('rp')
+	opts['submitTransfer'] = opts.pop('st')
 	
 	if opts['ne']:
 		opts['notify'] = False
@@ -484,7 +634,11 @@ def parse_input():
 		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
 		sys.exit(msg)
- 	if opts['REQUESTINDEX']:
+	if (opts['submitTransfer'] and not opts['REQUESTINDEX']):
+		msg = "Please specify the dsrqst index (-ri) with the -st flag."
+		my_logger.error(msg)
+		sys.exit(msg)
+	if opts['REQUESTINDEX']:
 		opts['ridx'] = opts.pop('REQUESTINDEX')
 		opts.update({'action': 1})
 	elif opts['DATASETID']:
@@ -514,9 +668,10 @@ def parse_input():
 	opts['print'] = True
 	return opts
 	
+#=========================================================================================
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/p/rda/work/tcram/logs/globus'
+	LOGPATH = '/glade/scratch/tcram/logs/globus'
 	LOGFILE = 'dsglobus.log'
 
 	if 'level' in kwargs:
@@ -533,7 +688,7 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=10)
+	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=10000000,backupCount=5)
 	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
@@ -541,6 +696,7 @@ def configure_log(**kwargs):
 	
 	return
 
+#=========================================================================================
 def handle_error(err, **kwargs):
 	if 'name' in kwargs:
 		name = kwargs['name']

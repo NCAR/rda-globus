@@ -22,9 +22,9 @@ $MYGLOBUS = array(
    "TOKEN" => $gotoken,
    "BASE_URL" => "https://transfer.api.globusonline.org/v0.10",
    "DATASHARE_ENDPOINT_ID" => "db57de42-6d04-11e5-ba46-22000b92c6ec",
-   "DATASHARE_ENDPOINT_BASE" => "/glade/p/rda/data/",
+   "DATASHARE_ENDPOINT_BASE" => "/glade2/collections/rda/data/",
    "DATAREQUEST_ENDPOINT_ID" => "d20e610e-6d04-11e5-ba46-22000b92c6ec",
-   "DATAREQUEST_ENDPOINT_BASE" => "/glade/p/rda/transfer/"
+   "DATAREQUEST_ENDPOINT_BASE" => "/glade2/collections/rda/transfer/"
 );
 
 ?>
