@@ -50,7 +50,7 @@ from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import MyGlobus
 
-from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
@@ -139,7 +139,8 @@ def add_endpoint_acl_rule(action, data):
  		rule_data.update({"notify_email": email})	
 
 	try:
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
 		result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
 	except GlobusAPIError as e:
 		msg = ("[add_endpoint_acl_rule] Globus API Error\n"
@@ -261,7 +262,8 @@ def delete_endpoint_acl_rule(action, data):
 				myupdt('goshare', record, cond)
 
 	try:
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
 		result = tc.delete_endpoint_acl_rule(endpoint_id, rule_id)
 	except GlobusAPIError as e:
 		my_logger.error(("[delete_endpoint_acl_rule] Globus API Error\n"
@@ -322,8 +324,9 @@ def submit_dsrqst_transfer(data):
 	directory = construct_share_path(1, share_data)
 
 	""" Instantiate the Globus SDK transfer client """
-	transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-		session['transfer.api.globus.org']['refresh_token'], load_app_client()))
+	refresh_token = session['transfer.api.globus.org']['refresh_token']
+	tc_authorizer = RefreshTokenAuthorizer(refresh_token, load_app_client())
+	transfer = TransferClient(authorizer=tc_authorizer)
         
 	""" Instantiate TransferData object """
 	transfer_data = TransferData(transfer_client=transfer,
@@ -454,7 +457,8 @@ def get_user_id(identity):
 		E-mail identity                   : in the form of user@domain.com
 	"""
 	try:
-		ac = AuthClient(authorizer=AccessTokenAuthorizer(MyGlobus['auth_token']))
+		ac_authorizer = RefreshTokenAuthorizer(MyGlobus['auth_refresh_token'], load_app_client())
+		ac = AuthClient(authorizer=ac_authorizer)
 		result = ac.get_identities(usernames=identity, provision=True)
 		uuid = result.data['identities'][0]['id']
 	except GlobusAPIError as e:

@@ -30,7 +30,8 @@ if (path2 not in sys.path):
 
 from MyGlobus import headers, MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
-from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+from globus_utils import load_app_client
+from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
 from datetime import datetime, tzinfo
@@ -81,7 +82,8 @@ def get_tasks(filters):
 	""" Get list of successful transfer tasks """
 	try:
 		tasks = []
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
 		for task in tc.endpoint_manager_task_list(num_results=None, **filters):
 			tasks.append(task)
 	except GlobusAPIError as e:
