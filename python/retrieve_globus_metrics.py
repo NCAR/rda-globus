@@ -145,35 +145,30 @@ def add_tasks(go_table, data):
 # Get list of files transferred successfully
 
 def get_successful_transfers(task_id):
-	import requests
-	
-	url = MyGlobus['url']
-	bearer = "Bearer {}".format(MyGlobus['transfer_token'])
-	headers = {'Authorization': bearer}
-	
-	resource = 'endpoint_manager/task/'+task_id+'/successful_transfers'
-	r = requests.get(url+resource, headers=headers)
-	data = r.json()
-	data_transfers = {}
-	
-	if (r.status_code >= 400):
-		handle_error(r, data)
-		return data_transfers
-	else:	
-		data_transfers.update(data)
-	
-	# Check for additional pages.  Append response to data_transfers.
-		while (data['next_marker']):
-			markers = {'marker':data['next_marker']}
-			r = requests.get(url+resource, headers=headers, params=markers)
-			data = r.json()
-			if (r.status_code >= 400):
-				handle_error(r, data)
-			else:
-				data_transfers['DATA'].extend(data['DATA'])
+
+	try:
+		transfers = []
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
+		for transfer in tc.endpoint_manager_task_successful_transfers(task_id, num_results=None):
+			transfers.append(transfer)
+	except GlobusAPIError as e:
+		msg = ("[get_successful_transfers] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		raise e
+	except NetworkError:
+		my_logger.error(("[get_successful_transfers] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[get_successful_transfers] Totally unexpected GlobusError!")
+		raise
 
 	# return all successful transfers
-		return data_transfers
+		return transfers
 
 #=========================================================================================
 # Handle errors returned by API resource
@@ -207,10 +202,10 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 	transfer_recs = []
 	size = 0
 	
-	for i in range(len(data['DATA'])):
-		destination_path = data['DATA'][i]['destination_path']
-		source_path = data['DATA'][i]['source_path']
-		data_type = data['DATA'][i]['DATA_TYPE']
+	for i in range(len(data)):
+		destination_path = data[i]['destination_path']
+		source_path = data[i]['source_path']
+		data_type = data[i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
 		if (endpoint == datashareID):
@@ -268,7 +263,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 
 # *** Need to delete records from data['DATA'][i]['source_path'] which are not in RDADB wfile here ***
 
-	if (len(data['DATA']) >= 1):
+	if (len(data) >= 1):
 		records = prepare_transfer_recs(data, task_id, bytes, endpoint)
 		if (len(records) == 0):
 			my_logger.warning("[add_successful_transfers] transfer_recs is empty")
