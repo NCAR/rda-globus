@@ -50,6 +50,17 @@ AUTH_TOKEN_FILE = 'globus.auth-token'
 
 DSS_DATA_PATH = '/glade/collections/rda'
 
+""" Endpoint IDs """
+RDA_DATASET_ENDPOINT = '1e128d3c-852d-11e8-9546-0a6d4e044368'
+RDA_DSRQST_ENDPOINT = 'e61f9cde-8537-11e8-9546-0a6d4e044368'
+NCAR_HOST_ENDPOINT = 'dd1ee92a-6d04-11e5-ba46-22000b92c6ec'
+
+""" Legacy endpoints no longer used """
+RDA_DATASET_ENDPOINT_LEGACY1 = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
+RDA_DATASET_ENDPOINT_LEGACY2 = '2869611a-36aa-11e8-b95e-0ac6873fc732'
+RDA_DSRQST_ENDPOINT_LEGACY1 = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
+RDA_DSRQST_ENDPOINT_LEGACY1 = '68823254-36aa-11e8-b95e-0ac6873fc732'
+
 transfer_tokenf = open(CLIENT_BASE+TRANSFER_TOKEN_FILE, 'r')
 auth_tokenf = open(CLIENT_BASE+AUTH_TOKEN_FILE, 'r')
 transfer_refresh_tokenf = open(CLIENT_BASE+'globus.transfer-refresh-token', 'r')
@@ -78,21 +89,15 @@ headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
 
 MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
-   'transfer_token': TRANSFER_TOKEN,
-   'auth_token': AUTH_TOKEN,
    'transfer_refresh_token': TRANSFER_REFRESH_TOKEN,
    'auth_refresh_token': AUTH_REFRESH_TOKEN,
-   'datashare_ep': '1e128d3c-852d-11e8-9546-0a6d4e044368',
-   'data_request_ep' : 'e61f9cde-8537-11e8-9546-0a6d4e044368',
-   'datashare_ep_legacy': 'db57de42-6d04-11e5-ba46-22000b92c6ec',
-   'datashare_ep_legacy2': '2869611a-36aa-11e8-b95e-0ac6873fc732',
-   'data_request_ep_legacy' : 'd20e610e-6d04-11e5-ba46-22000b92c6ec',
-   'data_request_ep_legacy2' : '68823254-36aa-11e8-b95e-0ac6873fc732',
+   'datashare_ep': RDA_DATASET_ENDPOINT,
+   'data_request_ep' : RDA_DSRQST_ENDPOINT,
    'datashare_legacy' : 'rda#datashare',
    'data_request_legacy' : 'rda#data_request',
    'datashare_ep_base' : DSS_DATA_PATH + '/data/',
    'data_request_ep_base' : DSS_DATA_PATH + '/transfer/',
-   'host_endpoint_id' : 'dd1ee92a-6d04-11e5-ba46-22000b92c6ec',
+   'host_endpoint_id' : NCAR_HOST_ENDPOINT,
    'client_id': CLIENT_ID,
    'client_secret': CLIENT_SECRET,
    'private_key': PRIVATE_KEY,

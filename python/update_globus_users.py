@@ -23,9 +23,10 @@ if (path2 not in sys.path):
 
 from MyGlobus import MyGlobus
 from PyDBI import myget, myadd, myupdt
+from globus_utils import load_app_client
 import logging
 import logging.handlers
-from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
+from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
 #=========================================================================================
@@ -52,7 +53,8 @@ def get_acls(endpoint_id):
 	""" Get list of access rules in the ACL for a specified endpoint """
 	try:
 		acls = []
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
 		for rule in tc.endpoint_manager_acl_list(endpoint_id, num_results=None):
 			acls.append(rule)
 	except GlobusAPIError as e:

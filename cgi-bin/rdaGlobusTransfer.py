@@ -179,8 +179,9 @@ def submit_transfer(session, form):
         data = add_endpoint_acl_rule(2, share_data)
 	
     """ Instantiate the Globus SDK transfer client """
-    transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['transfer.api.globus.org']['refresh_token'], load_app_client()))
+    refresh_token = session['transfer.api.globus.org']['refresh_token']
+    tc_authorizer = RefreshTokenAuthorizer(refresh_token, load_app_client())
+    transfer = TransferClient(authorizer=tc_authorizer)
         
     """ Instantiate TransferData object """
     transfer_data = TransferData(transfer_client=transfer,
@@ -225,9 +226,10 @@ def update_transfer_status(task_id):
     session = get_session_data()
 
     """ Instantiate the transfer client & get transfer task details """
-    transfer = TransferClient(authorizer=RefreshTokenAuthorizer(
-        session['transfer.api.globus.org']['refresh_token'], 
-        load_app_client()))
+    refresh_token = session['transfer.api.globus.org']['refresh_token']
+    tc_authorizer = RefreshTokenAuthorizer(refresh_token, load_app_client())
+    transfer = TransferClient(authorizer=tc_authorizer)
+
     task = transfer.get_task(task_id)
     
     task_data = {'task_id': task_id,
