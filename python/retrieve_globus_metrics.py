@@ -587,7 +587,7 @@ def configure_log(**kwargs):
 #=========================================================================================
 """ Set up logging """
 my_logger = logging.getLogger(__name__)
-configure_log(level='debug')
+configure_log(level='info')
 
 if __name__ == "__main__":
 	args = parse_opts()
