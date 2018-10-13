@@ -169,7 +169,7 @@ def get_successful_transfers(task_id):
 		raise
 
 	# return all successful transfers
-		return transfers
+	return transfers
 
 #=========================================================================================
 # Handle errors returned by API resource
