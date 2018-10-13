@@ -70,6 +70,7 @@ def main(filters):
 	for i in range(len(transfer_tasks)):
 		task_id = transfer_tasks[i]['task_id']
 		bytes = transfer_tasks[i]['bytes_transferred']
+		my_logger.debug(__name__+': task_id: '+task_id)
 		data_transfers = get_successful_transfers(task_id)
 		if (len(data_transfers) > 0):
 			add_successful_transfers('gofile', data_transfers, task_id, bytes, filters['filter_endpoint'])
@@ -586,7 +587,7 @@ def configure_log(**kwargs):
 #=========================================================================================
 """ Set up logging """
 my_logger = logging.getLogger(__name__)
-configure_log(level='info')
+configure_log(level='debug')
 
 if __name__ == "__main__":
 	args = parse_opts()
