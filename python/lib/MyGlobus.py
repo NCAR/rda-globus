@@ -91,6 +91,8 @@ MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
    'transfer_refresh_token': TRANSFER_REFRESH_TOKEN,
    'auth_refresh_token': AUTH_REFRESH_TOKEN,
+   'transfer_token': TRANSFER_TOKEN,
+   'auth_token': AUTH_TOKEN,
    'datashare_ep': RDA_DATASET_ENDPOINT,
    'data_request_ep' : RDA_DSRQST_ENDPOINT,
    'datashare_legacy' : 'rda#datashare',
