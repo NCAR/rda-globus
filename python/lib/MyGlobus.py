@@ -76,7 +76,7 @@ client_idf.close()
 client_secretf.close()
 private_keyf.close()
 
-headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
+# headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
 
 MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
