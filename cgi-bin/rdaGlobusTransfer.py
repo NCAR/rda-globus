@@ -380,15 +380,6 @@ def get_cookie():
 		return null
 
 #=========================================================================================
-#def set_environ():
-#    """ Define environment variables required by this script """
-#    os.environ['REQUEST_METHOD'] = 'POST'
-#    os.environ['GLOBUS_SDK_TRANSFER_TOKEN'] = MyGlobus['transfer_token']
-#    os.environ['GLOBUS_SDK_AUTH_TOKEN'] = MyGlobus['auth_token']
-#    
-#    return
-#
-#=========================================================================================
 def get_protocol():
     """ Return the web server protocol """
     server_protocol = os.environ['SERVER_PROTOCOL']
@@ -564,5 +555,4 @@ my_logger = logging.getLogger(__name__)
 configure_log(level='info')
 
 if __name__ == "__main__":
-#    set_environ()
     main()
