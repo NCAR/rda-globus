@@ -2,6 +2,10 @@
 #########################
 *config.py
 
+# RDA Globus app configuration #
+################################
+rda_globus_app_config.py
+
 # OSX generated files #
 #######################
 .DS_Store
