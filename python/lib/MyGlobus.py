@@ -38,9 +38,11 @@ elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostn
 else:
 	pass
 
+from rda_globus_app_config import TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
+                                  CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY
+
 #=========================================================================================
 
-CLIENT_BASE = '/glade/u/home/rdadata/dssdb/tmp/.globus/'
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://www.globus.org/app/'
@@ -58,24 +60,7 @@ RDA_DATASET_ENDPOINT_LEGACY2 = '2869611a-36aa-11e8-b95e-0ac6873fc732'
 RDA_DSRQST_ENDPOINT_LEGACY1 = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
 RDA_DSRQST_ENDPOINT_LEGACY1 = '68823254-36aa-11e8-b95e-0ac6873fc732'
 
-transfer_refresh_tokenf = open(CLIENT_BASE+'globus.transfer-refresh-token', 'r')
-auth_refresh_tokenf = open(CLIENT_BASE+'globus.auth-refresh-token', 'r')
-client_idf = open(CLIENT_BASE+'globus.client-id', 'r')
-client_secretf = open(CLIENT_BASE+'globus.client-secret', 'r')
-private_keyf = open(CLIENT_BASE+'globus.private-key', 'r')
-
-TRANSFER_REFRESH_TOKEN = transfer_refresh_tokenf.read().rstrip()
-AUTH_REFRESH_TOKEN = auth_refresh_tokenf.read().rstrip()
-CLIENT_ID = client_idf.read().rstrip()
-CLIENT_SECRET = client_secretf.read().rstrip()
-PRIVATE_KEY = private_keyf.read().rstrip()
-
-transfer_refresh_tokenf.close()
-auth_refresh_tokenf.close()
-client_idf.close()
-client_secretf.close()
-private_keyf.close()
-
+""" Authorization header for vanilla API requests.  No longer used """
 # headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
 
 MyGlobus = {
