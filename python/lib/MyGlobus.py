@@ -38,8 +38,8 @@ elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostn
 else:
 	pass
 
-from rda_globus_app_config import TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
-                                  CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY
+from rda_globus_app_config import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
+                                   CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY)
 
 #=========================================================================================
 
