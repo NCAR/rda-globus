@@ -5,6 +5,7 @@
 # RDA Globus app configuration #
 ################################
 rda_globus_app_config.py
+rda_globus_app_config_json.py
 
 # OSX generated files #
 #######################
