@@ -140,6 +140,9 @@ def refresh_tokens():
 	# os.remove(transfer_token_file_tmp)
 	# os.remove(auth_token_file_tmp)
 	
+	msg = "Test message for demonstration purposes"
+	print msg
+	
 	msg = "Transfer and auth tokens have been successfully updated."
 	print msg
 	my_logger.info("[refresh_tokens] {}".format(msg))
