@@ -71,9 +71,6 @@ def check_timestamp(limit):
 	msg =  "Transfer timestamp offset (seconds): {}".format(delta_transfer)
 	my_logger.info("[check_timestamp] {}".format(msg))
 	
-	msg = "New comment for demonstration"
-	print msg
-
 	if (max(delta_auth, delta_transfer) > limit):
 		refresh_tokens()
 	else:
