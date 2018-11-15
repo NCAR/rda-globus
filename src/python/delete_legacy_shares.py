@@ -6,8 +6,7 @@
 #    Author : Thomas Cram, tcram@ucar.edu
 #      Date : 08/31/2018
 #   Purpose : Python script to delete Globus shares from legacy RDA shared
-#             endpoints that are no longer used (e.g. NCAR RDA Dataset Archive
-#             (legacy v2).
+#             endpoints that are no longer used.
 #
 # Work File : $DSSHOME/bin/delete_legacy_shares.py*
 # Test File : $DSSHOME/bin/delete_legacy_shares_test.py*
@@ -22,14 +21,18 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus, DSS_DATA_PATH
+from MyGlobus import (MyGlobus, DSS_DATA_PATH, RDA_DATASET_ENDPOINT_LEGACY,
+                      RDA_DSRQST_ENDPOINT_LEGACY)
 from PyDBI import myget, myupdt, mymget
+
 import logging
 import logging.handlers
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
 from dsglobus import get_user_id
+from globus_utils import load_app_client
+
 try:
     from urllib.parse import urlencode
 except:
@@ -41,7 +44,8 @@ def main(args):
 
 	endpoint_id_legacy = args['endpoint_id_legacy']
 
-	tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+	tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+	tc = TransferClient(authorizer=tc_authorizer)
 	endpoint = tc.get_endpoint(endpoint_id_legacy)
 
 	msg = "Endpoint: {0}".format(endpoint['display_name'])
@@ -74,7 +78,8 @@ def get_acls(endpoint_id):
 	""" Get list of access rules in the ACL for a specified endpoint """
 	try:
 		acls = []
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
 		for rule in tc.endpoint_manager_acl_list(endpoint_id, num_results=None):
 			acls.append(rule)
 	except GlobusAPIError as e:
@@ -108,7 +113,8 @@ def delete_acls(endpoint_id, acl_list):
 			continue
 			
 		try:
-			tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+			tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+			tc = TransferClient(authorizer=tc_authorizer)
 			result = tc.delete_endpoint_acl_rule(endpoint_id, rule_id)
 		except GlobusAPIError as e:
 			my_logger.error(("[delete_endpoint_acl_rule] Globus API Error\n"
@@ -162,16 +168,16 @@ def parse_opts(argv):
 			print usg
 	
 	if (endpoint == 'rda#data_request'):
-		endpoint_id_legacy = MyGlobus['data_request_ep_legacy2']
+		endpoint_id_legacy = RDA_DSRQST_ENDPOINT_LEGACY
 	elif (endpoint == 'rda#datashare'):
-		endpoint_id_legacy = MyGlobus['datashare_ep_legacy2']
+		endpoint_id_legacy = RDA_DATASET_ENDPOINT_LEGACY
 	else:
 		msg = "[parse_opts] Globus endpoint {0} not found.".format(endpoint)
 		print msg
 		my_logger.warning(msg)
 		sys.exit()
 
-	print 'ENDPOINT          : {}'.format(endpoint)
+	print 'ENDPOINT NAME     : {}'.format(endpoint)
 	print 'LEGACY ENDPOINT ID: {}'.format(endpoint_id_legacy)
 	print 'PRINT             : {}'.format(doprint)
 	print 'REMAINING         : {}'.format(rem)

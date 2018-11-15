@@ -5,13 +5,15 @@
 #     Title : move_globus_shares.py
 #    Author : Thomas Cram, tcram@ucar.edu
 #      Date : 04/02/2018
-#   Purpose : Python script to move all current Globus shares to the new
-#             RDA shared endpoints on /glade2/collections/rda.  Current shares on
-#             the old endpoints with host path /glade/p/rda will be deleted.
-#
-#   Modified 11 Jul 2018: New shared endpoints created to accommodate glade migration
-#                         from /glade2/collections/rda to /glade/collections/rda
-#                         (T. Cram)
+#   Purpose : Python script to move all current Globus shares to new
+#             RDA shared endpoints under /glade/collections/rda.  Current shares on
+#             the old endpoints will be deleted.
+#             Note: Prior to running this script, the new RDA shared endpoints
+#             should be created and MyGlobus.py should be updated as follows:
+#             1. Store old endpoint IDs in the parameters 
+#                RDA_DATASET_ENDPOINT_LEGACY and RDA_DSRQST_ENDPOINT_LEGACY
+#             2. Store the new endpoint IDs in the parameters
+#                RDA_DATASET_ENDPOINT and RDA_DSRQST_ENDPOINT
 #
 # Work File : $DSSHOME/bin/move_globus_shares.py*
 # Test File : $DSSHOME/bin/move_globus_shares_test.py*
@@ -26,7 +28,8 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus, DSS_DATA_PATH
+from MyGlobus import (MyGlobus, DSS_DATA_PATH, RDA_DATASET_ENDPOINT_LEGACY,
+                      RDA_DSRQST_ENDPOINT_LEGACY)
 from PyDBI import myget, myupdt, mymget
 import logging
 import logging.handlers
@@ -34,6 +37,8 @@ from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
 from dsglobus import get_user_id
+from globus_utils import load_app_client
+
 try:
     from urllib.parse import urlencode
 except:
@@ -64,7 +69,8 @@ def get_acls(endpoint_id):
 	""" Get list of access rules in the ACL for a specified endpoint """
 	try:
 		acls = []
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
 		for rule in tc.endpoint_manager_acl_list(endpoint_id, num_results=None):
 			acls.append(rule)
 	except GlobusAPIError as e:
@@ -116,7 +122,7 @@ def add_endpoint_acl_rule_new(action, data):
 	"""
 	if (action == 1):
 		try:
-			endpoint_id = MyGlobus['data_request_ep']
+			new_endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
 			myrqst = myget('dsrqst', ['*'], cond)
@@ -136,7 +142,7 @@ def add_endpoint_acl_rule_new(action, data):
 
 	elif (action == 2):
 		try:
-			endpoint_id = MyGlobus['datashare_ep']
+			new_endpoint_id = MyGlobus['datashare_ep']
 			dsid = data['dsid']
 			email = data['email']
 			"""
@@ -170,8 +176,9 @@ def add_endpoint_acl_rule_new(action, data):
  		rule_data.update({"notify_email": email})	
 
 	try:
-		tc = TransferClient(authorizer=AccessTokenAuthorizer(MyGlobus['transfer_token']))
-		result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
+		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+		tc = TransferClient(authorizer=tc_authorizer)
+		result = tc.add_endpoint_acl_rule(new_endpoint_id, rule_data)
 	except GlobusAPIError as e:
 		msg = ("[add_endpoint_acl_rule] Globus API Error\n"
 		       "HTTP status: {}\n"
@@ -367,10 +374,10 @@ def parse_opts(argv):
 			print usg
 	
 	if (endpoint == 'rda#data_request'):
-		endpoint_id = MyGlobus['data_request_ep_legacy2']
+		endpoint_id_legacy = RDA_DSRQST_ENDPOINT_LEGACY
 		action = 1
 	elif (endpoint == 'rda#datashare'):
-		endpoint_id = MyGlobus['datashare_ep_legacy2']
+		endpoint_id_legacy = RDA_DATASET_ENDPOINT_LEGACY
 		action = 2
 	else:
 		msg = "[parse_opts] Globus endpoint {0} not found.".format(endpoint)
@@ -378,13 +385,13 @@ def parse_opts(argv):
 		my_logger.warning(msg)
 		sys.exit()
 
-	print 'ENDPOINT          : {}'.format(endpoint)
-	print 'LEGACY ENDPOINT ID: {}'.format(endpoint_id)
+	print 'ENDPOINT NAME     : {}'.format(endpoint)
+	print 'LEGACY ENDPOINT ID: {}'.format(endpoint_id_legacy)
 	print 'PRINT             : {}'.format(doprint)
 	print 'REMAINING         : {}'.format(rem)
 
 	return {'endpoint': endpoint, \
-	        'endpoint_id_legacy': endpoint_id, \
+	        'endpoint_id_legacy': endpoint_id_legacy, \
 	        'action': action, \
             'rem': rem}
 
