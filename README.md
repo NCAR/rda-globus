@@ -1,2 +1,2 @@
 # rda-globus
-Utilities for managing Globus shares and collecting transfer metrics.
+Utilities for managing NCAR RDA Globus shares and collecting transfer metrics.
