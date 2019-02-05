@@ -24,7 +24,7 @@ my ($sharecnt, $taskcnt);
 my ($offset, $then, $i, $err, $cmd);
 my ($email, $completion_time);
 
-$MYLOG{LOGPATH} = "/glade2/scratch2/tcram/logs/globus";
+$MYLOG{LOGPATH} = "/glade/scratch/tcram/logs/globus";
 $MYLOG{LOGFILE} = "purge_globus_shares.log";
 
 # Get date from ~six months (180 days) ago
