@@ -124,7 +124,7 @@ def transfer(form):
         'label': ''
     }
 
-    browse_endpoint = 'https://www.globus.org/app/browse-endpoint?{}'.format(urlencode(params))
+    browse_endpoint = '{0}browse-endpoint?{1}'.format(MyGlobus['globusURL'], urlencode(params))
     print "Location: {0}\r\n\r\n".format(browse_endpoint)
 
     return
@@ -256,7 +256,7 @@ def display_transfer_status(task_id, new=False):
     faults = session['faults']
     dsid = session['dsid']
     
-    detail_uri = "https://www.globus.org/app/activity/{0}".format(task_id)
+    detail_uri = "{0}activity/{1}".format(MyGlobus['globusURL'], task_id)
     
     protocol = 'https://'
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
