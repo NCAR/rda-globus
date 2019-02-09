@@ -121,7 +121,7 @@ def transfer(form):
         'filelimit': 0,
         'folderlimit': 1,
         'cancelurl': cancelurl,
-        'label': 'NCAR RDA Globus transfer'
+        'label': ''
     }
 
     browse_endpoint = 'https://www.globus.org/app/browse-endpoint?{}'.format(urlencode(params))
