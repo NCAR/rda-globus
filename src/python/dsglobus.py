@@ -51,7 +51,7 @@ from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import MyGlobus
 
 from globus_sdk import (TransferClient, TransferAPIError,
-                        TransferData, RefreshTokenAuthorizer, AuthClient, 
+                        TransferData, RefreshTokenAuthorizer, AuthClient,
                         GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client
 
@@ -59,14 +59,14 @@ from globus_utils import load_app_client
 def main():
 	opts = parse_input()
 	action = opts['action']
-	
+
 	if opts['removePermission']:
 		result = delete_endpoint_acl_rule(action, opts)
 	elif opts['addPermission']:
 		result = add_endpoint_acl_rule(action, opts)
 	elif opts['submitTransfer']:
 		result = submit_dsrqst_transfer(opts)
-	
+
 	return result
 
 #=========================================================================================
@@ -79,7 +79,7 @@ def add_endpoint_acl_rule(action, data):
 		print_stdout = data['print']
 	else:
 		print_stdout = False
-	
+
 	if (action == 1):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
@@ -136,7 +136,7 @@ def add_endpoint_acl_rule(action, data):
 	    "permissions": "r"
  	}
  	if 'notify' in data:
- 		rule_data.update({"notify_email": email})	
+ 		rule_data.update({"notify_email": email})
 
 	try:
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
@@ -156,20 +156,20 @@ def add_endpoint_acl_rule(action, data):
 	except GlobusError:
 		logging.exception("[add_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
-	
+
 	msg = "{0}\nResource: {1}\nRequest ID: {2}\nAccess ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
 	if 'print' in data and data['print']:
 		print msg
 	my_logger.info("[add_endpoint_acl_rule] {0}".format(msg))
 	my_logger.info("[add_endpoint_acl_rule] User email: {0}".format(email))
-	
+
 	if 'print' in data and data['print']:
 		share_data.update({'print': True})
-	
+
 	url = construct_share_url(action, share_data)
-	share_data.update({'globus_rid': result['access_id'],'globus_url': url})	
+	share_data.update({'globus_rid': result['access_id'],'globus_url': url})
 	update_share_record(action, share_data)
-	
+
 	return {'access_id': result["access_id"], 'share_url': url}
 
 #=========================================================================================
@@ -177,7 +177,7 @@ def delete_endpoint_acl_rule(action, data):
 	""" Delete a specific endpoint access rule
 	    action = 1: dsrqst share
 	           = 2: standard dataset share
-	""" 
+	"""
 	if 'print' in data:
 		print_stdout = data['print']
 	else:
@@ -197,7 +197,7 @@ def delete_endpoint_acl_rule(action, data):
 			mypurge = myget('dspurge', ['*'], rqst_cond)
 			rqst_rid = None
 			purge_rid = None
-			
+
 			try:
 				rqst_rid = myrqst['globus_rid']
 			except KeyError:
@@ -211,7 +211,7 @@ def delete_endpoint_acl_rule(action, data):
 					return {'Error': msg}
 
 			rule_id = rqst_rid if rqst_rid else purge_rid
-			
+
 			if not rule_id:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in request record (request index {0}).".format(ridx)
 				my_logger.warning(msg)
@@ -225,7 +225,7 @@ def delete_endpoint_acl_rule(action, data):
 					myupdt('dsrqst', record, rqst_cond)
 				else:
 					myupdt('dspurge', record, rqst_cond)
-				
+
 				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
 				myshare = myget('goshare', ['*'], share_cond)
 				if (len(myshare) > 0):
@@ -278,12 +278,12 @@ def delete_endpoint_acl_rule(action, data):
 	except GlobusError:
 		logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
 		raise
-    
+
 	msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
 	if 'print' in data and data['print']:
 		print msg
 	my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
-	
+
 	return msg
 
 #=========================================================================================
@@ -302,7 +302,7 @@ def submit_dsrqst_transfer(data):
 	session = get_session(myrqst['session_id'])
 	email = session['email']
 	dsid = session['dsid']
-	
+
 	# Get request files from wfrqst
 	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
 	if (len(files) > 0):
@@ -327,7 +327,7 @@ def submit_dsrqst_transfer(data):
 	refresh_token = session['transfer.api.globus.org']['refresh_token']
 	tc_authorizer = RefreshTokenAuthorizer(refresh_token, load_app_client())
 	transfer = TransferClient(authorizer=tc_authorizer)
-        
+
 	""" Instantiate TransferData object """
 	transfer_data = TransferData(transfer_client=transfer,
 								 source_endpoint=source_endpoint_id,
@@ -358,9 +358,9 @@ def submit_dsrqst_transfer(data):
 
 #=========================================================================================
 def construct_share_path(action, data):
-	""" Construct the path to the shared data.  Path is relative to the 
+	""" Construct the path to the shared data.  Path is relative to the
 	    shared endpoint base path.
-	    
+
 	    action = 1: dsrqst share
 	           = 2: standard dataset share
 	"""
@@ -404,8 +404,8 @@ def construct_share_path(action, data):
 
 #=========================================================================================
 def construct_share_url(action, data):
-	""" Construct the URL to the shared data on the Globus web app 
-	
+	""" Construct the URL to the shared data on the Globus web app
+
 		action = 1: dsrqst shares
 		       = 2: standard dataset share
 	"""
@@ -441,17 +441,17 @@ def construct_share_url(action, data):
 	params = {'origin_id': origin_id, 'origin_path': origin_path}
 	if 'identity' in data:
 		params.update({'add_identity': data['identity']})
-	
+
 	url = '{0}transfer?{1}'.format(MyGlobus['globusURL'], urlencode(params))
-	
+
 	my_logger.info("[construct_share_url] Globus share URL created: {0}".format(url))
 	return url
-	
+
 #=========================================================================================
 def get_user_id(identity):
 	""" Get the UUID assigned by Globus Auth. Input argument 'identity' can be one of
 	    the following:
-	    
+
 	    GlobusID (Globus primary identity): in the form of user@globusid.org
 		NCAR RDA identity                 : in the form of user@domain.com@rda.ucar.edu, where user@domain.com is the user's RDA e-mail login
 		E-mail identity                   : in the form of user@domain.com
@@ -487,12 +487,12 @@ def query_acl_rule(action, data):
 		print_stdout = data['print']
 	else:
 		print_stdout = False
-	
+
 	if (action == 1):
 		""" dsrqst shares """
 		cond = " WHERE rindex='{0}'".format(data['ridx'])
 		myrule = myget('dsrqst', ['*'], cond)
-		
+
 	elif (action == 2):
 		""" standard dataset shares """
 		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
@@ -518,7 +518,7 @@ def update_share_record(action, data):
 		print_stdout = data['print']
 	else:
 		print_stdout = False
-	
+
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
@@ -532,7 +532,7 @@ def update_share_record(action, data):
 			return {'Error': msg}
 	except KeyError as err:
 		return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
-	
+
 	share_record = {'globus_rid': '{0}'.format(globus_rid),
                     'globus_url': '{0}'.format(globus_url),
                     'email': '{0}'.format(email),
@@ -541,7 +541,7 @@ def update_share_record(action, data):
                     'request_date': datetime.now().strftime("%Y-%m-%d"),
                     'dsid': '{0}'.format(dsid),
                     'status': 'ACTIVE'}
-	
+
 	if (action == 1):
 		try:
 			ridx = data['ridx']
@@ -557,9 +557,9 @@ def update_share_record(action, data):
 			                     'rindex': '{0}'.format(ridx)
 			                    })
 			myadd('goshare', share_record)
-			my_logger.info("[update_share_record] Record added to goshare. Request index: {0}, ACL rule ID: {1}.".format(ridx, globus_rid)) 
+			my_logger.info("[update_share_record] Record added to goshare. Request index: {0}, ACL rule ID: {1}.".format(ridx, globus_rid))
 		except KeyError as err:
-			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout) 
+			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
 	elif (action == 2):
 		try:
 			path = construct_share_path(2, {'dsid': dsid})
@@ -567,19 +567,19 @@ def update_share_record(action, data):
 			                     'acl_path': '{0}'.format(path)
 			                    })
 			myadd('goshare', share_record)
-			my_logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid)) 
+			my_logger.info("[update_share_record] Record added to goshare. Email: {0}, dsid: {1}, ACL rule ID: {2}.".format(email, dsid, globus_rid))
 		except KeyError as err:
 			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout)
 
 	return
-	
+
 #=========================================================================================
 def get_session(sid):
 	""" Retrieve session data from RDADB """
 	keys = ['id','access','data']
 	condition = " WHERE {0} = '{1}'".format("id", sid)
 	myrec = myget('sessions', keys, condition)
-	
+
 	if (len(myrec) == 0):
 		msg = "[get_session] Session ID not found in DB"
 		my_logger.warning(msg)
@@ -591,15 +591,15 @@ def get_session(sid):
 def parse_input():
 	""" Parse command line arguments """
 	import re
-	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
+	desc = "Manage RDA Globus shared endpoints and endpoint permissions."
 	epilog = textwrap.dedent('''\
 	Examples:
 	  - Grant share permission to a user for dsrqst index 1234:
 	              dsglobus -ap -ri 1234
-	
+
 	  - Delete permission from a user and delete the access share rule for dsrqst index 1234:
 	              dsglobus -rp -ri 1234
-	
+
 	  - Share all files from RDA dataset ds131.2 with a user:
 	             dsglobus -ap -ds 131.2 -em tcram@ucar.edu
 	''')
@@ -615,25 +615,30 @@ def parse_input():
 	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
 	parser.add_argument('-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
 	parser.add_argument('-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
-	
+
+	parser.add_argument('-as', action="store_true", default=False, help='Get all active shares. Default = False.')
+	parser.add_argument('-dr', action="store", dest="DATE", help='Date Range')
+
+
 	if len(sys.argv)==1:
 		parser.print_help()
 		sys.exit(1)
-	
+
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("[parse_input] {0}: {1}".format(sys.argv[0], args))
-	
+
 	opts = vars(args)
 	opts['addPermission'] = opts.pop('ap')
 	opts['removePermission'] = opts.pop('rp')
 	opts['submitTransfer'] = opts.pop('st')
-	
+	opts['activeShares'] = opts.pop('as')
+
 	if opts['ne']:
 		opts['notify'] = False
 	else:
 		opts['notify'] = True
 	opts.pop('ne')
-	
+
 	if (opts['REQUESTINDEX'] and opts['DATASETID']):
 		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
@@ -671,7 +676,7 @@ def parse_input():
 
 	opts['print'] = True
 	return opts
-	
+
 #=========================================================================================
 def configure_log(**kwargs):
 	""" Set up log file """
@@ -697,7 +702,7 @@ def configure_log(**kwargs):
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
 	my_logger.addHandler(handler)
-	
+
 	return
 
 #=========================================================================================
@@ -706,13 +711,13 @@ def handle_error(err, **kwargs):
 		name = kwargs['name']
 	else:
 		name = ""
-	
+
 	msg = "{0} {1}".format(name, err)
 	my_logger.error(msg, exc_info=True)
-	
+
 	if 'print_stdout' in kwargs and kwargs['print_stdout']:
 		sys.exit(msg)
-	
+
 	return {'Error': msg}
 
 #=========================================================================================
