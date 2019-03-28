@@ -45,7 +45,7 @@ from rda_globus_app_config import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
 
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
-GLOBUS_APP_URL = 'https://www.globus.org/app/'
+GLOBUS_APP_URL = 'https://app.globus.org/'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 DSS_DATA_PATH = '/glade/collections/rda'
 
