@@ -25,10 +25,10 @@ my ($offset, $then, $i, $err, $cmd);
 my ($email, $completion_time);
 
 $MYLOG{LOGPATH} = "/glade/scratch/tcram/logs/globus";
-$MYLOG{LOGFILE} = "purge_globus_shares.log";
+$MYLOG{LOGFILE} = "purge_globus_requests.log";
 
-# Get date from ~six months (180 days) ago
-$offset = -120;
+# Get date from ~three months (90 days) ago
+$offset = -90;
 $then = offset_date($offset);
 mylog("Purging ACLs prior to: $then", LOGWRN);
 
@@ -42,7 +42,7 @@ if($sharecnt > 0) {
     # Skip if DSS group member
     $myuser = myget("wuser", "email,org_type", "email='$email'");
 #    print "$myuser->{email}\n" if($myuser);
-    next if($myuser && $myuser->{org_type} eq 'DECS');
+    next if($myuser && $myuser->{org_type} eq 'DSS');
     $mytasks = mymget("gotask", "email,completion_time", "email='$email' AND source_endpoint='rda#data_request' ORDER BY completion_time DESC");
     $taskcnt = $mytasks ? @{$mytasks->{email}} : 0;
     if($taskcnt == 0 || $mytasks->{completion_time}[0] lt $then) {
