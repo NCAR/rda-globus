@@ -33,7 +33,7 @@ $then = offset_date($offset);
 mylog("Purging ACLs prior to: $then", LOGWRN);
 
 # Query active Globus shares greater than six months old
-$myrecs = mymget("goshare", "email,dsid,ridx", "request_date < '$then' AND status='ACTIVE' AND source_endpoint='rda#data_request' ORDER BY request_date ASC");
+$myrecs = mymget("goshare", "email,dsid,rindex", "request_date < '$then' AND status='ACTIVE' AND source_endpoint='rda#data_request' ORDER BY request_date ASC");
 $sharecnt = $myrecs ? @{$myrecs->{email}} : 0;
 mylog("Number of active ACLs: $sharecnt", LOGWRN);
 if($sharecnt > 0) {
@@ -42,7 +42,7 @@ if($sharecnt > 0) {
     # Skip if DSS group member
     $myuser = myget("wuser", "email,org_type", "email='$email'");
 #    print "$myuser->{email}\n" if($myuser);
-    next if($myuser && $myuser->{org_type} eq 'DSS');
+    next if($myuser && $myuser->{org_type} eq 'DECS');
     $mytasks = mymget("gotask", "email,completion_time", "email='$email' AND source_endpoint='rda#data_request' ORDER BY completion_time DESC");
     $taskcnt = $mytasks ? @{$mytasks->{email}} : 0;
     if($taskcnt == 0 || $mytasks->{completion_time}[0] lt $then) {
@@ -50,7 +50,7 @@ if($sharecnt > 0) {
       $completion_time = $mytasks ? $mytasks->{completion_time}[0] : "n/a";
       mylog("completion time: $completion_time", LOGWRN);
       mylog("$offset days ago: $then", LOGWRN);
-      $cmd = "dsglobus -rp -ds $myrecs->{dsid}[$i] -em $myrecs->{email}[$i] -ri $myrecs->{ridx}[$i]";
+      $cmd = "dsglobus -rp -ri $myrecs->{rindex}[$i]";
       mylog("$cmd", LOGWRN);
       mysystem($cmd, LGWNEX, 7, __FILE__, __LINE__);
     }
