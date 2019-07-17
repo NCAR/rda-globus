@@ -145,7 +145,10 @@ function acl_dataset($msg, $gtype, $email) {
 
 /**
  * Save session data and redirect user to Globus browse_endpoint helper API.  For users 
- * who generate custom file lists.  See https://docs.globus.org/api/helper-pages/browse-endpoint/
+ * who generate custom file lists.  See https://docs.globus.org/api/helper-pages/browse-endpoint/.
+ * Note we are using the PDO Session class, which uses the PDO method to prevent SQL injection.
+ * Thus it is not necessary to escape the POST input in this function.  See
+ * https://culttt.com/2013/02/04/how-to-save-php-sessions-to-a-database/ for details.
  */
 
 function globus_browseEndpoint($msg, $gtype, $email) {
