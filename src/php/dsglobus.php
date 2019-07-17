@@ -18,8 +18,6 @@ manage_acl();
 
 function manage_acl() {
 
-   global $MYLOG;
-
    $msg = "initiate a Globus file transfer";
    $mfunc = "bmessage";
 
@@ -330,7 +328,7 @@ function resendForm($message, $gtype, $ridx=0, $dsid=0, $email) {
 
 function globus_cli_cmd($cmd) {
 
-   global $MYLOG;
+   $MYLOG = &$GLOBALS['MYLOG'];   
    
    $spec = array(
       0 => array("pipe", "r"),   # STDIN
@@ -340,7 +338,7 @@ function globus_cli_cmd($cmd) {
 
    if(strpos($cmd, '/') === false) {
       $path = getenv('PATH');
-      if(strpos($path, $MYLOG['DSSHOME']) === false) {
+      if(strpos($path, $MYLOG[DSSHOME]) === false) {
          $path .= ":$MYLOG[DSSHOME]/bin";
          putenv("PATH=$path");
       }
