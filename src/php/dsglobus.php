@@ -350,7 +350,6 @@ function globus_cli_cmd($cmd) {
    if(!is_resource($proc)) {
       return pmessge("$cmd: error executing command", true);
    }
-   fwrite($pipes[0], $rinfo);
    fclose($pipes[0]);
 
    $out = stream_get_contents($pipes[1]);
