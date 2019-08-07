@@ -135,8 +135,8 @@ def add_endpoint_acl_rule(action, data):
 	    "path": path,
 	    "permissions": "r"
  	}
- 	if 'notify' in data:
- 		rule_data.update({"notify_email": email})	
+	if 'notify' in data:
+ 		rule_data.update({"notify_email": email})
 
 	try:
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
