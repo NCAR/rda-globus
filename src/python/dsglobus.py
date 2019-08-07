@@ -23,7 +23,7 @@ import subprocess
 try:
 	assert sys.version_info >= (2, 7)
 except AssertionError:
-	print "Error: Python version 2.7 or later required."
+	print ("Error: Python version 2.7 or later required.")
 	raise
 
 path1 = "/glade/u/home/rdadata/lib/python"
@@ -159,7 +159,7 @@ def add_endpoint_acl_rule(action, data):
 	
 	msg = "{0}\nResource: {1}\nRequest ID: {2}\nAccess ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
 	if 'print' in data and data['print']:
-		print msg
+		print (msg)
 	my_logger.info("[add_endpoint_acl_rule] {0}".format(msg))
 	my_logger.info("[add_endpoint_acl_rule] User email: {0}".format(email))
 	
@@ -281,7 +281,7 @@ def delete_endpoint_acl_rule(action, data):
     
 	msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
 	if 'print' in data and data['print']:
-		print msg
+		print (msg)
 	my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
 	
 	return msg
@@ -350,7 +350,7 @@ def submit_dsrqst_transfer(data):
 	myupdt('dsrqst', record[0], cond)
 
 	if 'print' in data and data['print']:
-		print "{}".format(task_id)
+		print ("{}".format(task_id))
 
 	"""	Create share record in goshare """
 
