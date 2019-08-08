@@ -189,10 +189,10 @@ def delete_endpoint_acl_rule(action, data):
 		delete_date_str = unicode('delete_date')
 		status_str = unicode('status')
 	else:
-		globus_rid_str = 'globus_rid'
-		globus_url_str = 'globus_url'
-		delete_date_str = 'delete_date'
-		status_str = 'status'
+		globus_rid_str = str(b'globus_rid', 'utf-8')
+		globus_url_str = str(b'globus_url')
+		delete_date_str = str(b'delete_date')
+		status_str = str(b'status')
 		
 	if (action == 1):
 		try:
@@ -304,7 +304,7 @@ def submit_dsrqst_transfer(data):
 	if (sys.version_info < (3, 0)):
 		task_id_str = unicode('task_id')
 	else:
-		task_id_str = 'task_id'
+		task_id_str = str(b'task_id', 'utf-8')
 	
 	""" Get session ID from dsrqst record """
 	ridx = data['ridx']
@@ -539,8 +539,8 @@ def update_share_record(action, data):
 		globus_rid_str = unicode('globus_rid')
 		globus_url_str = unicode('globus_url')
 	else:
-		globus_rid_str = 'globus_rid'
-		globus_url_str = 'globus_url'
+		globus_rid_str = str(b'globus_rid', 'utf-8')
+		globus_url_str = str(b'globus_url', 'utf-8')
 	
 	try:
 		globus_rid = data['globus_rid']
