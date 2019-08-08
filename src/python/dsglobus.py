@@ -190,9 +190,9 @@ def delete_endpoint_acl_rule(action, data):
 		status_str = unicode('status')
 	else:
 		globus_rid_str = str(b'globus_rid', 'utf-8')
-		globus_url_str = str(b'globus_url')
-		delete_date_str = str(b'delete_date')
-		status_str = str(b'status')
+		globus_url_str = str(b'globus_url', 'utf-8')
+		delete_date_str = str(b'delete_date', 'utf-8')
+		status_str = str(b'status', 'utf-8')
 		
 	if (action == 1):
 		try:
