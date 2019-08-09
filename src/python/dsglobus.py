@@ -183,17 +183,6 @@ def delete_endpoint_acl_rule(action, data):
 	else:
 		print_stdout = False
 
-	if (sys.version_info < (3, 0)):
-		globus_rid_str = unicode('globus_rid')
-		globus_url_str = unicode('globus_url')
-		delete_date_str = unicode('delete_date')
-		status_str = unicode('status')
-	else:
-		globus_rid_str = str(b'globus_rid', 'utf-8')
-		globus_url_str = str(b'globus_url', 'utf-8')
-		delete_date_str = str(b'delete_date', 'utf-8')
-		status_str = str(b'status', 'utf-8')
-		
 	if (action == 1):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
@@ -301,11 +290,6 @@ def delete_endpoint_acl_rule(action, data):
 def submit_dsrqst_transfer(data):
 	""" Submit a Globus transfer on behalf of the user.  For dsrqst 'push' transfers. """
 
-	if (sys.version_info < (3, 0)):
-		task_id_str = unicode('task_id')
-	else:
-		task_id_str = str(b'task_id', 'utf-8')
-	
 	""" Get session ID from dsrqst record """
 	ridx = data['ridx']
 	cond = " WHERE rindex={0}".format(ridx)
@@ -535,13 +519,6 @@ def update_share_record(action, data):
 	else:
 		print_stdout = False
 
-	if (sys.version_info < (3, 0)):
-		globus_rid_str = unicode('globus_rid')
-		globus_url_str = unicode('globus_url')
-	else:
-		globus_rid_str = str(b'globus_rid', 'utf-8')
-		globus_url_str = str(b'globus_url', 'utf-8')
-	
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
