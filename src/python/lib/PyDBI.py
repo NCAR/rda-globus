@@ -152,7 +152,7 @@ def myadd(tablename, record, print_status=None):
 		fields = []
 		values = []
 		for key in record:
-			fields.append(str(key).encode('utf8'))
+			fields.append(str(key))
 		fields = "(" + ",".join(fields) + ")"
 		for val in record.values():
 			if val == None:
@@ -196,7 +196,7 @@ def myupdt(tablename, record, condition, print_status=None):
 		fields = []
 		values = []
 		for key in record:
-			field = str(key).encode('utf8')
+			field = str(key)
 			setstr = "{0}=%s".format(field)
 			fields.append(setstr)
 		fields = ",".join(fields)
