@@ -51,13 +51,13 @@ def dbconnect():
 		return db
 	except mysql.connector.Error as err:
 		if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-			print "Incorrect database user name/password combination"
+			print ("Incorrect database user name/password combination")
 			sys.exit(1)
 		elif err.errno == errorcode.ER_BAD_DB_ERROR:
-			print "Database %s does not exist" % dbconfig['database']
+			print ("Database {} does not exist".format(dbconfig['database']))
 			sys.exit(1)
 		else:
-			print "Error: ", err
+			print ("Error: {}".format(err))
 			sys.exit(1)
 
 #=========================================================================================
@@ -67,7 +67,7 @@ def dbclose(db):
 	try:
 		db.close()
 	except mysql.connector.Error as err:
-		print "Error %d" % err.errno
+		print ("Error {}".format(err.errno))
 		sys.exit(1)
 
 #=========================================================================================
@@ -99,7 +99,7 @@ def myget(tablename, fields, condition):
 		else:
 			return {}
 	except mysql.connector.Error as err:
-		print "Error: ", err
+		print ("Error: {}".format(err))
 		sys.exit(1)
 
 #=========================================================================================
@@ -135,7 +135,7 @@ def mymget(tablename, fields, condition):
 		else:
 			return {}
 	except mysql.connector.Error as err:
-		print "Error: ", err
+		print ("Error: {}".format(err))
 		sys.exit(1)
 
 #=========================================================================================
@@ -152,7 +152,7 @@ def myadd(tablename, record, print_status=None):
 		fields = []
 		values = []
 		for key in record:
-			fields.append(str(key).encode('utf8'))
+			fields.append(str(key))
 		fields = "(" + ",".join(fields) + ")"
 		for val in record.values():
 			if val == None:
@@ -167,11 +167,11 @@ def myadd(tablename, record, print_status=None):
 		db.commit()
 		dbclose(db)
 		if print_status:
-			print "One record added to table %s" % tablename
+			print ("One record added to table {}".format(tablename))
 	except mysql.connector.Error as err:
-		print "table: "+tablename
-		print record
-		print "Error in myadd: ", err
+		print ("table: {}".format(tablename))
+		print (record)
+		print ("Error in myadd: {}".format(err))
 		sys.exit(1)
 		
 #=========================================================================================
@@ -196,7 +196,7 @@ def myupdt(tablename, record, condition, print_status=None):
 		fields = []
 		values = []
 		for key in record:
-			field = str(key).encode('utf8')
+			field = str(key)
 			setstr = "{0}=%s".format(field)
 			fields.append(setstr)
 		fields = ",".join(fields)
@@ -215,11 +215,11 @@ def myupdt(tablename, record, condition, print_status=None):
 		db.commit()
 		dbclose(db)
 		if print_status:
-			print "One record updated in table %s" % tablename
+			print ("One record updated in table {}".format(tablename))
 	except mysql.connector.Error as err:
-		print record
-		print condition
-		print "Error in myupdt: ", err
+		print (record)
+		print (condition)
+		print ("Error in myupdt: {}".format(err))
 		sys.exit(1)
 
 #=========================================================================================

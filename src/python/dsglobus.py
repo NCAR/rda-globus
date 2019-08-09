@@ -23,7 +23,7 @@ import subprocess
 try:
 	assert sys.version_info >= (2, 7)
 except AssertionError:
-	print "Error: Python version 2.7 or later required."
+	print ("Error: Python version 2.7 or later required.")
 	raise
 
 path1 = "/glade/u/home/rdadata/lib/python"
@@ -135,8 +135,8 @@ def add_endpoint_acl_rule(action, data):
 	    "path": path,
 	    "permissions": "r"
  	}
- 	if 'notify' in data:
- 		rule_data.update({"notify_email": email})	
+	if 'notify' in data:
+ 		rule_data.update({"notify_email": email})
 
 	try:
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
@@ -159,7 +159,7 @@ def add_endpoint_acl_rule(action, data):
 	
 	msg = "{0}\nResource: {1}\nRequest ID: {2}\nAccess ID: {3}".format(result['message'], result['resource'], result['request_id'], result['access_id'])
 	if 'print' in data and data['print']:
-		print msg
+		print (msg)
 	my_logger.info("[add_endpoint_acl_rule] {0}".format(msg))
 	my_logger.info("[add_endpoint_acl_rule] User email: {0}".format(email))
 	
@@ -219,8 +219,8 @@ def delete_endpoint_acl_rule(action, data):
 					sys.exit("Error: {0}".format(msg))
 				return {'Error': msg}
 			else:
-				record = {unicode('globus_rid'): None,
-				          unicode('globus_url'): None}
+				record = {'globus_rid': None,
+				          'globus_url': None}
 				if rqst_rid:
 					myupdt('dsrqst', record, rqst_cond)
 				else:
@@ -229,8 +229,8 @@ def delete_endpoint_acl_rule(action, data):
 				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
 				myshare = myget('goshare', ['*'], share_cond)
 				if (len(myshare) > 0):
-					share_record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
-				                    unicode('status'): 'DELETED'}
+					share_record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
+				                    'status': 'DELETED'}
 					myupdt('goshare', share_record, share_cond)
 
 	elif (action == 2):
@@ -257,8 +257,8 @@ def delete_endpoint_acl_rule(action, data):
 				return {'Error': msg}
 			else:
 				rule_id = myshare['globus_rid']
-				record = {unicode('delete_date'): datetime.now().strftime("%Y-%m-%d"),
-				          unicode('status'): 'DELETED'}
+				record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
+				          'status': 'DELETED'}
 				myupdt('goshare', record, cond)
 
 	try:
@@ -281,7 +281,7 @@ def delete_endpoint_acl_rule(action, data):
     
 	msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
 	if 'print' in data and data['print']:
-		print msg
+		print (msg)
 	my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
 	
 	return msg
@@ -346,11 +346,11 @@ def submit_dsrqst_transfer(data):
 	task_id = transfer.submit_transfer(transfer_data)['task_id']
 
 	""" Store task_id in request record """
-	record = [{unicode('task_id'): task_id}]
+	record = [{'task_id': task_id}]
 	myupdt('dsrqst', record[0], cond)
 
 	if 'print' in data and data['print']:
-		print "{}".format(task_id)
+		print ("{}".format(task_id))
 
 	"""	Create share record in goshare """
 
@@ -518,7 +518,7 @@ def update_share_record(action, data):
 		print_stdout = data['print']
 	else:
 		print_stdout = False
-	
+
 	try:
 		globus_rid = data['globus_rid']
 		globus_url = data['globus_url']
@@ -546,8 +546,8 @@ def update_share_record(action, data):
 		try:
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
-			rqst_record = {unicode('globus_rid'): data['globus_rid'],
-			               unicode('globus_url'): data['globus_url']
+			rqst_record = {'globus_rid': data['globus_rid'],
+			               'globus_url': data['globus_url']
 			              }
 			myupdt('dsrqst', rqst_record, cond)
 			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid))
