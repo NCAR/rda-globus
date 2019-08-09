@@ -230,8 +230,8 @@ def delete_endpoint_acl_rule(action, data):
 					sys.exit("Error: {0}".format(msg))
 				return {'Error': msg}
 			else:
-				record = {globus_rid_str: None,
-				          globus_url_str: None}
+				record = {'globus_rid': None,
+				          'globus_url': None}
 				if rqst_rid:
 					myupdt('dsrqst', record, rqst_cond)
 				else:
@@ -240,8 +240,8 @@ def delete_endpoint_acl_rule(action, data):
 				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
 				myshare = myget('goshare', ['*'], share_cond)
 				if (len(myshare) > 0):
-					share_record = {delete_date_str: datetime.now().strftime("%Y-%m-%d"),
-				                    status_str: 'DELETED'}
+					share_record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
+				                    'status': 'DELETED'}
 					myupdt('goshare', share_record, share_cond)
 
 	elif (action == 2):
@@ -268,8 +268,8 @@ def delete_endpoint_acl_rule(action, data):
 				return {'Error': msg}
 			else:
 				rule_id = myshare['globus_rid']
-				record = {delete_date_str: datetime.now().strftime("%Y-%m-%d"),
-				          status_str: 'DELETED'}
+				record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
+				          'status': 'DELETED'}
 				myupdt('goshare', record, cond)
 
 	try:
@@ -362,7 +362,7 @@ def submit_dsrqst_transfer(data):
 	task_id = transfer.submit_transfer(transfer_data)['task_id']
 
 	""" Store task_id in request record """
-	record = [{task_id_str: task_id}]
+	record = [{'task_id': task_id}]
 	myupdt('dsrqst', record[0], cond)
 
 	if 'print' in data and data['print']:
@@ -569,8 +569,8 @@ def update_share_record(action, data):
 		try:
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
-			rqst_record = {globus_rid_str: data['globus_rid'],
-			               globus_url_str: data['globus_url']
+			rqst_record = {'globus_rid': data['globus_rid'],
+			               'globus_url': data['globus_url']
 			              }
 			myupdt('dsrqst', rqst_record, cond)
 			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid))
