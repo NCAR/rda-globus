@@ -27,7 +27,7 @@ import hashlib
 from MyGlobus import MyGlobus
 from PyDBI import myget, myupdt
 from globus_utils import load_app_client
-from globus_sdk import (TransferClient, TransferAPIError,
+from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
 from dsglobus import *
 
@@ -203,8 +203,24 @@ def submit_transfer(session, form):
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
     
-    task_id = transfer.submit_transfer(transfer_data)['task_id']
-    transfer_status(task_id, new=True)
+    try:
+        transfer_result = transfer.submit_transfer(transfer_data)
+        task_id = transfer_result['task_id']
+        transfer_status(task_id, new=True)        
+        msg = ("[submit_transfer] transfer code: {0}, 
+               "submission_id: {1}, "
+               "task_id: {2}, "
+               "request_id: {3}, "
+               "message: {4}").format(transfer_result['code'], transfer_result['submission_id'], transfer_result['task_id'], transfer_result['request_id'], transfer_result['message'])
+        my_logger.info(msg)
+    except TransferAPIError as e:
+        msg = ("[submit_transfer] Transfer API Error\n"
+		       "HTTP status: {0}\n"
+		       "Error code: {1}\n"
+		       "Error message: {2}\n"
+		       "Request ID: {3}").format(e.http_status, e.code, e.message, e.request_id)
+        my_logger.error(msg)
+        raise e
     
     return
     
