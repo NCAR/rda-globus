@@ -172,6 +172,7 @@ def submit_transfer(session, form):
        source_endpoint_id = MyGlobus['datashare_ep']
 
     destination_endpoint_id = form.getvalue('endpoint_id')
+    label = str(form.getvalue('label'))
 
     """ Check if user has a share set up for this endpoint & path """
     share_data = {'email': email, 'dsid': dsid, 'notify': True}
@@ -187,7 +188,7 @@ def submit_transfer(session, form):
     transfer_data = TransferData(transfer_client=transfer,
                                  source_endpoint=source_endpoint_id,
                                  destination_endpoint=destination_endpoint_id,
-                                 label=form.getvalue('label'))
+                                 label=label)
 
     """ Add files to be transferred.  Note source_path is relative to the source
         endpoint base path. """
