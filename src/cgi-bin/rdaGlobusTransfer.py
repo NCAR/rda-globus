@@ -27,7 +27,7 @@ import hashlib
 from MyGlobus import MyGlobus
 from PyDBI import myget, myupdt
 from globus_utils import load_app_client
-from globus_sdk import (TransferClient, TransferAPIError,
+from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
 from dsglobus import *
 
@@ -172,6 +172,11 @@ def submit_transfer(session, form):
        source_endpoint_id = MyGlobus['datashare_ep']
 
     destination_endpoint_id = form.getvalue('endpoint_id')
+    
+    try:
+        label = form.getvalue('label')[0]
+    except TypeError:
+    	label = ''
 
     """ Check if user has a share set up for this endpoint & path """
     share_data = {'email': email, 'dsid': dsid, 'notify': True}
@@ -187,7 +192,7 @@ def submit_transfer(session, form):
     transfer_data = TransferData(transfer_client=transfer,
                                  source_endpoint=source_endpoint_id,
                                  destination_endpoint=destination_endpoint_id,
-                                 label=form.getvalue('label'))
+                                 label=label)
 
     """ Add files to be transferred.  Note source_path is relative to the source
         endpoint base path. """
@@ -199,8 +204,30 @@ def submit_transfer(session, form):
     transfer.endpoint_autoactivate(source_endpoint_id)
     transfer.endpoint_autoactivate(destination_endpoint_id)
     
-    task_id = transfer.submit_transfer(transfer_data)['task_id']
-    transfer_status(task_id, new=True)
+    try:
+        transfer_result = transfer.submit_transfer(transfer_data)
+        task_id = transfer_result['task_id']
+        transfer_status(task_id, new=True)        
+        msg = ("[submit_transfer] transfer code: {0}, "
+               "submission_id: {1}, "
+               "task_id: {2}, "
+               "request_id: {3}, "
+               "message: {4}, "
+               "email: {5}, dsid: {6}, gtype: {7}, directory: {8}").format(transfer_result['code'], 
+                                                                           transfer_result['submission_id'], 
+                                                                           transfer_result['task_id'], 
+                                                                           transfer_result['request_id'], 
+                                                                           transfer_result['message'], 
+                                                                           email, dsid, gtype, directory)
+        my_logger.info(msg)
+    except TransferAPIError as e:
+        msg = ("[submit_transfer] Transfer API Error\n"
+		       "HTTP status: {0}\n"
+		       "Error code: {1}\n"
+		       "Error message: {2}\n"
+		       "Request ID: {3}").format(e.http_status, e.code, e.message, e.request_id)
+        my_logger.error(msg)
+        raise e
     
     return
     
