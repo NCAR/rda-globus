@@ -213,7 +213,7 @@ def submit_transfer(session, form):
                "request_id: {3}, "
                "message: {4}").format(transfer_result['code'], transfer_result['submission_id'], transfer_result['task_id'], transfer_result['request_id'], transfer_result['message'])
         my_logger.info(msg)
-        msg = "[submit_transfer] email: {0}, dsid: {2}, gtype: {3}, directory: {4}".format(email, dsid, gtype, directory)
+        msg = "[submit_transfer] email: {0}, dsid: {1}, gtype: {2}, directory: {3}".format(email, dsid, gtype, directory)
         my_logger.info(msg)
     except TransferAPIError as e:
         msg = ("[submit_transfer] Transfer API Error\n"
