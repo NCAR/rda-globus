@@ -172,7 +172,7 @@ def submit_transfer(session, form):
        source_endpoint_id = MyGlobus['datashare_ep']
 
     destination_endpoint_id = form.getvalue('endpoint_id')
-    label = str(form.getvalue('label'))
+    label = form.getvalue('label')[0]
 
     """ Check if user has a share set up for this endpoint & path """
     share_data = {'email': email, 'dsid': dsid, 'notify': True}
