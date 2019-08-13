@@ -225,7 +225,12 @@ def submit_transfer(session, form):
 		       "HTTP status: {0}\n"
 		       "Error code: {1}\n"
 		       "Error message: {2}\n"
-		       "Request ID: {3}").format(e.http_status, e.code, e.message, e.request_id)
+		       "Request ID: {3}\n"
+		       "email: {4}, dsid: {5}, gtype: {6}, directory: {7}").format(e.http_status, 
+		                                                                   e.code, 
+		                                                                   e.message, 
+		                                                                   e.request_id,
+		                                                                   email, dsid, gtype, directory)
         my_logger.error(msg)
         raise e
     
