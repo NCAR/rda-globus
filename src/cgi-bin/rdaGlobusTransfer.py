@@ -213,7 +213,7 @@ def submit_transfer(session, form):
                "task_id: {2}, "
                "request_id: {3}, "
                "message: {4}, "
-               "email: {0}, dsid: {1}, gtype: {2}, directory: {3}").format(transfer_result['code'], 
+               "email: {5}, dsid: {6}, gtype: {7}, directory: {8}").format(transfer_result['code'], 
                                                                            transfer_result['submission_id'], 
                                                                            transfer_result['task_id'], 
                                                                            transfer_result['request_id'], 
