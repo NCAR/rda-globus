@@ -190,6 +190,9 @@ def submit_transfer(session, form):
                                  destination_endpoint=destination_endpoint_id,
                                  label=label)
 
+	msg = "[submit_transfer] transfer label: " + transfer_data['label']
+	my_logger.info(msg)
+	
     """ Add files to be transferred.  Note source_path is relative to the source
         endpoint base path. """
     for file in selected:
