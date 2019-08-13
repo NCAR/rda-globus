@@ -207,7 +207,7 @@ def submit_transfer(session, form):
         transfer_result = transfer.submit_transfer(transfer_data)
         task_id = transfer_result['task_id']
         transfer_status(task_id, new=True)        
-        msg = ("[submit_transfer] transfer code: {0}, 
+        msg = ("[submit_transfer] transfer code: {0}, "
                "submission_id: {1}, "
                "task_id: {2}, "
                "request_id: {3}, "
