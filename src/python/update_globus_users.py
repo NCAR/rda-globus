@@ -116,7 +116,7 @@ def update_users(data):
 						my_logger.info('[main] Globus user name {0} is up to date in the gouser table'.format(mygouser['username']))
 
 			# Update Globus user name in goshare record
-				if (myrec['username'] == None or cmp(myrec['username'],principal) != 0):
+				if (myrec['username'] == None or not (myrec['username'] == principal)):
 					myupdt('goshare', rec, condition)
 				else:
 					my_logger.info('[main] Globus user name {0} is up to date in the goshare table.'.format(myrec['username']))
