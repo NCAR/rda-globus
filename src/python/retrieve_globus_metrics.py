@@ -38,7 +38,6 @@ from datetime import datetime, tzinfo
 import pytz
 import logging
 import logging.handlers
-import urllib
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -200,6 +199,11 @@ def handle_error(r, data):
 # Parse file names in data_transfers dictionary
 
 def prepare_transfer_recs(data, task_id, bytes, endpoint):
+	try:
+		from urllib.parse import unquote
+	except:
+		from urllib import unquote
+	
 	transfer_recs = []
 	size = 0
 	
@@ -212,7 +216,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		if (endpoint == datashareID):
 		    # Query file size from wfile.data_size
 			dsid = pathsplit[1]
-			wfile = urllib.unquote("/".join(pathsplit[2:]))
+			wfile = unquote("/".join(pathsplit[2:]))
 			condition = " WHERE dsid='{0}' AND wfile='{1}'".format(dsid, wfile)
 			myrec = myget('wfile', ['data_size'], condition)
 			if (len(myrec) > 0):
@@ -221,7 +225,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				             unicode('source_path'):source_path,
 				             unicode('DATA_TYPE'):data_type,
 				             unicode('task_id'):task_id,
-			                 unicode('file_name'):urllib.unquote(pathsplit[-1]),
+			                 unicode('file_name'): unquote(pathsplit[-1]),
 			                 unicode('rindex'):None,
 			                 unicode('dsid'):dsid,
 			                 unicode('size'):myrec['data_size'],
