@@ -42,7 +42,7 @@ def main(args):
 	# Prepare database records and insert records
 	if (len(acls) == 0):
 		msg = "[main] There is no data in the return document."
-		print msg
+		print (msg)
 		my_logger.warning(msg)
 	else:
 		records = create_recs(acls, task_keys)
@@ -138,10 +138,10 @@ def parse_opts(argv):
 	doprint = bool(False)
 	rem = ''
 	
-	print 'ARGV      :',argv
+	print ('ARGV      :',argv)
 	opts, rem = getopt.getopt(argv, 'n:p', ['endpoint=','print'])
 	
-	print 'OPTIONS   :',opts
+	print ('OPTIONS   :',opts)
 	
 	for opt, arg in opts:
 		if opt in ('-n', '--endpoint'):
@@ -149,7 +149,7 @@ def parse_opts(argv):
 		elif opt in ('-p', '--print'):
 			doprint = bool(True)
 		elif opt in ('-h', '--help'):
-			print usg
+			print (usg)
 	
 	if (endpoint == 'rda#data_request'):
 		endpoint_id = MyGlobus['data_request_ep']
@@ -157,14 +157,14 @@ def parse_opts(argv):
 		endpoint_id = MyGlobus['datashare_ep']
 	else:
 		msg = "[parse_opts] Globus endpoint {0} not found.".format(endpoint)
-		print msg
+		print (msg)
 		my_logger.warning(msg)
 		sys.exit()
 
-	print 'ENDPOINT   : {}'.format(endpoint)
-	print 'ENDPOINT ID: {}'.format(endpoint_id)
-	print 'PRINT      : {}'.format(doprint)
-	print 'REMAINING  : {}'.format(rem)
+	print ('ENDPOINT   : {}'.format(endpoint))
+	print ('ENDPOINT ID: {}'.format(endpoint_id))
+	print ('PRINT      : {}'.format(doprint))
+	print ('REMAINING  : {}'.format(rem))
 
 	return {'endpoint': endpoint, \
 	        'endpoint_id': endpoint_id, \
@@ -192,10 +192,10 @@ def create_recs(data, keys):
 
 def print_doc(data, keys):
 	for i in range(len(data)):
-		print '\n'
+		print ()
 		for key in data[i].keys():
 			if key in keys:
-				print key, '\t', data[i][key]
+				print (key, '\t', data[i][key])
 			else:
 				continue
 
