@@ -221,15 +221,15 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			myrec = myget('wfile', ['data_size'], condition)
 			if (len(myrec) > 0):
 				transfer_recs.append({
-				             unicode('destination_path'):destination_path,
-				             unicode('source_path'):source_path,
-				             unicode('DATA_TYPE'):data_type,
-				             unicode('task_id'):task_id,
-			                 unicode('file_name'): unquote(pathsplit[-1]),
-			                 unicode('rindex'):None,
-			                 unicode('dsid'):dsid,
-			                 unicode('size'):myrec['data_size'],
-			                 unicode('count'):1})
+				             'destination_path':destination_path,
+				             'source_path':source_path,
+				             'DATA_TYPE':data_type,
+				             'task_id':task_id,
+			                 'file_name': unquote(pathsplit[-1]),
+			                 'rindex':None,
+			                 'dsid':dsid,
+			                 'size':myrec['data_size'],
+			                 'count':1})
 		
 		# rda#data_request
 		if (endpoint == data_requestID):
@@ -246,15 +246,15 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				dsid = None
 			
 			transfer_recs.append({
-				         unicode('destination_path'):destination_path,
-				         unicode('source_path'):source_path,
-				         unicode('DATA_TYPE'):data_type,
-			             unicode('task_id'):task_id,
-			             unicode('file_name'):pathsplit[2],
-			             unicode('rindex'):rindex,
-			             unicode('dsid'):dsid,
-			             unicode('size'):bytes,
-			             unicode('count'):None})
+				         'destination_path':destination_path,
+				         'source_path':source_path,
+				         'DATA_TYPE':data_type,
+			             'task_id':task_id,
+			             'file_name':pathsplit[2],
+			             'rindex':rindex,
+			             'dsid':dsid,
+			             'size':bytes,
+			             'count':None})
 	
 	return transfer_recs
 
@@ -314,15 +314,15 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		pathsplit = records[0]['source_path'].split("/")
 		file_name = pathsplit.pop()
 		source_path = "/".join(pathsplit)
-		dsrqst_rec.append({unicode('task_id'): task_id,
-		                   unicode('DATA_TYPE'): records[0]['DATA_TYPE'],
-		                   unicode('destination_path'): records[0]['destination_path'],
-		                   unicode('source_path'): source_path,
-		                   unicode('file_name'): records[0]['file_name'],
-		                   unicode('rindex'): records[0]['rindex'],
-		                   unicode('dsid'): records[0]['dsid'],
-		                   unicode('size'): bytes,
-		                   unicode('count'): dsrqst_count
+		dsrqst_rec.append({'task_id'): task_id,
+		                   'DATA_TYPE': records[0]['DATA_TYPE'],
+		                   'destination_path': records[0]['destination_path'],
+		                   'source_path': source_path,
+		                   'file_name': records[0]['file_name'],
+		                   'rindex': records[0]['rindex'],
+		                   'dsid': records[0]['dsid'],
+		                   'size': bytes,
+		                   'count': dsrqst_count
 		                   })
 		condition = " WHERE task_id='{0}' AND rindex={1}".format(task_id, dsrqst_rec[0]['rindex'])
 		myrec = myget(go_table, keys, condition)
@@ -374,7 +374,7 @@ def update_allusage(task_id):
 	myrecs = mymget('gofile',['dsid','SUM(size)'], condition)
 	if (len(myrecs) > 0):
 		for i in range(len(myrecs)):
-			all_recs.append({unicode('email'): email,unicode('org_type'): org_type,unicode('country'): country, unicode('dsid'): myrecs[i]['dsid'],unicode('date'): completion_date,unicode('time'): completion_time,unicode('quarter'): quarter, unicode('size'): int(myrecs[i]['SUM(size)']), unicode('method'): method,unicode('source'): source,unicode('midx'): 0,unicode('ip'): None})
+			all_recs.append({'email': email,'org_type': org_type,'country': country, 'dsid': myrecs[i]['dsid'],'date': completion_date,'time': completion_time,'quarter': quarter, 'size': int(myrecs[i]['SUM(size)']), 'method': method,'source': source,'midx': 0,'ip': None})
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile.".format(task_id))
 		return
