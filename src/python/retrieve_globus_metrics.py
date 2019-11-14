@@ -524,7 +524,7 @@ def check_email(data):
 	for i in range(len(data)):
 		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['username'])
 		myrec = myget('gouser', ['email'], condition)
-		if (myrec.has_key('email')):
+		if 'email' in myrec:
 			emails.append(myrec)
 		else:
 			emails.append({'email':None})
