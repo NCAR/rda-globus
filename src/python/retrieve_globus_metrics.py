@@ -314,7 +314,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		pathsplit = records[0]['source_path'].split("/")
 		file_name = pathsplit.pop()
 		source_path = "/".join(pathsplit)
-		dsrqst_rec.append({'task_id'): task_id,
+		dsrqst_rec.append({'task_id': task_id,
 		                   'DATA_TYPE': records[0]['DATA_TYPE'],
 		                   'destination_path': records[0]['destination_path'],
 		                   'source_path': source_path,
