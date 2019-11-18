@@ -17,7 +17,7 @@ sys.path.insert(1, "/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
-from Cookie import SimpleCookie
+from http import cookies
 from phpserialize import *
 import json
 import hmac
@@ -329,7 +329,7 @@ def display_transfer_status(task_id, new=False):
 #=========================================================================================
 def submit_request(session, form):
 	""" Submit request parameters to dsrqst.php and display request message """
-	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	endpoint_id = form.getvalue('endpoint_id')
 	dest_path = form.getvalue('path')
 	data = {
@@ -372,7 +372,7 @@ def get_session_data():
     """ 
     - Retrieve session data from RDADB.
     """
-    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
     myrec = myget('sessions', keys, condition)
@@ -387,7 +387,7 @@ def update_session_data(data):
     """ 
     - Update session data in RDADB
     """
-    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
     myrec = myget('sessions', keys, condition)
@@ -440,7 +440,7 @@ def print_http_status(msg):
 #=========================================================================================
 def generate_state_parameter(client_id, private_key):
 	""" Generate a state parameter for OAuth2 requests """
-	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	raw_state = sid + client_id
 	hashed = hmac.new(private_key, raw_state, hashlib.sha1)
 	state = b64encode(hashed.digest())
