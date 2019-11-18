@@ -495,7 +495,7 @@ def print_directory():
     print ("<h3>Current Working Directory:</h3>")
     try:
         pwd = os.getcwd()
-    except os.error, msg:
+    except os.error as msg:
         print ("os.error:", escape(str(msg)))
     else:
         print (escape(pwd))
