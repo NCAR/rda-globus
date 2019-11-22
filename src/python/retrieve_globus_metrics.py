@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 ##################################################################################
 #
@@ -28,8 +28,8 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus
-from PyDBI import myget, mymget, myadd, myupdt
+from MyGlobus_test import MyGlobus
+from PyDBI_test import myget, mymget, myadd, myupdt
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)

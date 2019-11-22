@@ -24,8 +24,8 @@ import hmac
 from base64 import b64encode
 import hashlib
 
-from MyGlobus import MyGlobus
-from PyDBI import myget, myupdt
+from MyGlobus_test import MyGlobus
+from PyDBI_test import myget, myupdt
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
