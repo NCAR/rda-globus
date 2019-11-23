@@ -482,9 +482,9 @@ def print_form(form):
         print ("<p>No form fields.")
     print ("<dl>")
     for key in keys:
-        print ("<dt>" + escape(key) + ":", value = form[key])
-        print ("<i>" + escape(repr(type(value))) + "</i>")
-        print ("<dd>" + escape(repr(value)))
+        print ("<dt>{0}: {1}".format(escape(key), form[key]))
+        print ("<i>{0}</i>".format(escape(repr(type(value)))))
+        print ("<dd>{0}".format(escape(repr(value))))
     print ("</dl>")
     print ()
 
