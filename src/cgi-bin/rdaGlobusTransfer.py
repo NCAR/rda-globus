@@ -526,6 +526,8 @@ def escape(s, quote=None):
 #=========================================================================================
 def print_session_data():
     """ Print session data """
+    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    print ("<p>\n<h3>Session id:</h3>\n{0}</p>\n".format(sid))
     session = get_session_data()
     print ("<p>\n<h3>Session data:</h3>\n</p>\n")
     print ("<p>\n")
