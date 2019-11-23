@@ -483,8 +483,8 @@ def print_form(form):
     print ("<dl>")
     for key in keys:
         print ("<dt>{0}: {1}".format(escape(key), form[key]))
-        print ("<i>{0}</i>".format(escape(repr(type(value)))))
-        print ("<dd>{0}".format(escape(repr(value))))
+        print ("<i>{0}</i>".format(escape(repr(type(form[key])))))
+        print ("<dd>{0}".format(escape(repr(form[key]))))
     print ("</dl>")
     print ()
 
