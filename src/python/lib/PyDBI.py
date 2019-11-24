@@ -18,8 +18,8 @@ hostname = socket.gethostname()
 
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
-if (path1 not in sys.path):
-	sys.path.append(path1)
+# if (path1 not in sys.path):
+# 	sys.path.append(path1)
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
