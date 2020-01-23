@@ -234,7 +234,13 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		# rda#data_request
 		if (endpoint == data_requestID):
 			searchObj = re.search(r'\d+$', pathsplit[2])
-			rindex = int(searchObj.group(0))
+			try:
+				rindex = int(searchObj.group(0))
+			except AttributeError as attr_err:
+				msg = "[prepare_transfer_recs] {}".format(attr_err)
+				my_logger.error(msg)
+				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				my_logger.info(msg)				
 			condition = " WHERE rindex='{0}'".format(rindex)
 			myrec = myget('dsrqst', ['dsid'], condition)
 			if (len(myrec) == 0):
