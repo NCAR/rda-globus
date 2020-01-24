@@ -215,8 +215,36 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 
 		if (endpoint == datashareID):
 		    # Query file size from wfile.data_size
-			dsid = pathsplit[1]
-			wfile = unquote("/".join(pathsplit[2:]))
+		    
+		    # Get dsid from source_path
+		    a = re.search(r'/ds\d\d\d.\d/', source_path)
+		    if a:
+		    	b = re.search(r'ds\d\d\d.\d', a.group())
+		    else:
+		    	msg = "[prepare_transfer_recs] Dataset ID not found"
+		    	my_logger.warning(msg)
+		    	return transfer_recs
+		    
+		    try:
+		    	dsid = b.group()
+		    except AttributeError as attr_err:
+				msg = "[prepare_transfer_recs] {}".format(attr_err)
+				my_logger.warning(msg)
+				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				my_logger.info(msg)
+				return transfer_recs
+
+			# Get wfile name
+			c = re.split(a.group(), source_path)
+			if c:
+				wfile = unquote(c[1])
+			else:
+		    	msg = "[prepare_transfer_recs] wfile not found"
+		    	my_logger.warning(msg)
+				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				my_logger.info(msg)
+		    	return transfer_recs
+				
 			condition = " WHERE dsid='{0}' AND wfile='{1}'".format(dsid, wfile)
 			myrec = myget('wfile', ['data_size'], condition)
 			if (len(myrec) > 0):
@@ -233,14 +261,24 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		
 		# rda#data_request
 		if (endpoint == data_requestID):
-			searchObj = re.search(r'\d+$', pathsplit[2])
+			# Get request ID from source_path
+			a = re.search(r'/[A-Z]+\d+/', source_path)
+			if a:
+				b = re.search(r'\d+', a.group(0))
+			else:
+				msg = "[prepare_transfer_recs] Request ID not found"
+				my_logger.warning(msg)
+				return transfer_recs
+			
 			try:
-				rindex = int(searchObj.group(0))
+				rindex = int(b.group())
 			except AttributeError as attr_err:
 				msg = "[prepare_transfer_recs] {}".format(attr_err)
-				my_logger.error(msg)
+				my_logger.warning(msg)
 				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
-				my_logger.info(msg)				
+				my_logger.info(msg)
+				return transfer_recs
+
 			condition = " WHERE rindex='{0}'".format(rindex)
 			myrec = myget('dsrqst', ['dsid'], condition)
 			if (len(myrec) == 0):
@@ -256,7 +294,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				         'source_path':source_path,
 				         'DATA_TYPE':data_type,
 			             'task_id':task_id,
-			             'file_name':pathsplit[2],
+			             'file_name':pathsplit[-1],
 			             'rindex':rindex,
 			             'dsid':dsid,
 			             'size':bytes,
