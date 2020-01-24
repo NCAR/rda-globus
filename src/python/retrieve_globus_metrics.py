@@ -214,20 +214,20 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		pathsplit = source_path.split("/")
 
 		if (endpoint == datashareID):
-		    # Query file size from wfile.data_size
+			# Query file size from wfile.data_size
 		    
-		    # Get dsid from source_path
-		    a = re.search(r'/ds\d\d\d.\d/', source_path)
-		    if a:
-		    	b = re.search(r'ds\d\d\d.\d', a.group())
-		    else:
-		    	msg = "[prepare_transfer_recs] Dataset ID not found"
-		    	my_logger.warning(msg)
-		    	return transfer_recs
+			# Get dsid from source_path
+			a = re.search(r'/ds\d\d\d.\d/', source_path)
+			if a:
+				b = re.search(r'ds\d\d\d.\d', a.group())
+			else:
+				msg = "[prepare_transfer_recs] Dataset ID not found"
+				my_logger.warning(msg)
+				return transfer_recs
 		    
-		    try:
-		    	dsid = b.group()
-		    except AttributeError as attr_err:
+			try:
+				dsid = b.group()
+			except AttributeError as attr_err:
 				msg = "[prepare_transfer_recs] {}".format(attr_err)
 				my_logger.warning(msg)
 				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
@@ -239,11 +239,11 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			if c:
 				wfile = unquote(c[1])
 			else:
-		    	msg = "[prepare_transfer_recs] wfile not found"
-		    	my_logger.warning(msg)
+				msg = "[prepare_transfer_recs] wfile not found"
+				my_logger.warning(msg)
 				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
 				my_logger.info(msg)
-		    	return transfer_recs
+				return transfer_recs
 				
 			condition = " WHERE dsid='{0}' AND wfile='{1}'".format(dsid, wfile)
 			myrec = myget('wfile', ['data_size'], condition)
