@@ -18,7 +18,7 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
 from http import cookies
-from phpserialize import *
+from phpserialize_test import *
 import json
 import hmac
 from base64 import b64encode
@@ -41,7 +41,7 @@ def main():
     form = cgi.FieldStorage()
 
     """ Print HTTP headers and debug info """
-    print_info(form)
+    # print_info(form)
     
     if 'endpoint_id' in form:
     	browsecallback(form)
