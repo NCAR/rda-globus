@@ -442,9 +442,13 @@ def generate_state_parameter(client_id, private_key):
 	""" Generate a state parameter for OAuth2 requests """
 	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	raw_state = sid + client_id
-	hashed = hmac.new(private_key, raw_state, hashlib.sha1)
+	
+	""" Note hmac requires bytearrays """
+	hashed = hmac.new(private_key.encode(), raw_state.encode(), hashlib.sha1)
 	state = b64encode(hashed.digest())
-	return (state)
+	
+	""" Convert result back to string """
+	return state.decode()
 
 #=========================================================================================
 def is_valid_state(state):
