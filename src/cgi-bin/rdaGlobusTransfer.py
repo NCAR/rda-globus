@@ -378,6 +378,7 @@ def get_session_data():
     sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
+    myrec = myget('sessions', keys, condition)
     
     """ Raise exception if myrec is nonempty """
 
