@@ -378,7 +378,6 @@ def get_session_data():
     sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
-    myrec = myget('sessions', keys, condition)
     
     """ Raise exception if myrec is nonempty """
 
@@ -398,8 +397,10 @@ def update_session_data(data):
     session_data = unserialize(myrec['data'])
     session_data.update(data)
     
-    """ Update session """
-    myupdt('sessions', {'data': serialize(session_data)}, condition)
+    """ Update session. Note that serialize converts string to bytestring in Python 3.  
+        Need to convert back to string (via decode) before updating DB record. """
+
+    myupdt('sessions', {'data': serialize(session_data).decode()}, condition)
     
     return
 
@@ -446,7 +447,7 @@ def generate_state_parameter(client_id, private_key):
 	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	raw_state = sid + client_id
 	
-	""" Note hmac requires bytearrays. Convert strings to bytes via encode(). """
+	""" Note hmac requires bytearrays in Python 3. Convert strings to bytes via encode(). """
 	hashed = hmac.new(private_key.encode(), raw_state.encode(), hashlib.sha1)
 	state = b64encode(hashed.digest())
 	
