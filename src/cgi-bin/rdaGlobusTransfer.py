@@ -31,6 +31,9 @@ from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
 from dsglobus_test import query_acl_rule, add_endpoint_acl_rule
 
+import logging
+import logging.handlers
+
 try:
     from urllib.parse import urlencode, unquote
 except:
