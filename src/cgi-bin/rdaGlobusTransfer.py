@@ -29,7 +29,7 @@ from PyDBI_test import myget, myupdt
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
-from dsglobus import *
+from dsglobus_test import query_acl_rule, add_endpoint_acl_rule
 
 try:
     from urllib.parse import urlencode, unquote
@@ -443,7 +443,7 @@ def generate_state_parameter(client_id, private_key):
 	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	raw_state = sid + client_id
 	
-	""" Note hmac requires bytearrays """
+	""" Note hmac requires bytearrays. Convert strings to bytes via encode(). """
 	hashed = hmac.new(private_key.encode(), raw_state.encode(), hashlib.sha1)
 	state = b64encode(hashed.digest())
 	

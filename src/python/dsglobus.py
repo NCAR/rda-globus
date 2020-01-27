@@ -40,7 +40,7 @@ import json
 import textwrap
 from datetime import datetime
 from time import strftime
-from phpserialize import unserialize
+from phpserialize_test import unserialize
 try:
     from urllib.parse import urlencode
 except:
