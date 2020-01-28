@@ -336,7 +336,7 @@ def submit_dsrqst_transfer(data):
 		selected = {}
 		count = 0
 		for i in range(len(files)):
-			if os.path.isfile(directory + files[i]):
+			if os.path.isfile(directory + files[i]['wfile']):
 				selected.update({count: files[i]['wfile']})
 				count+=1
 	else:
