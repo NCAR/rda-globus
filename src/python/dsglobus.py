@@ -325,35 +325,29 @@ def submit_dsrqst_transfer(data):
 								 destination_endpoint=destination_endpoint_id,
 								 label=session['label'])
 
-	""" Get request files from wfrqst. Also check for tar file output. """
+	""" Get request files from wfrqst and add files to be transferred. Also check for tar file output. 
+	    Note that source_path is relative to the source endpoint base path. """
+	count = 0
 	if (myrqst['tarflag'] == 'Y' and myrqst['tarcount'] > 0):
 		tar_dir = 'Tarfiles'
 		if os.path.exists(directory + tar_dir):
-			tar_selected = {0: tar_dir}
+			source_path = directory + tar_dir
+			dest_path = session['dest_path'] + tar_dir
+			transfer_data.add_item(source_path, dest_path, recursive=True)
+			count += 1
 
 	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
 	if (len(files) > 0):
-		selected = {}
-		count = 0
 		for i in range(len(files)):
-			if os.path.isfile(directory + files[i]['wfile']):
-				selected.update({count: files[i]['wfile']})
-				count+=1
-	else:
-		return null
+			file = files[i]['wfile']
+			if os.path.isfile(directory + file):
+				source_path = directory + file
+				dest_path = session['dest_path'] + file
+				transfer_data.add_item(source_path, dest_path)
+				count += 1
 
-	""" Add files to be transferred.  Note source_path is relative to the source
-		endpoint base path. """
-	if (len(tar_selected) > 0):
-		for path in tar_selected:
-			source_path = directory + tar_selected[path]
-			dest_path = session['dest_path'] + tar_selected[path]
-			transfer_data.add_item(source_path, dest_path, recursive=True)
-	if (len(selected) > 0):
-		for file in selected:
-			source_path = directory + selected[file]
-			dest_path = session['dest_path'] + selected[file]
-			transfer_data.add_item(source_path, dest_path)
+	if (count == 0):
+		return null
 
 	transfer.endpoint_autoactivate(source_endpoint_id)
 	transfer.endpoint_autoactivate(destination_endpoint_id)
