@@ -293,7 +293,7 @@ def submit_dsrqst_transfer(data):
 	""" Get session ID from dsrqst record """
 	ridx = data['ridx']
 	cond = " WHERE rindex={0}".format(ridx)
-	myrqst = myget('dsrqst', ['*'], cond)
+	myrqst = myget('dsrqst', ['tarcount', 'tarflag', 'session_id'], cond)
 	if (len(myrqst) == 0):
 		msg = "[submit_dsrqst_transfer] Request index not found in DB"
 		my_logger.warning(msg)
@@ -303,15 +303,6 @@ def submit_dsrqst_transfer(data):
 	email = session['email']
 	dsid = session['dsid']
 	
-	# Get request files from wfrqst
-	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
-	if (len(files) > 0):
-		selected = {}
-		for i in range(len(files)):
-			selected.update({i: files[i]['wfile']})
-	else:
-		return null
-
 	""" Define source endpoint ID and paths """
 	host_endpoint = MyGlobus['host_endpoint_id']
 	source_endpoint_id = MyGlobus['data_request_ep']
@@ -334,12 +325,35 @@ def submit_dsrqst_transfer(data):
 								 destination_endpoint=destination_endpoint_id,
 								 label=session['label'])
 
+	""" Get request files from wfrqst. Also check for tar file output. """
+	if (myrqst['tarflag'] == 'Y' and myrqst['tarcount'] > 0):
+		tar_dir = 'Tarfiles'
+		if os.path.exists(directory + tar_dir):
+			tar_selected = {0: tar_dir}
+
+	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
+	if (len(files) > 0):
+		selected = {}
+		count = 0
+		for i in range(len(files)):
+			if os.path.isfile(directory + files[i]):
+				selected.update({count: files[i]['wfile']})
+				count+=1
+	else:
+		return null
+
 	""" Add files to be transferred.  Note source_path is relative to the source
 		endpoint base path. """
-	for file in selected:
-		source_path = directory + selected[file]
-		dest_path = session['dest_path'] + selected[file]
-		transfer_data.add_item(source_path, dest_path)
+	if (len(tar_selected) > 0):
+		for path in tar_selected:
+			source_path = directory + tar_selected[path]
+			dest_path = session['dest_path'] + tar_selected[path]
+			transfer_data.add_item(source_path, dest_path, recursive=True)
+	if (len(selected) > 0):
+		for file in selected:
+			source_path = directory + selected[file]
+			dest_path = session['dest_path'] + selected[file]
+			transfer_data.add_item(source_path, dest_path)
 
 	transfer.endpoint_autoactivate(source_endpoint_id)
 	transfer.endpoint_autoactivate(destination_endpoint_id)
