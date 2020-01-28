@@ -347,6 +347,7 @@ def submit_dsrqst_transfer(data):
 				count += 1
 
 	if (count == 0):
+		my_logger.warning("[submit_dsrqst_transfer] No request files found to transfer for request index {}".format(ridx))
 		return None
 
 	transfer.endpoint_autoactivate(source_endpoint_id)
@@ -356,7 +357,10 @@ def submit_dsrqst_transfer(data):
 	""" Store task_id in request record """
 	record = [{'task_id': task_id}]
 	myupdt('dsrqst', record[0], cond)
-
+	
+	msg = "[submit_dsrqst_transfer] Transfer submitted successfully.  Task ID: {0}, Number of files transferred: {1}".format(task_id, count)
+	my_logger.info(msg)
+	
 	if 'print' in data and data['print']:
 		print ("{}".format(task_id))
 
