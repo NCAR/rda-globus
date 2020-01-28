@@ -347,7 +347,7 @@ def submit_dsrqst_transfer(data):
 				count += 1
 
 	if (count == 0):
-		return null
+		return None
 
 	transfer.endpoint_autoactivate(source_endpoint_id)
 	transfer.endpoint_autoactivate(destination_endpoint_id)
