@@ -327,10 +327,11 @@ def submit_dsrqst_transfer(data):
 
 	""" Get request files from wfrqst and add files to be transferred. Also check for tar file output. 
 	    Note that source_path is relative to the source endpoint base path. """
+	ep_base_path = MyGlobus['data_request_ep_base'].rstrip("/")
 	count = 0
 	if (myrqst['tarflag'] == 'Y' and myrqst['tarcount'] > 0):
 		tar_dir = 'Tarfiles'
-		if os.path.exists(directory + tar_dir):
+		if os.path.exists(ep_base_path + directory + tar_dir):
 			source_path = directory + tar_dir
 			dest_path = session['dest_path'] + tar_dir
 			transfer_data.add_item(source_path, dest_path, recursive=True)
@@ -340,7 +341,7 @@ def submit_dsrqst_transfer(data):
 	if (len(files) > 0):
 		for i in range(len(files)):
 			file = files[i]['wfile']
-			if os.path.isfile(directory + file):
+			if os.path.isfile(ep_base_path + directory + file):
 				source_path = directory + file
 				dest_path = session['dest_path'] + file
 				transfer_data.add_item(source_path, dest_path)
