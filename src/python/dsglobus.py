@@ -16,7 +16,7 @@
 #
 ##################################################################################
 
-import sys
+import sys, os
 import subprocess
 
 """ Python version 2.7 or later required """
