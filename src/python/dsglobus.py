@@ -330,8 +330,7 @@ def submit_dsrqst_transfer(data):
 	ep_base_path = MyGlobus['data_request_ep_base'].rstrip("/")
 	count = 0
 	if (myrqst['tarflag'] == 'Y' and myrqst['tarcount'] > 0):
-		tar_dir = 'Tarfiles'
-		my_logger.info("[submit_dsrqst_transfer] path: {}".format(ep_base_path + directory + tar_dir))
+		tar_dir = 'TarFiles'
 		if os.path.exists(ep_base_path + directory + tar_dir):
 			source_path = directory + tar_dir
 			dest_path = session['dest_path'] + tar_dir
