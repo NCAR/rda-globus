@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 #
 ##################################################################################
@@ -17,7 +17,7 @@ sys.path.insert(1, "/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
-from Cookie import SimpleCookie
+from http import cookies
 from phpserialize import *
 import json
 import hmac
@@ -29,7 +29,10 @@ from PyDBI import myget, myupdt
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
-from dsglobus import *
+from dsglobus import query_acl_rule, add_endpoint_acl_rule
+
+import logging
+import logging.handlers
 
 try:
     from urllib.parse import urlencode, unquote
@@ -58,9 +61,12 @@ def main():
     			display_transfer_status(task_id, new=new)
     	except:
     		print_header()
-    		print "<div id=\"error\">\n"
-    		print "<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>\n"
-    		print "</div>\n"
+    		print ("<div id=\"error\">")
+    		print()
+    		print ("<p>Error: task ID missing from URL query.  Please contact rdahelp@ucar.edu for assistance.</p>")
+    		print()
+    		print ("</div>")
+    		print()
     else:
     	authcallback(form)
 
@@ -72,7 +78,7 @@ def authcallback(form):
     # will be in the "error" query string parameter.
     if 'error' in form:
         print_header()
-        print "<p><strong>You could not be logged into the portal:</strong>{0} {1}\n".format(form['error_description'].value,form['error'].value)
+        print ("<p><strong>You could not be logged into the portal:</strong>{0} {1}\n".format(form['error_description'].value,form['error'].value))
         return
 
     # Set up our Globus Auth client
@@ -85,7 +91,7 @@ def authcallback(form):
     # starting a Globus Auth login flow.
     if 'code' not in form:
         auth_uri = client.oauth2_get_authorize_url()
-        print "Location: {0}\r\n".format(auth_uri)
+        print ("Location: {0}\r\n".format(auth_uri))
     else:
         # If we do have a "code" param, we're coming back from Globus Auth
         # and can start the process of exchanging an auth code for a token.        
@@ -125,7 +131,7 @@ def transfer(form):
     }
 
     browse_endpoint = '{0}browse-endpoint?{1}'.format(MyGlobus['globusURL'], urlencode(params))
-    print "Location: {0}\r\n\r\n".format(browse_endpoint)
+    print ("Location: {0}\r\n\r\n".format(browse_endpoint))
 
     return
 
@@ -248,7 +254,7 @@ def transfer_status(task_id, new=False):
     	params.update({'new': 'true'})
     display_status = 'https://' + os.environ['HTTP_HOST'] + '/#!cgi-bin/rdaGlobusTransfer?'
     qs = urlencode(params)
-    print "Location: %s%s\r\n" % (display_status, qs)
+    print ("Location: {0}{1}\r\n".format(display_status, qs))
 
 #=========================================================================================
 def update_transfer_status(task_id):
@@ -294,39 +300,39 @@ def display_transfer_status(task_id, new=False):
     redirect_uri = protocol + os.environ['HTTP_HOST'] + MyGlobus['redirect_uri']
     
     print_header()
-    print "<script id=\"globus_script\" language=\"JavaScript\" type=\"text/javascript\" src=\"/js/rda_globus.js\"></script>\n"
-    print "<form name=\"displayStatus\" action=\"{0}\" method=\"POST\" onsubmit=\"showLoading()\">\n".format(redirect_uri)
-    print"<input type = \"hidden\" name=\"method\" value=\"POST\">\n"
-    print"<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n"
-    print"<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id)
+    print ("<script id=\"globus_script\" language=\"JavaScript\" type=\"text/javascript\" src=\"/js/rda_globus.js\"></script>\n")
+    print ("<form name=\"displayStatus\" action=\"{0}\" method=\"POST\" onsubmit=\"showLoading()\">\n".format(redirect_uri))
+    print ("<input type = \"hidden\" name=\"method\" value=\"POST\">\n")
+    print ("<input type = \"hidden\" name=\"action\" value=\"transfer_status\">\n")
+    print ("<input type = \"hidden\" name=\"task_id\" value=\"{0}\">\n".format(task_id))
     if new:
-    	print "<div class=\"alert alert-success\" id=\"alertMessage\">\n"
-    	print "Transfer request submitted successfully. Task ID: <a href=\"{0}\" class=\"alert-link\" target=\"_blank\">{1}</a>".format(detail_uri, task_id)
-    	print "</div>"
-    print "<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n"
-    print "<h1>Globus transfer details</h1>\n"
-    print "</div>"
-    print "<hr style=\"height: 1px; color: #cccccc; background-color: #cccccc; border: none; width: 90%;\">"
-    print "<div id=\"transferDetails\" style=\"margin-left: 10px\">\n"
-    print "<p>\n"
-    print "<strong>Task ID</strong>: {0}<br />\n".format(task_id)
-    print "<strong>Source endpoint</strong>: {0}<br />\n".format(source_endpoint_display_name)
-    print "<strong>Destination Endpoint</strong>: {0}<br />\n".format(destination_endpoint_display_name)
-    print "<strong>Request Time</strong>: {0}<br />\n".format(request_time)
-    print "<strong>Status</strong>: {0}<br />\n".format(status)
-    print "<strong>Files transferred</strong>: {0}<br />\n".format(files_transferred)
-    print "<strong>Faults</strong>: {0}<br />\n".format(faults)
-    print "<strong>Overview and event log</strong>: <a href=\"{0}\" target=\"_blank\">{1}</a></p>\n".format(detail_uri, detail_uri)
-    print "</div>\n"
-    print "<div style=\"margin-left: 10px\">\n"
-    print "<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n"
-    print "<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid)
-    print "</div>\n"
+    	print ("<div class=\"alert alert-success\" id=\"alertMessage\">\n")
+    	print ("Transfer request submitted successfully. Task ID: <a href=\"{0}\" class=\"alert-link\" target=\"_blank\">{1}</a>".format(detail_uri, task_id))
+    	print ("</div>")
+    print ("<div id=\"transferStatusHeader\" style=\"margin-left: 10px\">\n")
+    print ("<h1>Globus transfer details</h1>\n")
+    print ("</div>")
+    print ("<hr style=\"height: 1px; color: #cccccc; background-color: #cccccc; border: none; width: 90%;\">")
+    print ("<div id=\"transferDetails\" style=\"margin-left: 10px\">\n")
+    print ("<p>\n")
+    print ("<strong>Task ID</strong>: {0}<br />\n".format(task_id))
+    print ("<strong>Source endpoint</strong>: {0}<br />\n".format(source_endpoint_display_name))
+    print ("<strong>Destination Endpoint</strong>: {0}<br />\n".format(destination_endpoint_display_name))
+    print ("<strong>Request Time</strong>: {0}<br />\n".format(request_time))
+    print ("<strong>Status</strong>: {0}<br />\n".format(status))
+    print ("<strong>Files transferred</strong>: {0}<br />\n".format(files_transferred))
+    print ("<strong>Faults</strong>: {0}<br />\n".format(faults))
+    print ("<strong>Overview and event log</strong>: <a href=\"{0}\" target=\"_blank\">{1}</a></p>\n".format(detail_uri, detail_uri))
+    print ("</div>\n")
+    print ("<div style=\"margin-left: 10px\">\n")
+    print ("<p><button type=\"submit\" class=\"btn btn-primary\">Refresh</button></p>\n")
+    print ("<p><a href=\"/datasets/{0}\">Return to the {1} dataset page</a>\n</p>\n".format(dsid, dsid))
+    print ("</div>\n")
     
 #=========================================================================================
 def submit_request(session, form):
 	""" Submit request parameters to dsrqst.php and display request message """
-	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	endpoint_id = form.getvalue('endpoint_id')
 	dest_path = form.getvalue('path')
 	data = {
@@ -358,18 +364,18 @@ def submit_request(session, form):
 	my_logger.info(msg)
 	
 	print_header()
-	print "<form name=\"globus_request\" action=\"/datasets/{0}/index.html#!null\" method=\"POST\">\n".format(params['dsid'])
+	print ("<form name=\"globus_request\" action=\"/datasets/{0}/index.html#!null\" method=\"POST\">\n".format(params['dsid']))
 	for key in params:
-		print "<input type=\"hidden\" name=\"{0}\" value=\"{1}\" />\n".format(key,params[key])
-	print "</form>\n"
-	print "<img src=\"/images/transpace.gif\" onLoad=\"document.globus_request.submit()\" />\n"
+		print ("<input type=\"hidden\" name=\"{0}\" value=\"{1}\" />\n".format(key,params[key]))
+	print ("</form>\n")
+	print ("<img src=\"/images/transpace.gif\" onLoad=\"document.globus_request.submit()\" />\n")
 
 #=========================================================================================
 def get_session_data():
     """ 
     - Retrieve session data from RDADB.
     """
-    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
     myrec = myget('sessions', keys, condition)
@@ -384,7 +390,7 @@ def update_session_data(data):
     """ 
     - Update session data in RDADB
     """
-    sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
     keys = ['id','access','data']
     condition = " WHERE {0} = '{1}'".format("id", sid)
     myrec = myget('sessions', keys, condition)
@@ -392,8 +398,10 @@ def update_session_data(data):
     session_data = unserialize(myrec['data'])
     session_data.update(data)
     
-    """ Update session """
-    myupdt('sessions', {'data': serialize(session_data)}, condition)
+    """ Update session. Note that serialize converts string to bytestring in Python 3.  
+        Need to convert back to string (via decode) before updating DB record. """
+
+    myupdt('sessions', {'data': serialize(session_data).decode()}, condition)
     
     return
 
@@ -426,22 +434,26 @@ def get_protocol():
 
 #=========================================================================================
 def print_header():
-    print "Content-type: text/html\r\n\r\n"
+    print ("Content-type: text/html\r\n\r\n")
     return
 
 #=========================================================================================
 def print_http_status(msg):
-    print "Status: " + msg + "\r\n\r\n"
+    print ("Status: " + msg + "\r\n\r\n")
     return
 
 #=========================================================================================
 def generate_state_parameter(client_id, private_key):
 	""" Generate a state parameter for OAuth2 requests """
-	sid = SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+	sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
 	raw_state = sid + client_id
-	hashed = hmac.new(private_key, raw_state, hashlib.sha1)
+	
+	""" Note hmac requires bytearrays in Python 3. Convert strings to bytes via encode(). """
+	hashed = hmac.new(private_key.encode(), raw_state.encode(), hashlib.sha1)
 	state = b64encode(hashed.digest())
-	return (state)
+	
+	""" Convert result back to string """
+	return state.decode()
 
 #=========================================================================================
 def is_valid_state(state):
@@ -462,11 +474,11 @@ def print_environ(environ=os.environ):
     keys = environ.keys()
     keys.sort()
     print
-    print "<h3>Shell Environment:</h3>"
-    print "<dl>"
+    print ("<h3>Shell Environment:</h3>")
+    print ("<dl>")
     for key in keys:
-        print "<dt>", escape(key), "<dd>", escape(environ[key])
-    print "</dl>"
+        print ("<dt>{0}<dd>{1}".format(escape(key), escape(environ[key])))
+    print ("</dl>")
     print
 
 #=========================================================================================
@@ -474,38 +486,37 @@ def print_form(form):
     keys = form.keys()
     keys.sort()
     print
-    print "<h3>Form Contents:</h3>"
+    print ("<h3>Form Contents:</h3>")
     if not keys:
-        print "<p>No form fields."
-    print "<dl>"
+        print ("<p>No form fields.")
+    print ("<dl>")
     for key in keys:
-        print "<dt>" + escape(key) + ":",
-        value = form[key]
-        print "<i>" + escape(repr(type(value))) + "</i>"
-        print "<dd>" + escape(repr(value))
-    print "</dl>"
-    print
+        print ("<dt>{0}: {1}".format(escape(key), form[key]))
+        print ("<i>{0}</i>".format(escape(repr(type(form[key])))))
+        print ("<dd>{0}".format(escape(repr(form[key]))))
+    print ("</dl>")
+    print ()
 
 #=========================================================================================
 def print_directory():
     """Dump the current directory as HTML."""
     print
-    print "<h3>Current Working Directory:</h3>"
+    print ("<h3>Current Working Directory:</h3>")
     try:
         pwd = os.getcwd()
-    except os.error, msg:
-        print "os.error:", escape(str(msg))
+    except os.error as msg:
+        print ("os.error:", escape(str(msg)))
     else:
-        print escape(pwd)
-    print
+        print (escape(pwd))
+    print ()
 
 #=========================================================================================
 def print_arguments():
-    print
-    print "<h3>Command Line Arguments:</h3>"
-    print
-    print sys.argv
-    print
+    print ()
+    print ("<h3>Command Line Arguments:</h3>")
+    print ()
+    print (sys.argv)
+    print ()
 
 #=========================================================================================
 def escape(s, quote=None):
@@ -524,23 +535,25 @@ def escape(s, quote=None):
 #=========================================================================================
 def print_session_data():
     """ Print session data """
+    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
+    print ("<p>\n<h3>Session id:</h3>\n{0}</p>\n".format(sid))
     session = get_session_data()
-    print "<p>\n<h3>Session data:</h3>\n</p>\n"
-    print "<p>\n"
+    print ("<p>\n<h3>Session data:</h3>\n</p>\n")
+    print ("<p>\n")
     print_dict(session)
-    print "</p>\n"
+    print ("</p>\n")
 
 #=========================================================================================
 def print_dict(mydict):
     """ Print contents of a dictionary """
-    print "<dl>\n"
+    print ("<dl>\n")
     for key, val in mydict.iteritems():
         if isinstance(val, dict):
-            print "<dt><strong>{0} :</strong> <dd>".format(key)
+            print ("<dt><strong>{0} :</strong> <dd>".format(key))
             print_dict(val)
         else:
-            print "<dt><strong>{0} :</strong> <dd>{1}".format(key, val)
-    print "</dl>\n"
+            print ("<dt><strong>{0} :</strong> <dd>{1}".format(key, val))
+    print ("</dl>\n")
 
 #=========================================================================================
 def print_info(form):
@@ -549,7 +562,7 @@ def print_info(form):
     print_directory()
     print_arguments()
     print_form(form)
-   # print_session_data()
+    print_session_data()
     print_environ()
     sys.exit()
 

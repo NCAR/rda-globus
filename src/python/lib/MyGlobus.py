@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 ##################################################################################
 #
@@ -14,33 +14,14 @@
 #
 ##################################################################################
 
-""" 
-Include path to Globus SDK if on cheyenne login or compute nodes 
-(or load the globus-sdk environment module via the command 'module load globus-sdk'),
-or on DAV systems
-"""
-import os, sys, socket, re, platform
-hostname = socket.gethostname()
-if ((hostname.find('cheyenne') != -1) or re.match(r'^r\d{1,2}', hostname)):
-	sdk_path_ch = "/glade/u/apps/ch/opt/pythonpkgs/2.7/globus-sdk/1.4.1/gnu/6.3.0/lib/python2.7/site-packages"
-	if (sdk_path_ch not in sys.path):
-		sys.path.append(sdk_path_ch)
-elif ( hostname.find('casper') != -1):
-	if (sys.version_info < (3, 0)):
-		sdk_path_casper = '/glade/u/apps/dav/opt/python/2.7.14/intel/17.0.1/pkg-library/20180510/lib/python2.7/site-packages'
-		sys.path.append(sdk_path_casper)
-elif ( (hostname.find('geyser') != -1 or hostname.find('caldera') != -1 or hostname.find('pronghorn') != -1 or hostname.find('yslogin') != -1 or hostname.find('ysm') != -1) ):
-	os_dist = platform.linux_distribution()[0]
-	if (re.match(r'^CentOS', os_dist)):
-		sdk_path_centos = '/glade/u/apps/dav/opt/python/2.7.14/intel/17.0.1/pkg-library/20180510/lib/python2.7/site-packages'
-		if (sdk_path_centos not in sys.path):
-			sys.path.append(sdk_path_centos)
-	else:
-		sdk_path_dav = '/glade/u/apps/opt/python/2.7.7/gnu-westmere/4.8.2/lib/python2.7/site-packages'
-		if (sdk_path_dav not in sys.path):
-			sys.path.append(sdk_path_dav)
-else:
-	pass
+import sys
+
+path1 = "/glade/u/home/rdadata/lib/python"
+path2 = "/glade/u/home/tcram/lib/python"
+if (path1 not in sys.path):
+	sys.path.append(path1)
+if (path2 not in sys.path):
+	sys.path.append(path2)
 
 from rda_globus_app_config import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
                                    CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY)

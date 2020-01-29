@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 ##################################################################################
 #
@@ -8,22 +8,19 @@
 #   Purpose : Python module to create and manage shared endpoints to facilitate
 #             Globus data transfers from the RDA.
 #
-#             *** NOTE: Python 2.7 or later required ***
-#
 # Work File : $DSSHOME/lib/python/dsglobus.py*
 # Test File : $DSSHOME/lib/python/dsglobus_test.py*
 # Github    : https://github.com/NCAR/rda-globus/python/dsglobus.py
 #
 ##################################################################################
 
-import sys, os
+import os, sys
 import subprocess
 
-""" Python version 2.7 or later required """
 try:
-	assert sys.version_info >= (2, 7)
+	assert sys.version_info >= (3,0)
 except AssertionError:
-	print ("Error: Python version 2.7 or later required.")
+	print ("Error: Python version 3.0+ required.")
 	raise
 
 path1 = "/glade/u/home/rdadata/lib/python"
@@ -325,29 +322,31 @@ def submit_dsrqst_transfer(data):
 								 destination_endpoint=destination_endpoint_id,
 								 label=session['label'])
 
-	""" Get request files from wfrqst and add files to be transferred. Also check for tar file output. 
+	""" Check for tar file output and add to items to be transferred. 
 	    Note that source_path is relative to the source endpoint base path. """
+
 	ep_base_path = MyGlobus['data_request_ep_base'].rstrip("/")
-	count = 0
+
 	if (myrqst['tarflag'] == 'Y' and myrqst['tarcount'] > 0):
 		tar_dir = 'TarFiles'
 		if os.path.exists(ep_base_path + directory + tar_dir):
 			source_path = directory + tar_dir
 			dest_path = session['dest_path'] + tar_dir
 			transfer_data.add_item(source_path, dest_path, recursive=True)
-			count += 1
 
+	""" Get individual request files from wfrqst and add to items to be transferred """
+	
 	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
-	if (len(files) > 0):
+
+  if (len(files) > 0):
 		for i in range(len(files)):
 			file = files[i]['wfile']
 			if os.path.isfile(ep_base_path + directory + file):
 				source_path = directory + file
 				dest_path = session['dest_path'] + file
 				transfer_data.add_item(source_path, dest_path)
-				count += 1
 
-	if (count == 0):
+	if (len(transfer_data['DATA']) == 0):
 		my_logger.warning("[submit_dsrqst_transfer] No request files found to transfer for request index {}".format(ridx))
 		return None
 
@@ -359,7 +358,7 @@ def submit_dsrqst_transfer(data):
 	record = [{'task_id': task_id}]
 	myupdt('dsrqst', record[0], cond)
 	
-	msg = "[submit_dsrqst_transfer] Transfer submitted successfully.  Task ID: {0}, Number of files transferred: {1}".format(task_id, count)
+	msg = "[submit_dsrqst_transfer] Transfer submitted successfully.  Task ID: {0}. Files transferred: {1}.  Request index: {2}".format(task_id, len(transfer_data['DATA']), ridx)
 	my_logger.info(msg)
 	
 	if 'print' in data and data['print']:
@@ -368,7 +367,7 @@ def submit_dsrqst_transfer(data):
 	"""	Create share record in goshare """
 
 	return task_id
-
+	
 #=========================================================================================
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 

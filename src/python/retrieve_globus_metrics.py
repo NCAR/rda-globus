@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 ##################################################################################
 #
@@ -38,7 +38,6 @@ from datetime import datetime, tzinfo
 import pytz
 import logging
 import logging.handlers
-import urllib
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -121,7 +120,7 @@ def add_tasks(go_table, data):
 	# Check if record already exists for each task id. Update if necessary.
 	task_keys.append('email')
 	for i in range(len(records)):
-		condition = " WHERE {0} = '{1}'".format("task_id", records[i]['task_id'])
+		condition = " WHERE task_id='{0}'".format(records[i]['task_id'])
 		myrec = myget(go_table, task_keys, condition)
 		if (len(myrec) > 0):
 			try:
@@ -129,7 +128,7 @@ def add_tasks(go_table, data):
 				myrec['completion_time'] = myrec['completion_time'].replace(tzinfo=pytz.utc).isoformat()
 			except KeyError:
 				pass
-			if (cmp(records[i],myrec) != 0):
+			if not (records[i] == myrec):
 				records[i]['request_time'] = records[i]['request_time'][:19]
 				records[i]['completion_time'] = records[i]['completion_time'][:19]
 				myupdt(go_table, records[i], condition)
@@ -200,6 +199,11 @@ def handle_error(r, data):
 # Parse file names in data_transfers dictionary
 
 def prepare_transfer_recs(data, task_id, bytes, endpoint):
+	try:
+		from urllib.parse import unquote
+	except:
+		from urllib import unquote
+	
 	transfer_recs = []
 	size = 0
 	
@@ -210,28 +214,72 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		pathsplit = source_path.split("/")
 
 		if (endpoint == datashareID):
-		    # Query file size from wfile.data_size
-			dsid = pathsplit[1]
-			wfile = urllib.unquote("/".join(pathsplit[2:]))
-			condition = " WHERE {0}='{1}' AND {2}='{3}'".format("dsid", dsid, "wfile", wfile)
+			# Query file size from wfile.data_size
+		    
+			# Get dsid from source_path
+			a = re.search(r'/ds\d{3}\.\d{1}/', source_path)
+			if a:
+				b = re.search(r'ds\d{3}\.\d{1}', a.group())
+			else:
+				msg = "[prepare_transfer_recs] Dataset ID not found"
+				my_logger.warning(msg)
+				return transfer_recs
+		    
+			try:
+				dsid = b.group()
+			except AttributeError as attr_err:
+				msg = "[prepare_transfer_recs] {}".format(attr_err)
+				my_logger.warning(msg)
+				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				my_logger.info(msg)
+				return transfer_recs
+
+			# Get wfile name
+			c = re.split(a.group(), source_path)
+			if c:
+				wfile = unquote(c[1])
+			else:
+				msg = "[prepare_transfer_recs] wfile not found"
+				my_logger.warning(msg)
+				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				my_logger.info(msg)
+				return transfer_recs
+				
+			condition = " WHERE dsid='{0}' AND wfile='{1}'".format(dsid, wfile)
 			myrec = myget('wfile', ['data_size'], condition)
 			if (len(myrec) > 0):
 				transfer_recs.append({
-				             unicode('destination_path'):destination_path,
-				             unicode('source_path'):source_path,
-				             unicode('DATA_TYPE'):data_type,
-				             unicode('task_id'):task_id,
-			                 unicode('file_name'):urllib.unquote(pathsplit[-1]),
-			                 unicode('rindex'):None,
-			                 unicode('dsid'):dsid,
-			                 unicode('size'):myrec['data_size'],
-			                 unicode('count'):1})
+				             'destination_path':destination_path,
+				             'source_path':source_path,
+				             'DATA_TYPE':data_type,
+				             'task_id':task_id,
+			                 'file_name': unquote(pathsplit[-1]),
+			                 'rindex':None,
+			                 'dsid':dsid,
+			                 'size':myrec['data_size'],
+			                 'count':1})
 		
 		# rda#data_request
 		if (endpoint == data_requestID):
-			searchObj = re.search(r'\d+$', pathsplit[2])
-			rindex = int(searchObj.group(0))
-			condition = " WHERE {0}='{1}'".format("rindex", rindex)
+			# Get request ID from source_path
+			a = re.search(r'/[A-Z]+\d+/', source_path)
+			if a:
+				b = re.search(r'\d+', a.group(0))
+			else:
+				msg = "[prepare_transfer_recs] Request ID not found"
+				my_logger.warning(msg)
+				return transfer_recs
+			
+			try:
+				rindex = int(b.group())
+			except AttributeError as attr_err:
+				msg = "[prepare_transfer_recs] {}".format(attr_err)
+				my_logger.warning(msg)
+				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				my_logger.info(msg)
+				return transfer_recs
+
+			condition = " WHERE rindex='{0}'".format(rindex)
 			myrec = myget('dsrqst', ['dsid'], condition)
 			if (len(myrec) == 0):
 				myrec = myget('dspurge', ['dsid'], condition)
@@ -242,15 +290,15 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				dsid = None
 			
 			transfer_recs.append({
-				         unicode('destination_path'):destination_path,
-				         unicode('source_path'):source_path,
-				         unicode('DATA_TYPE'):data_type,
-			             unicode('task_id'):task_id,
-			             unicode('file_name'):pathsplit[2],
-			             unicode('rindex'):rindex,
-			             unicode('dsid'):dsid,
-			             unicode('size'):bytes,
-			             unicode('count'):None})
+				         'destination_path':destination_path,
+				         'source_path':source_path,
+				         'DATA_TYPE':data_type,
+			             'task_id':task_id,
+			             'file_name':pathsplit[-1],
+			             'rindex':rindex,
+			             'dsid':dsid,
+			             'size':bytes,
+			             'count':None})
 	
 	return transfer_recs
 
@@ -286,10 +334,10 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			continue
 		else:
 			if (endpoint == datashareID):
-				condition = " WHERE {0} = '{1}' AND {2}='{3}'".format("task_id", records[i]['task_id'], "source_path", records[i]['source_path'])
+				condition = " WHERE task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
 				myrec = myget(go_table, keys, condition)
 				if (len(myrec) > 0):
-					if (cmp(records[i],myrec) != 0):
+					if not (records[i] == myrec):
 						myupdt(go_table, records[i], condition)
 					else:
 						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
@@ -310,20 +358,20 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		pathsplit = records[0]['source_path'].split("/")
 		file_name = pathsplit.pop()
 		source_path = "/".join(pathsplit)
-		dsrqst_rec.append({unicode('task_id'): task_id,
-		                   unicode('DATA_TYPE'): records[0]['DATA_TYPE'],
-		                   unicode('destination_path'): records[0]['destination_path'],
-		                   unicode('source_path'): source_path,
-		                   unicode('file_name'): records[0]['file_name'],
-		                   unicode('rindex'): records[0]['rindex'],
-		                   unicode('dsid'): records[0]['dsid'],
-		                   unicode('size'): bytes,
-		                   unicode('count'): dsrqst_count
+		dsrqst_rec.append({'task_id': task_id,
+		                   'DATA_TYPE': records[0]['DATA_TYPE'],
+		                   'destination_path': records[0]['destination_path'],
+		                   'source_path': source_path,
+		                   'file_name': records[0]['file_name'],
+		                   'rindex': records[0]['rindex'],
+		                   'dsid': records[0]['dsid'],
+		                   'size': bytes,
+		                   'count': dsrqst_count
 		                   })
-		condition = " WHERE {0}='{1}' AND {2}={3}".format("task_id",task_id,"rindex", dsrqst_rec[0]['rindex'])
+		condition = " WHERE task_id='{0}' AND rindex={1}".format(task_id, dsrqst_rec[0]['rindex'])
 		myrec = myget(go_table, keys, condition)
 		if (len(myrec) > 0):
-			if (cmp(dsrqst_rec, myrec) != 0):
+			if not (dsrqst_rec == myrec):
 				myupdt(go_table, dsrqst_rec[0], condition)
 			else:
 				my_logger.info("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
@@ -340,7 +388,7 @@ def update_allusage(task_id):
 	source = 'G'
 	all_recs = []
 	
-	condition = " WHERE {0}='{1}'".format("task_id",task_id)
+	condition = " WHERE task_id='{0}'".format(task_id)
 	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)'], condition)
 	if (len(myrec) > 0):
 		email = myrec['email']
@@ -355,7 +403,7 @@ def update_allusage(task_id):
 	completion_time = myrec['completion_time'].strftime("%H:%M:%S")
 	
 	# Get user email, org_type, and country
-	condition = " WHERE {0}='{1}' AND {2} IS NULL".format("email",email,"end_date")
+	condition = " WHERE email='{0}' AND end_date IS NULL".format(email)
 	myrec = myget('ruser',['org_type','country'], condition)
 	if (len(myrec) > 0):
 		org_type = myrec['org_type']
@@ -366,23 +414,23 @@ def update_allusage(task_id):
 	
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
-	condition = " WHERE {0}='{1}' GROUP BY {2}".format("task_id",task_id,"dsid")
+	condition = " WHERE task_id='{0}' GROUP BY dsid".format(task_id)
 	myrecs = mymget('gofile',['dsid','SUM(size)'], condition)
 	if (len(myrecs) > 0):
 		for i in range(len(myrecs)):
-			all_recs.append({unicode('email'): email,unicode('org_type'): org_type,unicode('country'): country, unicode('dsid'): myrecs[i]['dsid'],unicode('date'): completion_date,unicode('time'): completion_time,unicode('quarter'): quarter, unicode('size'): int(myrecs[i]['SUM(size)']), unicode('method'): method,unicode('source'): source,unicode('midx'): 0,unicode('ip'): None})
+			all_recs.append({'email': email,'org_type': org_type,'country': country, 'dsid': myrecs[i]['dsid'],'date': completion_date,'time': completion_time,'quarter': quarter, 'size': int(myrecs[i]['SUM(size)']), 'method': method,'source': source,'midx': 0,'ip': None})
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile.".format(task_id))
 		return
 
 	for i in range(len(all_recs)):
 		dsid = all_recs[i]['dsid']
-		condition = " WHERE {0}='{1}' AND {2}='{3}' AND {4}='{5}' AND {6}='{7}' AND {8}='{9}'".format("email",email,"dsid",dsid,"date",completion_date,"time",completion_time,"method",method)
+		condition = " WHERE email='{0}' AND dsid='{1}' AND date='{2}' AND time='{3}' AND method='{4}'".format(email,dsid,completion_date,completion_time,method)
 		myrec = myget(go_table, ['*'], condition)
 		if (len(myrec) > 0):
 			myrec['date'] = myrec['date'].strftime("%Y-%m-%d")
 			myrec['time'] = str(myrec['time'])
-			if (cmp(all_recs[i], myrec) != 0):
+			if not (all_recs[i] == myrec):
 				myupdt(go_table, all_recs[i], condition)
 			else:
 				my_logger.info("[update_allusage] DB record already exists and is up to date.")
@@ -475,12 +523,12 @@ def parse_opts():
 	if opts['PRINTINFO']:
 		doprint = bool(True)
 			
-	print 'ENDPOINT   :', endpoint
-	print 'ENDPOINT ID:', endpointID
-	print 'USER       :', user
-	print 'START      :', start_date
-	print 'END        :', end_date
-	print 'PRINT      :', doprint
+	print ('ENDPOINT   :', endpoint)
+	print ('ENDPOINT ID:', endpointID)
+	print ('USER       :', user)
+	print ('START      :', start_date)
+	print ('END        :', end_date)
+	print ('PRINT      :', doprint)
 
 	return {'endpoint': endpoint, \
 	        'endpointID': endpointID, \
@@ -522,9 +570,9 @@ def create_recs(data, keys):
 def check_email(data):
 	emails = []
 	for i in range(len(data)):
-		condition = " WHERE {0}='{1}' AND {2}='{3}'".format("username", data[i]['username'],"status","ACTIVE")
+		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['username'])
 		myrec = myget('gouser', ['email'], condition)
-		if (myrec.has_key('email')):
+		if 'email' in myrec:
 			emails.append(myrec)
 		else:
 			emails.append({'email':None})
@@ -547,10 +595,10 @@ def update_records(list1,list2):
 
 def print_doc(data, keys):
 	for i in range(len(data)):
-		print '\n'
+		print()
 		for key in data[i]:
 			if key in keys:
-				print key, '\t', data[i][key]
+				print (key, '\t', data[i][key])
 			else:
 				continue
 
