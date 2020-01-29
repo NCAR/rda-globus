@@ -358,7 +358,7 @@ def submit_dsrqst_transfer(data):
 	record = [{'task_id': task_id}]
 	myupdt('dsrqst', record[0], cond)
 	
-	msg = "[submit_dsrqst_transfer] Transfer submitted successfully.  Task ID: {0}. Files transferred: {1}.  Request index: {2}".format(task_id, count, ridx)
+	msg = "[submit_dsrqst_transfer] Transfer submitted successfully.  Task ID: {0}. Files transferred: {1}.  Request index: {2}".format(task_id, len(transfer_data['DATA']), ridx)
 	my_logger.info(msg)
 	
 	if 'print' in data and data['print']:
