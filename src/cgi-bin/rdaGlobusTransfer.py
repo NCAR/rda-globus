@@ -18,18 +18,18 @@ sys.path.append("/glade/u/home/tcram/lib/python")
 
 import cgi, cgitb
 from http import cookies
-from phpserialize_test import *
+from phpserialize import *
 import json
 import hmac
 from base64 import b64encode
 import hashlib
 
-from MyGlobus_test import MyGlobus
-from PyDBI_test import myget, myupdt
+from MyGlobus import MyGlobus
+from PyDBI import myget, myupdt
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, GlobusAPIError,
                         TransferData, RefreshTokenAuthorizer)
-from dsglobus_test import query_acl_rule, add_endpoint_acl_rule
+from dsglobus import query_acl_rule, add_endpoint_acl_rule
 
 import logging
 import logging.handlers

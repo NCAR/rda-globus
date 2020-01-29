@@ -21,8 +21,8 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus_test import MyGlobus
-from PyDBI_test import myget, myadd, myupdt
+from MyGlobus import MyGlobus
+from PyDBI import myget, myadd, myupdt
 from globus_utils import load_app_client
 import logging
 import logging.handlers
