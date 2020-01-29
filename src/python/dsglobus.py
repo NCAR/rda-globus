@@ -338,7 +338,7 @@ def submit_dsrqst_transfer(data):
 	
 	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
 
-	if (len(files) > 0):
+  if (len(files) > 0):
 		for i in range(len(files)):
 			file = files[i]['wfile']
 			if os.path.isfile(ep_base_path + directory + file):
