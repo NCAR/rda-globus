@@ -293,7 +293,7 @@ def submit_dsrqst_transfer(data):
 	""" Get session ID from dsrqst record """
 	ridx = data['ridx']
 	cond = " WHERE rindex={0}".format(ridx)
-	myrqst = myget('dsrqst', ['*'], cond)
+	myrqst = myget('dsrqst', ['tarcount', 'tarflag', 'session_id'], cond)
 	if (len(myrqst) == 0):
 		msg = "[submit_dsrqst_transfer] Request index not found in DB"
 		my_logger.warning(msg)
@@ -303,15 +303,6 @@ def submit_dsrqst_transfer(data):
 	email = session['email']
 	dsid = session['dsid']
 	
-	# Get request files from wfrqst
-	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
-	if (len(files) > 0):
-		selected = {}
-		for i in range(len(files)):
-			selected.update({i: files[i]['wfile']})
-	else:
-		return null
-
 	""" Define source endpoint ID and paths """
 	host_endpoint = MyGlobus['host_endpoint_id']
 	source_endpoint_id = MyGlobus['data_request_ep']
@@ -334,12 +325,33 @@ def submit_dsrqst_transfer(data):
 								 destination_endpoint=destination_endpoint_id,
 								 label=session['label'])
 
-	""" Add files to be transferred.  Note source_path is relative to the source
-		endpoint base path. """
-	for file in selected:
-		source_path = directory + selected[file]
-		dest_path = session['dest_path'] + selected[file]
-		transfer_data.add_item(source_path, dest_path)
+	""" Check for tar file output and add to items to be transferred. 
+	    Note that source_path is relative to the source endpoint base path. """
+
+	ep_base_path = MyGlobus['data_request_ep_base'].rstrip("/")
+
+	if (myrqst['tarflag'] == 'Y' and myrqst['tarcount'] > 0):
+		tar_dir = 'TarFiles'
+		if os.path.exists(ep_base_path + directory + tar_dir):
+			source_path = directory + tar_dir
+			dest_path = session['dest_path'] + tar_dir
+			transfer_data.add_item(source_path, dest_path, recursive=True)
+
+	""" Get individual request files from wfrqst and add to items to be transferred """
+	
+	files = mymget('wfrqst', ['wfile'], "{} ORDER BY disp_order, wfile".format(cond))
+
+	if (len(files) > 0):
+		for i in range(len(files)):
+			file = files[i]['wfile']
+			if os.path.isfile(ep_base_path + directory + file):
+				source_path = directory + file
+				dest_path = session['dest_path'] + file
+				transfer_data.add_item(source_path, dest_path)
+
+	if (len(transfer_data['DATA']) == 0):
+		my_logger.warning("[submit_dsrqst_transfer] No request files found to transfer for request index {}".format(ridx))
+		return None
 
 	transfer.endpoint_autoactivate(source_endpoint_id)
 	transfer.endpoint_autoactivate(destination_endpoint_id)
@@ -348,14 +360,17 @@ def submit_dsrqst_transfer(data):
 	""" Store task_id in request record """
 	record = [{'task_id': task_id}]
 	myupdt('dsrqst', record[0], cond)
-
+	
+	msg = "[submit_dsrqst_transfer] Transfer submitted successfully.  Task ID: {0}. Files transferred: {1}.  Request index: {2}".format(task_id, count, ridx)
+	my_logger.info(msg)
+	
 	if 'print' in data and data['print']:
 		print ("{}".format(task_id))
 
 	"""	Create share record in goshare """
 
 	return task_id
-
+	
 #=========================================================================================
 def construct_share_path(action, data):
 	""" Construct the path to the shared data.  Path is relative to the 
