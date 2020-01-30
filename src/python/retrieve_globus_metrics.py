@@ -476,11 +476,11 @@ def parse_opts():
 	epilog = textwrap.dedent('''\
 	Example:
 	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
-	              retrieve_globus_metrics.py -n rda#datashare -s 2017-01-01 -e 2017-01-31	
+	              retrieve_globus_metrics.py -n datashare -s 2017-01-01 -e 2017-01-31	
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. rda#datashare')
+	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. datashare')
 	parser.add_argument('-u', action="store", dest="USERNAME", help='GlobusID username')
 	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
@@ -506,8 +506,8 @@ def parse_opts():
 	doprint = bool(False)
 
 	if opts['ENDPOINT']:
-		if(opts['ENDPOINT'] == 'rda#datashare'):
-			endpoint = opts['ENDPOINT']
+		if(opts['ENDPOINT'] == 'datashare'):
+			endpoint = "rda#{}".format(opts['ENDPOINT'])
 			endpointID = MyGlobus['datashare_ep']
 		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
 		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
