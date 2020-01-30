@@ -506,7 +506,7 @@ def parse_opts():
 	doprint = bool(False)
 
 	if opts['ENDPOINT']:
-		if(re.search(r'datashare', opts['ENDPOINT']))
+		if(re.search(r'datashare', opts['ENDPOINT'])):
 			endpoint = 'rda#datashare'
 			endpointID = MyGlobus['datashare_ep']
 		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
