@@ -13,6 +13,12 @@
 
 import os, sys
 
+if not os.path.isdir('/glade/u/home'):
+    print ("Status: 503 Service Unavailable\r\nContent-type: text/html\r\n\r\n")
+    print ("<h1>Service Unavailable</h1>\n")
+    print ("<p>Due to scheduled maintenance or an unplanned outage, the Globus transfer service is currently unavailable. Please try again later.</p>\n")
+    sys.exit()
+
 sys.path.insert(1, "/glade/u/home/rdadata/lib/python")
 sys.path.append("/glade/u/home/tcram/lib/python")
 
