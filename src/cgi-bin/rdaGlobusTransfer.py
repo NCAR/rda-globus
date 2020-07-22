@@ -136,7 +136,7 @@ def transfer(form):
         'label': ''
     }
 
-    browse_endpoint = '{0}browse-endpoint?{1}'.format(MyGlobus['globusURL'], urlencode(params))
+    browse_endpoint = '{0}file-manager?{1}'.format(MyGlobus['globusURL'], urlencode(params))
     print ("Location: {0}\r\n\r\n".format(browse_endpoint))
 
     return
