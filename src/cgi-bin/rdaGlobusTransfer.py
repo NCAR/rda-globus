@@ -383,17 +383,10 @@ def get_session_data():
 	"""
 	if 'HTTP_COOKIE' in os.environ:
 		cookie = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])
-		if 'PHPSESSID' in cookie:
-			sid = cookie['PHPSESSID'].value
-			keys = ['id','access','data']
-			condition = " WHERE {0} = '{1}'".format("id", sid)
-			myrec = myget('sessions', keys, condition)
-		else:
-			print_environ(log=True)
-			print ("Status: 500 Internal Server Error\r\nContent-type: text/html\r\n\r\n")
-			print ("<h1>Internal Server Error</h1>\n")
-			print ("<p>An unexpected error has occurred. Please try again later.</p>\n")
-			sys.exit()
+		sid = cookie['PHPSESSID'].value
+		keys = ['id','access','data']
+		condition = " WHERE {0} = '{1}'".format("id", sid)
+		myrec = myget('sessions', keys, condition)
 	else:
 		print_environ(log=True)
 		print ("Status: 500 Internal Server Error\r\nContent-type: text/html\r\n\r\n")
