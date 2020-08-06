@@ -494,7 +494,7 @@ def print_environ(environ=os.environ, log=False):
     """Dump the shell environment as HTML.  If log is True, print environment to 
        the logger. 
     """
-    keys = environ.keys()
+    keys = list(environ.keys())
     keys.sort()
     if log:
         my_logger.info("[print_environ] Shell environment:")
