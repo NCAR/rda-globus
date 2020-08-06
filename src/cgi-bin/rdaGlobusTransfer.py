@@ -378,18 +378,26 @@ def submit_request(session, form):
 
 #=========================================================================================
 def get_session_data():
-    """ 
-    - Retrieve session data from RDADB.
-    """
-    sid = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])['PHPSESSID'].value
-    keys = ['id','access','data']
-    condition = " WHERE {0} = '{1}'".format("id", sid)
-    myrec = myget('sessions', keys, condition)
+	""" 
+	- Retrieve session data from RDADB.
+	"""
+	if 'HTTP_COOKIE' in os.environ:
+		cookie = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])
+		sid = cookie['PHPSESSID'].value
+		keys = ['id','access','data']
+		condition = " WHERE {0} = '{1}'".format("id", sid)
+		myrec = myget('sessions', keys, condition)
+	else:
+		print_environ(log=True)
+		print ("Status: 500 Internal Server Error\r\nContent-type: text/html\r\n\r\n")
+		print ("<h1>Internal Server Error</h1>\n")
+		print ("<p>An unexpected error has occurred. Please try again later.</p>\n")
+		sys.exit()
     
-    """ Raise exception if myrec is nonempty """
+	""" Raise exception if myrec is empty """
 
-    """ Return unserialized session data """
-    return unserialize(myrec['data'])
+	""" Return unserialized session data """
+	return unserialize(myrec['data'])
 
 #=========================================================================================
 def update_session_data(data):
@@ -475,17 +483,27 @@ def is_valid_state(state):
 # ===============
 
 #=========================================================================================
-def print_environ(environ=os.environ):
-    """Dump the shell environment as HTML."""
-    keys = environ.keys()
+def print_environ(environ=os.environ, log=False):
+    """Dump the shell environment as HTML.  If log is True, print environment to 
+       the logger. 
+    """
+    keys = list(environ.keys())
     keys.sort()
-    print
-    print ("<h3>Shell Environment:</h3>")
-    print ("<dl>")
+    if log:
+        my_logger.info("[print_environ] Shell environment:")
+    else:
+        print
+        print ("<h3>Shell Environment:</h3>")
+        print ("<dl>")
     for key in keys:
-        print ("<dt>{0}<dd>{1}".format(escape(key), escape(environ[key])))
-    print ("</dl>")
-    print
+        if log:
+            msg = "{0}: {1}".format(escape(key), escape(environ[key]))
+            my_logger.info(msg)
+        else:
+            print ("<dt>{0}<dd>{1}".format(escape(key), escape(environ[key])))
+    if not log:
+        print ("</dl>")
+        print
 
 #=========================================================================================
 def print_form(form):
