@@ -673,6 +673,7 @@ def configure_log(**kwargs):
 	ckrec = myget('dscheck', ['cindex','command'], condition)
 	if (len(ckrec) > 0):
 		MYLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MYLOG['DSCHECK']['cindex']))
 
 	""" Handler to send log messages to email address (rda-data only) """
 	if (socket.gethostname() == 'rda-data.ucar.edu'):
