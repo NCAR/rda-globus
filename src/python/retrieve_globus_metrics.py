@@ -121,7 +121,13 @@ def add_tasks(go_table, data):
 		emails = check_email(data)
 		records = update_records(records, emails)
 	else:
-		my_logger.warning("[add_tasks] There are no transfer tasks in the return document.")
+		msg = "[add_tasks] There are no transfer tasks in the return document."
+		my_logger.warning(msg)
+		if (MYLOG['DSCHECK']['cindex']):
+			MYLOG['EMLMSG'] = msg
+			subject = "Warning log from {}".format(get_command())
+			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
@@ -156,7 +162,7 @@ def add_tasks(go_table, data):
 	if (MYLOG['DSCHECK']['cindex']):
 		MYLOG['EMLMSG'] = msg
 		subject = "Info log from {}".format(get_command())
-		cond = " WHERE cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+		cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
 		build_customized_email('dscheck', 'einfo', cond, subject)
 
 	if (count_add == 0):
@@ -165,7 +171,7 @@ def add_tasks(go_table, data):
 		if (MYLOG['DSCHECK']['cindex']):
 			MYLOG['EMLMSG'] = msg
 			subject = "Warning log from {}".format(get_command())
-			cond = " WHERE cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
 			build_customized_email('dscheck', 'einfo', cond, subject)
 
 	return
