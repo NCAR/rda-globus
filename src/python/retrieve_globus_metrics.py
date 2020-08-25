@@ -669,7 +669,7 @@ def configure_log(**kwargs):
 	my_logger.addHandler(rfh)
 	
 	""" Check for dscheck record """
-	condition = " WHERE command LIKE '%retrieve_globus_metrics.py%'"
+	condition = " WHERE command LIKE '%retrieve_globus_metrics%'"
 	ckrec = myget('dscheck', ['cindex','command'], condition)
 	if (len(ckrec) > 0):
 		MYLOG['DSCHECK'] = ckrec
