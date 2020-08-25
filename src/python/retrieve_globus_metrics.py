@@ -30,6 +30,9 @@ if (path2 not in sys.path):
 
 from MyGlobus import MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
+from MyLOG import *
+from MyDBI import build_customized_email
+
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
@@ -38,6 +41,9 @@ from datetime import datetime, tzinfo
 import pytz
 import logging
 import logging.handlers
+
+from email.mime.text import MIMEText
+from subprocess import Popen, PIPE
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -92,6 +98,7 @@ def get_tasks(filters):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
+		
 		raise e
 	except NetworkError:
 		my_logger.error(("[get_tasks] Network Failure. "
@@ -114,10 +121,12 @@ def add_tasks(go_table, data):
 		emails = check_email(data)
 		records = update_records(records, emails)
 	else:
-		my_logger.warning("[add_tasks] There is no data in the return document.")
+		my_logger.warning("[add_tasks] There are no transfer tasks in the return document.")
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
+	count_add = 0
+	count_updt = 0
 	task_keys.append('email')
 	for i in range(len(records)):
 		condition = " WHERE task_id='{0}'".format(records[i]['task_id'])
@@ -132,12 +141,32 @@ def add_tasks(go_table, data):
 				records[i]['request_time'] = records[i]['request_time'][:19]
 				records[i]['completion_time'] = records[i]['completion_time'][:19]
 				myupdt(go_table, records[i], condition)
+				count_updt+=1
 			else:
 				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(records[i]['task_id']))
 		else:
 			records[i]['request_time'] = records[i]['request_time'][:19]
 			records[i]['completion_time'] = records[i]['completion_time'][:19]
 			myadd(go_table, records[i])
+			count_add+=1
+
+	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
+	my_logger.info(msg)
+
+	if (MYLOG['DSCHECK']['cindex']):
+		MYLOG['EMLMSG'] = msg
+		subject = "Info log from {}".format(get_command())
+		cond = " WHERE cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+		build_customized_email('dscheck', 'einfo', cond, subject)
+
+	if (count_add == 0):
+		msg = "[add_tasks] No new Globus transfer tasks found."
+		my_logger.warning(msg)
+		if (MYLOG['DSCHECK']['cindex']):
+			MYLOG['EMLMSG'] = msg
+			subject = "Warning log from {}".format(get_command())
+			cond = " WHERE cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
 
 	return
 
@@ -318,7 +347,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			my_logger.warning("[add_successful_transfers] transfer_recs is empty")
 			return
 	else:
-		my_logger.warning("[add_successful_transfers] There is no data in the return document.")
+		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
 		return
 	
 	# Check if record already exists. Update if necessary.
@@ -624,11 +653,30 @@ def configure_log(**kwargs):
 
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
-	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=1)
-	handler.setLevel(level)
+
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-	handler.setFormatter(formatter)
-	my_logger.addHandler(handler)
+
+	""" Rotating file handler """
+	rfh = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=200000000,backupCount=1)
+	rfh.setLevel(level)
+	rfh.setFormatter(formatter)
+	my_logger.addHandler(rfh)
+	
+	""" Check for dscheck record """
+	condition = " WHERE command LIKE '%retrieve_globus_metrics.py%'"
+	ckrec = myget('dscheck', ['cindex','command'], condition)
+	if (len(ckrec) > 0):
+		MYLOG['DSCHECK'] = ckrec
+
+	""" Handler to send log messages to email address (rda-data only) """
+	if (socket.gethostname() == 'rda-data.ucar.edu')
+		fromaddr = 'tcram@ucar.edu'
+		toaddr = 'tcram@ucar.edu'
+		subject = '[retrieve_globus_metrics] Warning/error/critical message'
+		emh = logging.handlers.SMTPHandler('localhost', fromaddr, toaddr, subject)
+		emh.setLevel(logging.WARNING)
+		emh.setFormatter(formatter)
+		my_logger.addHandler(emh)
 	
 	return
 
