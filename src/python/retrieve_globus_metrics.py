@@ -669,7 +669,7 @@ def configure_log(**kwargs):
 		MYLOG['DSCHECK'] = ckrec
 
 	""" Handler to send log messages to email address (rda-data only) """
-	if (socket.gethostname() == 'rda-data.ucar.edu')
+	if (socket.gethostname() == 'rda-data.ucar.edu'):
 		fromaddr = 'tcram@ucar.edu'
 		toaddr = 'tcram@ucar.edu'
 		subject = '[retrieve_globus_metrics] Warning/error/critical message'
