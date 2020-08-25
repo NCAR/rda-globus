@@ -127,6 +127,7 @@ def add_tasks(go_table, data):
 			MYLOG['EMLMSG'] = msg
 			subject = "Warning log from {}".format(get_command())
 			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			my_logger.info("[add_tasks] Building customized email. \nCondition: {0}\nSubject{1}\nMessage: {2}".format(cond, subject, MYLOG['EMLMSG']))
 			build_customized_email('dscheck', 'einfo', cond, subject)
 		sys.exit()
 	
