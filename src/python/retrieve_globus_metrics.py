@@ -47,6 +47,7 @@ from subprocess import Popen, PIPE
 
 MYLOG['LOGPATH'] = '/glade/scratch/tcram/logs/globus'
 MYLOG['LOGFILE'] = 'mylog_test.log'
+mylog("test message from retrieve_globus_metrics.py")
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -129,9 +130,10 @@ def add_tasks(go_table, data):
 		if (MYLOG['DSCHECK']['cindex']):
 			subject = "Warning log from {}".format(get_command())
 			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-			msg = "[add_tasks] Building customized email. \nCondition: {0}\nSubject: {1}\nMessage: {2}".format(cond, subject, MYLOG['EMLMSG'])
+			msg = "[add_tasks] Building customized email. \nCondition: {0}\nSubject: {1}".format(cond, subject)
 			MYLOG['EMLMSG'] = msg
 			my_logger.info(msg)
+			mylog(msg)
 			build_customized_email('dscheck', 'einfo', cond, subject)
 		sys.exit()
 	
