@@ -138,8 +138,8 @@ def add_tasks(go_table, data):
 			# MyLOG.MYLOG['EMLMSG'] = msg
 			my_logger.info(msg)
 			my_logger.info(ebuf)
-			mylog(msg)
-			mylog(ebuf)
+			MyLOG.mylog(msg)
+			MyLOG.mylog(ebuf)
 			# build_customized_email('dscheck', 'einfo', cond, subject)
 			estat = cache_customized_email('dscheck', 'einfo', cond, ebuf, 0)
 			my_logger.info("[add_tasks] estat: {}".format(estat))
