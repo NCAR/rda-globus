@@ -30,7 +30,7 @@ if (path2 not in sys.path):
 
 from MyGlobus import MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
-from MyLOG import *
+import MyLOG
 from MyDBI import build_customized_email
 
 from globus_utils import load_app_client
@@ -45,9 +45,9 @@ import logging.handlers
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
-MYLOG['LOGPATH'] = '/glade/scratch/tcram/logs/globus'
-MYLOG['LOGFILE'] = 'mylog_test.log'
-mylog("test message from retrieve_globus_metrics.py")
+MyLOG.MYLOG['LOGPATH'] = '/glade/scratch/tcram/logs/globus'
+MyLOG.MYLOG['LOGFILE'] = 'mylog_test.log'
+MyLOG.mylog("test message from retrieve_globus_metrics.py")
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -127,11 +127,11 @@ def add_tasks(go_table, data):
 	else:
 		msg = "[add_tasks] There are no transfer tasks in the return document."
 		my_logger.warning(msg)
-		if (MYLOG['DSCHECK']['cindex']):
-			subject = "Warning log from {}".format(get_command())
-			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+		if (MyLOG.MYLOG['DSCHECK']['cindex']):
+			subject = "Warning log from {}".format(MyLOG.get_command())
+			cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
 			msg = "[add_tasks] Building customized email. \nCondition: {0}\nSubject: {1}".format(cond, subject)
-			MYLOG['EMLMSG'] = msg
+			MyLOG.MYLOG['EMLMSG'] = msg
 			my_logger.info(msg)
 			mylog(msg)
 			build_customized_email('dscheck', 'einfo', cond, subject)
@@ -166,19 +166,19 @@ def add_tasks(go_table, data):
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
 	my_logger.info(msg)
 
-	if (MYLOG['DSCHECK']['cindex']):
-		MYLOG['EMLMSG'] = msg
-		subject = "Info log from {}".format(get_command())
-		cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+	if (MyLOG.MYLOG['DSCHECK']['cindex']):
+		MyLOG.MYLOG['EMLMSG'] = msg
+		subject = "Info log from {}".format(MyLOG.get_command())
+		cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
 		build_customized_email('dscheck', 'einfo', cond, subject)
 
 	if (count_add == 0):
 		msg = "[add_tasks] No new Globus transfer tasks found."
 		my_logger.warning(msg)
-		if (MYLOG['DSCHECK']['cindex']):
-			MYLOG['EMLMSG'] = msg
-			subject = "Warning log from {}".format(get_command())
-			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+		if (MyLOG.MYLOG['DSCHECK']['cindex']):
+			MyLOG.MYLOG['EMLMSG'] = msg
+			subject = "Warning log from {}".format(MyLOG.get_command())
+			cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
 			build_customized_email('dscheck', 'einfo', cond, subject)
 
 	return
@@ -679,8 +679,8 @@ def configure_log(**kwargs):
 	condition = " WHERE command LIKE '%retrieve_globus_metrics%'"
 	ckrec = myget('dscheck', ['cindex','command'], condition)
 	if (len(ckrec) > 0):
-		MYLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MYLOG['DSCHECK']['cindex']))
+		MyLOG.MYLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MyLOG.MYLOG['DSCHECK']['cindex']))
 
 	""" Handler to send log messages to email address (rda-data only) """
 	if (socket.gethostname() == 'rda-data.ucar.edu'):
