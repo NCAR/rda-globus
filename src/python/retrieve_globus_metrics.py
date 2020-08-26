@@ -141,7 +141,8 @@ def add_tasks(go_table, data):
 			mylog(msg)
 			mylog(ebuf)
 			# build_customized_email('dscheck', 'einfo', cond, subject)
-			cache_customized_email('dscheck', 'einfo', cond, ebuf, 0)
+			estat = cache_customized_email('dscheck', 'einfo', cond, ebuf, 0)
+			my_logger.info("[add_tasks] estat: {}".format(estat))
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
