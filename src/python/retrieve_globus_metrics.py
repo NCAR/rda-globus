@@ -131,10 +131,17 @@ def add_tasks(go_table, data):
 			subject = "Warning log from {}".format(MyLOG.get_command())
 			cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
 			msg = "[add_tasks] Building customized email. \nCondition: {0}\nSubject: {1}".format(cond, subject)
-			MyLOG.MYLOG['EMLMSG'] = msg
+			
+			ebuf = "From: {0}\nTo: {1}\n".format('tcram@ucar.edu','tcram@ucar.edu')
+			ebuf += "Subject: {0}\n\n{1}".format(subject, msg)
+			
+			# MyLOG.MYLOG['EMLMSG'] = msg
 			my_logger.info(msg)
+			my_logger.info(ebuf)
 			mylog(msg)
-			build_customized_email('dscheck', 'einfo', cond, subject)
+			mylog(ebuf)
+			# build_customized_email('dscheck', 'einfo', cond, subject)
+			cache_customized_email('dscheck', 'einfo', cond, ebuf, 0)
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
