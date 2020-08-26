@@ -45,6 +45,9 @@ import logging.handlers
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
+MYLOG['LOGPATH'] = '/glade/scratch/tcram/logs/globus'
+MYLOG['LOGFILE'] = 'mylog_test.log'
+
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
 	         'type','request_time','completion_time','files',\
@@ -124,10 +127,11 @@ def add_tasks(go_table, data):
 		msg = "[add_tasks] There are no transfer tasks in the return document."
 		my_logger.warning(msg)
 		if (MYLOG['DSCHECK']['cindex']):
-			MYLOG['EMLMSG'] = msg
 			subject = "Warning log from {}".format(get_command())
 			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-			my_logger.info("[add_tasks] Building customized email. \nCondition: {0}\nSubject{1}\nMessage: {2}".format(cond, subject, MYLOG['EMLMSG']))
+			msg = "[add_tasks] Building customized email. \nCondition: {0}\nSubject: {1}\nMessage: {2}".format(cond, subject, MYLOG['EMLMSG'])
+			MYLOG['EMLMSG'] = msg
+			my_logger.info(msg)
 			build_customized_email('dscheck', 'einfo', cond, subject)
 		sys.exit()
 	
