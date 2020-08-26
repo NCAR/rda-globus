@@ -31,7 +31,7 @@ if (path2 not in sys.path):
 from MyGlobus import MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
 import MyLOG
-from MyDBI import build_customized_email
+from MyDBI import cache_customized_email
 
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
