@@ -30,8 +30,8 @@ if (path2 not in sys.path):
 
 from MyGlobus import MyGlobus
 from PyDBI import myget, mymget, myadd, myupdt
-import MyLOG
-from MyDBI_test import cache_customized_email
+from MyLOG import *
+from MyDBI import build_customized_email
 
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
@@ -44,10 +44,6 @@ import logging.handlers
 
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
-
-MyLOG.MYLOG['LOGPATH'] = '/glade/scratch/tcram/logs/globus'
-MyLOG.MYLOG['LOGFILE'] = 'mylog_test.log'
-MyLOG.mylog("test message from retrieve_globus_metrics.py")
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
@@ -63,7 +59,7 @@ transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
 # Endpoint UUIDs
 data_requestID = MyGlobus['data_request_ep']
 datashareID = MyGlobus['datashare_ep']
-                 
+
 #=========================================================================================
 def main(filters):
 
@@ -83,6 +79,15 @@ def main(filters):
 		data_transfers = get_successful_transfers(task_id)
 		if (len(data_transfers) > 0):
 			add_successful_transfers('gofile', data_transfers, task_id, bytes, filters['filter_endpoint'])
+		else:
+			msg = "[main] Warning: No successful transfers found."
+			my_logger.warning(msg)
+			if (MYLOG['DSCHECK']['cindex']):
+				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+				subject = "Warning/Error log from {}".format(get_command())
+				cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+				msg = "\n{0}".format(msg)
+				build_customized_email('dscheck', 'einfo', cond, subject)
 
 	my_logger.debug(__name__+': END')
 
@@ -127,22 +132,11 @@ def add_tasks(go_table, data):
 	else:
 		msg = "[add_tasks] There are no transfer tasks in the return document."
 		my_logger.warning(msg)
-		if (MyLOG.MYLOG['DSCHECK']['cindex']):
-			subject = "Warning log from {}".format(MyLOG.get_command())
-			cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
-			msg = "[add_tasks] Building customized email. \nCondition: {0}\nSubject: {1}".format(cond, subject)
-			
-			ebuf = "From: {0}\nTo: {1}\n".format('tcram@ucar.edu','tcram@ucar.edu')
-			ebuf += "Subject: {0}\n\n{1}".format(subject, msg)
-			
-			# MyLOG.MYLOG['EMLMSG'] = msg
-			my_logger.info(msg)
-			my_logger.info(ebuf)
-			MyLOG.mylog(msg)
-			MyLOG.mylog(ebuf)
-			# build_customized_email('dscheck', 'einfo', cond, subject)
-			estat = cache_customized_email('dscheck', 'einfo', cond, ebuf, 0)
-			my_logger.info("[add_tasks] estat: {}".format(estat))
+		if (MYLOG['DSCHECK']['cindex']):
+			MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			subject = "Warning/Error log from {}".format(get_command())
+			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
@@ -174,19 +168,13 @@ def add_tasks(go_table, data):
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
 	my_logger.info(msg)
 
-	if (MyLOG.MYLOG['DSCHECK']['cindex']):
-		MyLOG.MYLOG['EMLMSG'] = msg
-		subject = "Info log from {}".format(MyLOG.get_command())
-		cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
-		build_customized_email('dscheck', 'einfo', cond, subject)
-
 	if (count_add == 0):
 		msg = "[add_tasks] No new Globus transfer tasks found."
 		my_logger.warning(msg)
-		if (MyLOG.MYLOG['DSCHECK']['cindex']):
-			MyLOG.MYLOG['EMLMSG'] = msg
-			subject = "Warning log from {}".format(MyLOG.get_command())
-			cond = "cindex = {}".format(MyLOG.MYLOG['DSCHECK']['cindex'])
+		if (MYLOG['DSCHECK']['cindex']):
+			MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			subject = "Warning/Error log from {}".format(get_command())
+			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
 			build_customized_email('dscheck', 'einfo', cond, subject)
 
 	return
@@ -365,7 +353,13 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	if (len(data) >= 1):
 		records = prepare_transfer_recs(data, task_id, bytes, endpoint)
 		if (len(records) == 0):
-			my_logger.warning("[add_successful_transfers] transfer_recs is empty")
+			msg = "[add_successful_transfers] transfer_recs is empty"
+			my_logger.warning(msg)
+			if (MYLOG['DSCHECK']['cindex']):
+				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+				subject = "Warning/Error log from {}".format(get_command())
+				cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+				build_customized_email('dscheck', 'einfo', cond, subject)
 			return
 	else:
 		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
@@ -505,9 +499,11 @@ def set_filters(args):
 		if (args['end'] !=''):
 			filters['filter_completion_time'] = ",{0}".format(args['end'])
 
-	my_logger.info('FILTERS   :',filters)
+	my_logger.info('FILTERS   :')
 	for key in filters:
-		my_logger.info('{0} \t {1}'.format(key,filters[key]))
+		msg = '{0}: {1}'.format(key,filters[key])
+		my_logger.info(msg)
+		MYLOG['EMLMSG'] += "{0}\n".format(msg)
 
 	return filters
 
@@ -687,8 +683,9 @@ def configure_log(**kwargs):
 	condition = " WHERE command LIKE '%retrieve_globus_metrics%'"
 	ckrec = myget('dscheck', ['cindex','command'], condition)
 	if (len(ckrec) > 0):
-		MyLOG.MYLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MyLOG.MYLOG['DSCHECK']['cindex']))
+		MYLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MYLOG['DSCHECK']['cindex']))
+
 
 	""" Handler to send log messages to email address (rda-data only) """
 	if (socket.gethostname() == 'rda-data.ucar.edu'):
