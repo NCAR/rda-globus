@@ -86,7 +86,6 @@ def main(filters):
 				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
 				subject = "Warning/Error log from {}".format(get_command())
 				cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-				msg = "\n{0}".format(msg)
 				build_customized_email('dscheck', 'einfo', cond, subject)
 
 	my_logger.debug(__name__+': END')
@@ -431,6 +430,8 @@ def update_allusage(task_id):
 	method = 'GLOB'
 	source = 'G'
 	all_recs = []
+	count_updt = 0
+	count_add = 0
 	
 	condition = " WHERE task_id='{0}'".format(task_id)
 	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)'], condition)
@@ -462,7 +463,19 @@ def update_allusage(task_id):
 	myrecs = mymget('gofile',['dsid','SUM(size)'], condition)
 	if (len(myrecs) > 0):
 		for i in range(len(myrecs)):
-			all_recs.append({'email': email,'org_type': org_type,'country': country, 'dsid': myrecs[i]['dsid'],'date': completion_date,'time': completion_time,'quarter': quarter, 'size': int(myrecs[i]['SUM(size)']), 'method': method,'source': source,'midx': 0,'ip': None})
+			record = {'email': email,
+			          'org_type': org_type,
+			          'country': country,
+			          'dsid': myrecs[i]['dsid'],
+			          'date': completion_date,
+			          'time': completion_time,
+			          'quarter': quarter,
+			          'size': int(myrecs[i]['SUM(size)']),
+			          'method': method,
+			          'source': source,
+			          'midx': 0,
+			          'ip': None}
+			all_recs.append(record)
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile.".format(task_id))
 		return
@@ -475,12 +488,41 @@ def update_allusage(task_id):
 			myrec['date'] = myrec['date'].strftime("%Y-%m-%d")
 			myrec['time'] = str(myrec['time'])
 			if not (all_recs[i] == myrec):
-				myupdt(go_table, all_recs[i], condition)
+				try:
+					myupdt(go_table, all_recs[i], condition)
+					count_updt += 1
+				except:
+					msg = "[update_allusage] Error in updating allusage record.  Check logs."
+					my_logger.error(msg)
+					if (MYLOG['DSCHECK']['cindex']):
+						MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+						subject = "Warning/Error log from {}".format(get_command())
+						cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+						build_customized_email('dscheck', 'einfo', cond, subject)
 			else:
 				my_logger.info("[update_allusage] DB record already exists and is up to date.")
 		else:
-			myadd(go_table, all_recs[i])
+			try:
+				myadd(go_table, all_recs[i])
+				count_add += 1
+			except:
+				msg = "[update_allusage] Error in adding new allusage record.  Check logs."
+				my_logger.error(msg)
+				if (MYLOG['DSCHECK']['cindex']):
+					MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+					subject = "Warning/Error log from {}".format(get_command())
+					cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+					build_customized_email('dscheck', 'einfo', cond, subject)
 
+	if (count_add+count_updt == 0):
+		msg = "[update_allusage] Warning: no metrics added/updated in allusage."
+		my_logger.warning(msg)
+		if (MYLOG['DSCHECK']['cindex']):
+			MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			subject = "Warning/Error log from {}".format(get_command())
+			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
+		
 #=========================================================================================
 # Define filters to apply in API requests
 
