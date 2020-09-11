@@ -166,6 +166,10 @@ def add_tasks(go_table, data):
 
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
 	my_logger.info(msg)
+	if (MYLOG['DSCHECK']['cindex']):
+		MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+		subject = "Info log from {}".format(get_command())
+		build_customized_email('dscheck', 'einfo', "cindex = {}".format(MYLOG['DSCHECK']['cindex']), subject)
 
 	if (count_add == 0):
 		msg = "[add_tasks] No new Globus transfer tasks found."
@@ -343,7 +347,10 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 # Insert/update list of files transferred successfully
 
 def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
-	my_logger.info("[add_successful_transfers] task_id: {0}".format(task_id))
+	my_logger.info("[add_successful_transfers] Adding successful transfers for task_id: {0}".format(task_id))
+	
+	count_add = 0
+	count_updt = 0
 
 # Prepare database records
 
@@ -382,10 +389,12 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 				if (len(myrec) > 0):
 					if not (records[i] == myrec):
 						myupdt(go_table, records[i], condition)
+						count_updt += 1
 					else:
 						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
 				else:
 					myadd(go_table, records[i])
+					count_add += 1
 			elif (endpoint == data_requestID):
 				dsrqst_count += 1
 			else:
@@ -416,10 +425,20 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if (len(myrec) > 0):
 			if not (dsrqst_rec == myrec):
 				myupdt(go_table, dsrqst_rec[0], condition)
+				count_updt += 1
 			else:
 				my_logger.info("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
 		else:
 			myadd(go_table, dsrqst_rec[0])
+			count_add += 1
+	
+	msg = "[add_successful_transfers] {0} transfers added and {1} transfers updated for task id {2}".format(count_add, count_updt, task_id)
+	my_logger.info(msg)
+	if (MYLOG['DSCHECK']['cindex']):
+		MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+		subject = "Info log from {}".format(get_command())
+		cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+		build_customized_email('dscheck', 'einfo', cond, subject)
 
 #=========================================================================================
 # Insert/update usage in the table allusage
