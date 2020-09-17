@@ -24,7 +24,9 @@ if (path2 not in sys.path):
 	sys.path.append(path2)
 
 from rda_globus_app_config import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
-                                   CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY)
+                                   CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY,
+                                   TRANSFER_RT_QUASAR, AUTH_RT_QUASAR, 
+                                   RDA_QUASAR_CLIENT_ID)
 
 #=========================================================================================
 
@@ -32,7 +34,7 @@ GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://app.globus.org/'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
-DSS_DATA_PATH = '/glade/collections/rda'
+RDA_DATA_PATH = '/glade/collections/rda'
 
 """ Endpoint IDs """
 RDA_DATASET_ENDPOINT = '1e128d3c-852d-11e8-9546-0a6d4e044368'
@@ -60,12 +62,15 @@ MyGlobus = {
    'data_request_ep' : RDA_DSRQST_ENDPOINT,
    'datashare_legacy' : 'rda#datashare',
    'data_request_legacy' : 'rda#data_request',
-   'datashare_ep_base' : DSS_DATA_PATH + '/data/',
-   'data_request_ep_base' : DSS_DATA_PATH + '/transfer/',
+   'datashare_ep_base' : RDA_DATA_PATH + '/data/',
+   'data_request_ep_base' : RDA_DATA_PATH + '/transfer/',
    'host_endpoint_id' : NCAR_HOST_ENDPOINT,
    'client_id': CLIENT_ID,
    'client_secret': CLIENT_SECRET,
    'private_key': PRIVATE_KEY,
    'redirect_uri': REDIRECT_URI,
-   'globusURL': GLOBUS_APP_URL
+   'globusURL': GLOBUS_APP_URL,
+   'rda_quasar_client_id': RDA_QUASAR_CLIENT_ID,
+   'transfer_rt_quasar': TRANSFER_RT_QUASAR,
+   'auth_rt_quasar': AUTH_RT_QUASAR
 }
