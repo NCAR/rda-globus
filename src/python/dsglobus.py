@@ -50,10 +50,10 @@ from MyGlobus import MyGlobus
 from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
-from globus_utils import load_app_client
+from globus_utils import load_app_client, load_rda_native_client
 
 #=========================================================================================
-def main():
+def main(json_input = None):
 	opts = parse_input()
 	action = opts['action']
 	
@@ -63,7 +63,9 @@ def main():
 		result = add_endpoint_acl_rule(action, opts)
 	elif opts['submitTransfer']:
 		result = submit_dsrqst_transfer(opts)
-	
+	elif json_input:
+		result = submit_rda_transfer(json_input)
+
 	return result
 
 #=========================================================================================
@@ -600,6 +602,88 @@ def get_session(sid):
 	return unserialize(myrec['data'])
 
 #=========================================================================================
+def submit_rda_transfer(data):
+	""" General data transfer to RDA endpoints.  Input is JSON dict. """
+	try:
+		endpoint = data['endpoint']
+	except KeyError:
+		msg = "[submit_rda_transfer] Destination endpoint 'endpoint' missing from JSON input."
+		my_logger.error(msg)
+		sys.exit(1)
+
+	if endpoint == "quasar":
+		client_id = MyGlobus['rda_quasar_client_id']
+		refresh_token = MyGlobus['transfer_rt_quasar']
+		dest_endpoint_name = "NCAR Quasar"
+	else:
+		msg = "[submit_rda_transfer] Unknown destination endpoint"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	if (data['label']):
+		label = data['label']
+	else:
+		label = 'RDA Quasar transfer'
+
+	try:
+		files = data['files']
+	except KeyError:
+		msg = "[submit_rda_transfer] Local files missing from JSON input"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	source_endpoint = tc.endpoint_search('NCAR GLADE')[0]['id']
+	destination_endpoint = tc.endpoint_search(dest_endpoint_name)[0]['id']
+	
+	transfer_data = TransferData(transfer_client=tc,
+							     source_endpoint=source_endpoint,
+							     destination_endpoint=destination_endpoint,
+							     label=label)
+
+	for i in range(len(files)):
+    	source_file = files[i]['source_file']
+    	
+    	# Verify source file exists and meets minimum size requirements (> 200 MB, 1 GB preferred)
+    	
+    	
+    	dest_file = files[i]['destination_file']
+    	transfer_data.add_item(source_file, dest_file)
+
+	try:
+		transfer_result = tc.submit_transfer(transfer_data)
+		task_id = transfer_result['task_id']
+	except GlobusAPIError as e:
+		msg = ("[submit_rda_transfer] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		raise e
+	except NetworkError:
+		my_logger.error(("[submit_rda_transfer] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[submit_rda_transfer] Totally unexpected GlobusError!")
+		raise
+	
+	msg = "{0}\nTask ID: {1}".format(transfer_result['message'], task_id)
+	my_logger.info(msg)
+
+#=========================================================================================
+def read_json_from_stdin():
+	"""Read arguments from stdin"""
+	in_json=""
+	for line in sys.stdin.readlines():
+		in_json += line
+	json_dict = json.loads(in_json)
+	return json_dict
+
+#=========================================================================================
 def parse_input():
 	""" Parse command line arguments """
 	import re
@@ -733,4 +817,9 @@ my_logger = logging.getLogger(__name__)
 configure_log(level='info')
 
 if __name__ == "__main__":
-    main()
+	from_pipe = not os.isatty(sys.stdin.fileno())
+	if from_pipe:
+		json_input = read_json_from_stdin()
+		main(json_input=json_input)
+	else:
+		main()
