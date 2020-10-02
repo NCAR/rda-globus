@@ -681,16 +681,16 @@ def get_endpoint_ids(data):
 		my_logger.error(msg)
 		sys.exit(1)
 
-	if source_endpoint_name == "rda glade":
+	if source_endpoint_name == "NCAR RDA GLADE":
 		source_endpoint = MyGlobus['rda_glade_endpoint']
 	else:
 		msg = "[submit_rda_transfer] Unknown source endpoint"
 		my_logger.error(msg)
 		sys.exit(1)
 
-	if destination_endpoint_name == "quasar":
+	if destination_endpoint_name == "NCAR RDA Quasar":
 		dest_endpoint = MyGlobus['quasar_endpoint']
-	elif destination_endpoint_name == "quasar_dr":
+	elif destination_endpoint_name == "NCAR RDA Quasar DRDATA":
 		dest_endpoint = MyGlobus['quasar_dr_endpoint']
 	else:
 		msg = "[submit_rda_transfer] Unknown destination endpoint"
@@ -704,7 +704,8 @@ def get_endpoint_ids(data):
 
 #=========================================================================================
 def get_client_id(data):
-	if data['destination_endpoint_name'] == "quasar":
+	dest_endpoint_name = data['destination_endpoint_name']
+	if dest_endpoint_name == "NCAR RDA Quasar" or dest_endpoint_name == "NCAR RDA Quasar DRDATA":
 		client_id = MyGlobus['rda_quasar_client_id']
 	else:
 		msg = "[get_client_id] Unknown destination endpoint"
