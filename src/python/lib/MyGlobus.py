@@ -41,6 +41,10 @@ RDA_DATASET_ENDPOINT = '1e128d3c-852d-11e8-9546-0a6d4e044368'
 RDA_DSRQST_ENDPOINT = 'e61f9cde-8537-11e8-9546-0a6d4e044368'
 NCAR_HOST_ENDPOINT = 'dd1ee92a-6d04-11e5-ba46-22000b92c6ec'
 
+RDA_GLADE_ENDPOINT = 'c3dd5dac-0279-11eb-892e-0a5521ff3f4b'
+RDA_QUASAR_ENDPOINT = 'e50caa88-feae-11ea-81a2-0e2f230cc907'
+RDA_QUASAR_DR_ENDPOINT = '4c42c32c-feaf-11ea-81a2-0e2f230cc907'
+
 """ Legacy endpoints no longer used """
 RDA_DATASET_ENDPOINT_LEGACY = '2869611a-36aa-11e8-b95e-0ac6873fc732'
 RDA_DSRQST_ENDPOINT_LEGACY = '68823254-36aa-11e8-b95e-0ac6873fc732'
@@ -72,5 +76,8 @@ MyGlobus = {
    'globusURL': GLOBUS_APP_URL,
    'rda_quasar_client_id': RDA_QUASAR_CLIENT_ID,
    'transfer_rt_quasar': TRANSFER_RT_QUASAR,
-   'auth_rt_quasar': AUTH_RT_QUASAR
+   'auth_rt_quasar': AUTH_RT_QUASAR,
+   'rda_glade_endpoint': RDA_GLADE_ENDPOINT,
+   'quasar_endpoint': RDA_QUASAR_ENDPOINT,
+   'quasar_dr_endpoint': RDA_QUASAR_DR_ENDPOINT
 }

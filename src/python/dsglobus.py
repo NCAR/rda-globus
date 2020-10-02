@@ -604,26 +604,25 @@ def get_session(sid):
 #=========================================================================================
 def submit_rda_transfer(data):
 	""" General data transfer to RDA endpoints.  Input is JSON dict. """
-	try:
-		endpoint = data['endpoint']
-	except KeyError:
-		msg = "[submit_rda_transfer] Destination endpoint 'endpoint' missing from JSON input."
-		my_logger.error(msg)
-		sys.exit(1)
 
-	if endpoint == "quasar":
-		client_id = MyGlobus['rda_quasar_client_id']
-		refresh_token = MyGlobus['transfer_rt_quasar']
-		dest_endpoint_name = "NCAR Quasar"
-	else:
-		msg = "[submit_rda_transfer] Unknown destination endpoint"
+	try:
+		endpoint_ids = get_endpoint_ids(data)
+	except KeyError:
+		msg = "[submit_rda_transfer] source_endpoint and/or destination_endpoint missing from JSON input."
 		my_logger.error(msg)
 		sys.exit(1)
+	
+	source_endpoint = endpoint_ids['source_endpoint']
+	destination_endpoint = endpoint_ids['destination_endpoint']
+	client_id = get_client_id(data)
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	auth_refresh_token = tokens['auth_rt']
 
 	if (data['label']):
 		label = data['label']
 	else:
-		label = 'RDA Quasar transfer'
+		label = 'RDA transfer'
 
 	try:
 		files = data['files']
@@ -633,11 +632,8 @@ def submit_rda_transfer(data):
 		sys.exit(1)
 
 	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(refresh_token, client)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
 	tc = TransferClient(authorizer=tc_authorizer)
-	
-	source_endpoint = tc.endpoint_search('NCAR GLADE')[0]['id']
-	destination_endpoint = tc.endpoint_search(dest_endpoint_name)[0]['id']
 	
 	transfer_data = TransferData(transfer_client=tc,
 							     source_endpoint=source_endpoint,
@@ -646,11 +642,10 @@ def submit_rda_transfer(data):
 
 	for i in range(len(files)):
     	source_file = files[i]['source_file']
-    	
-    	# Verify source file exists and meets minimum size requirements (> 200 MB, 1 GB preferred)
-    	
-    	
     	dest_file = files[i]['destination_file']
+    	
+    	# Verify source file exists and meets minimum size requirements (> 200 MB, 1 GB preferred)    	
+    	
     	transfer_data.add_item(source_file, dest_file)
 
 	try:
@@ -673,6 +668,65 @@ def submit_rda_transfer(data):
 	
 	msg = "{0}\nTask ID: {1}".format(transfer_result['message'], task_id)
 	my_logger.info(msg)
+	print(msg)
+
+#=========================================================================================
+def get_endpoint_ids(data):
+
+	try:
+		source_endpoint_name = data['source_endpoint_name']
+		destination_endpoint_name = data['destination_endpoint_name']
+	except KeyError:
+		msg = "[get_endpoint_ids] source_endpoint_name and/or destination_endpoint_name not defined in JSON input."
+		my_logger.error(msg)
+		sys.exit(1)
+
+	if source_endpoint_name == "rda glade":
+		source_endpoint = MyGlobus['rda_glade_endpoint']
+	else:
+		msg = "[submit_rda_transfer] Unknown source endpoint"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	if destination_endpoint_name == "quasar":
+		dest_endpoint = MyGlobus['quasar_endpoint']
+	elif destination_endpoint_name == "quasar_dr"
+		dest_endpoint = MyGlobus['quasar_dr_endpoint']
+	else:
+		msg = "[submit_rda_transfer] Unknown destination endpoint"
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	endpoints = {'source_endpoint': source_endpoint,
+	             'destination_endpoint': dest_endpoint}
+	
+	return endpoints
+
+#=========================================================================================
+def get_client_id(data):
+	if data['destination_endpoint_name'] == "quasar":
+		client_id = MyGlobus['rda_quasar_client_id']
+	else:
+		msg = "[get_client_id] Unknown destination endpoint"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	return client_id
+
+#=========================================================================================
+def get_tokens(client_id):
+	if client_id == MyGlobus['rda_quasar_client_id']:
+		transfer_rt = MyGlobus['transfer_rt_quasar']
+		auth_rt = MyGlobus['auth_rt_quasar']
+	else:
+		msg = "[get_tokens] Unknown client ID"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	tokens = {'transfer_rt': transfer_rt,
+	          'auth_rt': auth_rt}
+
+	return tokens
 
 #=========================================================================================
 def read_json_from_stdin():

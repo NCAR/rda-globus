@@ -17,8 +17,8 @@ import globus_sdk
 from MyGlobus import MyGlobus
 
 def load_app_client():
-    """Create an AuthClient for the 'NCAR RDA Client' """
-    return globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
+	"""Create an AuthClient for the 'NCAR RDA Client' """
+	return globus_sdk.ConfidentialAppAuthClient(MyGlobus['client_id'], MyGlobus['client_secret'])
 
 def load_rda_native_client(client_id):
 	""" Create an AuthClient for RDA native app clients based on client_id """
