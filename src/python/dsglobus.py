@@ -690,7 +690,7 @@ def get_endpoint_ids(data):
 
 	if destination_endpoint_name == "quasar":
 		dest_endpoint = MyGlobus['quasar_endpoint']
-	elif destination_endpoint_name == "quasar_dr"
+	elif destination_endpoint_name == "quasar_dr":
 		dest_endpoint = MyGlobus['quasar_dr_endpoint']
 	else:
 		msg = "[submit_rda_transfer] Unknown destination endpoint"
