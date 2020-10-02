@@ -641,12 +641,12 @@ def submit_rda_transfer(data):
 							     label=label)
 
 	for i in range(len(files)):
-    	source_file = files[i]['source_file']
-    	dest_file = files[i]['destination_file']
-    	
-    	# Verify source file exists and meets minimum size requirements (> 200 MB, 1 GB preferred)    	
-    	
-    	transfer_data.add_item(source_file, dest_file)
+		source_file = files[i]['source_file']
+		dest_file = files[i]['destination_file']
+		
+		# Verify source file exists and meets minimum size requirements (> 200 MB, 1 GB preferred)    	
+		
+		transfer_data.add_item(source_file, dest_file)
 
 	try:
 		transfer_result = tc.submit_transfer(transfer_data)
