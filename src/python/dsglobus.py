@@ -54,17 +54,18 @@ from globus_utils import load_app_client, load_rda_native_client
 
 #=========================================================================================
 def main(json_input = None):
-	opts = parse_input()
-	action = opts['action']
-	
-	if opts['removePermission']:
-		result = delete_endpoint_acl_rule(action, opts)
-	elif opts['addPermission']:
-		result = add_endpoint_acl_rule(action, opts)
-	elif opts['submitTransfer']:
-		result = submit_dsrqst_transfer(opts)
-	elif json_input:
+	if json_input:
 		result = submit_rda_transfer(json_input)
+	else:
+		opts = parse_input()
+		action = opts['action']
+	
+		if opts['removePermission']:
+			result = delete_endpoint_acl_rule(action, opts)
+		elif opts['addPermission']:
+			result = add_endpoint_acl_rule(action, opts)
+		elif opts['submitTransfer']:
+			result = submit_dsrqst_transfer(opts)
 
 	return result
 
