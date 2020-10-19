@@ -60,12 +60,14 @@ def main(json_input = None):
 		opts = parse_input()
 		action = opts['action']
 	
-		if opts['removePermission']:
+		if opts['remove_permission']:
 			result = delete_endpoint_acl_rule(action, opts)
-		elif opts['addPermission']:
+		elif opts['add_permission']:
 			result = add_endpoint_acl_rule(action, opts)
-		elif opts['submitTransfer']:
+		elif opts['submit_transfer']:
 			result = submit_dsrqst_transfer(opts)
+		elif opts['list_files']:
+			result = list_endpoint_files(opts)
 
 	return result
 
@@ -731,6 +733,45 @@ def get_tokens(client_id):
 	return tokens
 
 #=========================================================================================
+def get_task_info(data):
+	""" Get transfer task info for transfers to Quasar endpoints """
+	if 'task_id' not in data:
+		msg = "[get_task_info] Task ID missing from input."
+		my_logger.error(msg)
+		sys.exit(1)
+
+	client_id = MyGlobus['rda_quasar_client_id']
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	task_info = tc.get_task(datta['task_id'])
+	return task_info.data
+
+#=========================================================================================
+def list_endpoint_files(data):
+	""" List endpoint directory contents """
+	
+	client_id = MyGlobus['rda_quasar_client_id']
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+
+	endpoint = data['endpoint']
+	path = data['path']
+	if data['filters']:
+		filters = data['filters']
+
+	result = tc.operation_ls(endpoint, path=path)
+	return result.data
+
+#=========================================================================================
 def read_json_from_stdin():
 	"""Read arguments from stdin"""
 	in_json=""
@@ -754,74 +795,103 @@ def parse_input():
 	
 	  - Share all files from RDA dataset ds131.2 with a user:
 	             dsglobus -ap -ds 131.2 -em tcram@ucar.edu
+
+	  - List files on the 'NCAR RDA Quasar' endpoint:
+	             dsglobus -ls -ep 'NCAR RDA Quasar' -dir /ds999.9/cmorph_v1.0/2019
 	''')
 
-	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
+	parser = argparse.ArgumentParser(prog='dsglobus', formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
 
 	group = parser.add_mutually_exclusive_group(required=True)
-	group.add_argument('-ap', action="store_true", default=False, help='Add endpoint permission')
-	group.add_argument('-rp', action="store_true", default=False, help='Delete endpoint permission')
-	group.add_argument('-st', action="store_true", default=False, help='Submit Globus transfer on behalf of user.  For dsrqst push transfers.')
+	group.add_argument('--add-permission', '-ap', action="store_true", default=False, help='Add endpoint permission')
+	group.add_argument('--remove-permission', '-rp', action="store_true", default=False, help='Delete endpoint permission')
+	group.add_argument('--submit-transfer', '-st', action="store_true", default=False, help='Submit Globus transfer on behalf of user.  For dsrqst push transfers.')
+	group.add_argument('--list-files', '-ls', action="store_true", default=False, help='List files on a specified endpoint path.')
 
-	parser.add_argument('-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
-	parser.add_argument('-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
-	parser.add_argument('-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
-	parser.add_argument('-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
+	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
+	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
+	parser.add_argument('--email', '-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
+	parser.add_argument('--no-email', '-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
+	parser.add_argument('--endpoint', '-ep', action="store", dest="ENDPOINT", help='Endpoint ID or name.  Required with -ls argument.')
+	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
+	parser.add_argument('--filter', action="store", dest="FILTER", help='Filter applied to file listing.')
 	
 	if len(sys.argv)==1:
 		parser.print_help()
 		sys.exit(1)
 	
 	args = parser.parse_args(sys.argv[1:])
-	my_logger.info("[parse_input] {0}: {1}".format(sys.argv[0], args))
+	my_logger.info("[parse_input] Input command & arguments: {0}: {1}".format(sys.argv[0], args))	
+
+	opts = {}
+	if args.add_permission:
+		opts.update({'add_permission': True})
+	if args.remove_permission:
+		opts.update({'remove_permission': True})
+	if args.submit_transfer:
+		opts.update({'submit_transfer': True})
+	if args.list_files:
+		opts.update({'list_files': True})
+		opts.update({'action': 3})
 	
-	opts = vars(args)
-	opts['addPermission'] = opts.pop('ap')
-	opts['removePermission'] = opts.pop('rp')
-	opts['submitTransfer'] = opts.pop('st')
-	
-	if opts['ne']:
-		opts['notify'] = False
+	if args.no_email:
+		opts.update({'notify': False})
 	else:
-		opts['notify'] = True
-	opts.pop('ne')
+		opts.update({'notify': True})
 	
-	if (opts['REQUESTINDEX'] and opts['DATASETID']):
+	if args.list_files and (args.ENDPOINT is None or args.PATH is None):
+		msg = "Option --list-files requires both --endpoint and --directory."
+		my_logger.error(msg)
+		parser.error(msg)
+	if args.add_permission and (args.REQUESTINDEX and args.DATASETID):
 		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
-		sys.exit(msg)
-	if (opts['submitTransfer'] and not opts['REQUESTINDEX']):
-		msg = "Please specify the dsrqst index (-ri) with the -st flag."
+		parser.error(msg)
+	if args.remove_permission and (args.REQUESTINDEX and args.DATASETID):
+		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
 		my_logger.error(msg)
-		sys.exit(msg)
-	if opts['REQUESTINDEX']:
-		opts['ridx'] = opts.pop('REQUESTINDEX')
+		parser.error(msg)
+	if args.submit_transfer and args.REQUESTINDEX is None:
+		msg = "Option --submit-transfer requires dsrqst index (--request-index)."
+		my_logger.error(msg)
+		parser.error(msg)
+	if args.DATASETID and args.EMAIL is None:
+		msg = "Option dataset ID (--dataset) requires email (--email)."
+		my_logger.error(msg)
+		parser.error(msg)
+	if args.EMAIL and args.DATASETID is None:
+		msg = "Option email (--email) requires dataset ID (--dataset)."
+		my_logger.error(msg)
+		parser.error(msg)
+
+	if args.REQUESTINDEX:
+		opts.update({'ridx': args.REQUESTINDEX})
 		opts.update({'action': 1})
-	elif opts['DATASETID']:
-		if not opts['EMAIL']:
-			msg = "The e-mail option (-em) is required with the dataset ID option (-ds)."
-			my_logger.error(msg)
-			sys.exit(msg)
-		dsid = opts['DATASETID']
+	elif args.DATASETID:
+		dsid = args.DATASETID
 		if not re.match(r'^(ds){0,1}\d{3}\.\d{1}$', dsid, re.I):
 			msg = "Please specify the dataset id as dsnnn.n or nnn.n"
 			my_logger.error(msg)
-			sys.exit(msg)
+			parser.error(msg)
 		searchObj = re.search(r'^\d{3}\.\d{1}$', dsid)
 		if searchObj:
-			opts['DATASETID'] = "ds%s" % dsid
-		opts['dsid'] = opts.pop('DATASETID').lower()
-		opts['email'] = opts.pop('EMAIL')
+			dsid = "ds%s" % dsid
+		opts.update({'dsid': dsid.lower()})
+		opts.update({'email': args.EMAIL})
 		opts.update({'action': 2})
-	elif opts['EMAIL']:
-		msg = "The dataset ID option (-ds) is required with the e-mail option (-em)."
-		my_logger.error(msg)
-		sys.exit(msg)
+	elif args.list_files:
+		opts.update({'endpoint': args.ENDPOINT})
+		opts.update({'path': args.PATH})
+		if args.FILTER:
+			opts.update({'filters': args.FILTER})
+		else:
+			opts.update({'filters': None})
 	else:
 		parser.print_help()
 		sys.exit(1)
 
-	opts['print'] = True
+	opts.update({'print': True})
+
 	return opts
 	
 #=========================================================================================
