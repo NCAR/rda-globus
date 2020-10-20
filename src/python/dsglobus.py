@@ -764,11 +764,11 @@ def list_endpoint_files(data):
 	tc = TransferClient(authorizer=tc_authorizer)
 
 	endpoint = data['endpoint']
-	path = data['path']
+	ls_params = {"path": data['path']}
 	if data['filters']:
-		filters = data['filters']
+		ls_params.update({"filter": "name:{}".format(data['filters'])})
 
-	result = tc.operation_ls(endpoint, path=path)
+	result = tc.operation_ls(endpoint, **ls_params)
 	ls_data = result.data
 	contents = ls_data['DATA']
 
