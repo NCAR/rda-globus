@@ -771,8 +771,9 @@ def list_endpoint_files(data):
 	result = tc.operation_ls(endpoint, path=path)
 	ls_data = result.data
 	contents = ls_data['DATA']
-	
-	console_logger.info("Number of items: {0}\nDATA_TYPE: {1}\npath: {2}\nendpoint: {3}".format(ls_data['length'], ls_data['DATA_TYPE'],ls_data['path'], ls_data['endpoint]))
+
+	console_msg = "Number of items: {0}\nDATA_TYPE: {1}\npath: {2}\nendpoint: {3}".format(ls_data['length'], ls_data['DATA_TYPE'],ls_data['path'], ls_data['endpoint'])
+	console_logger.info(console_msg)
 
 	for i in range(len(contents)):
 		type = contents['DATA_TYPE']
