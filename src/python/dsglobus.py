@@ -823,7 +823,7 @@ def parse_input():
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("[parse_input] Input command & arguments: {0}: {1}".format(sys.argv[0], args))	
 
-	opts = {}
+	opts = vars(args)
 	if args.add_permission:
 		opts.update({'add_permission': True})
 	if args.remove_permission:
