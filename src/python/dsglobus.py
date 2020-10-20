@@ -769,7 +769,23 @@ def list_endpoint_files(data):
 		filters = data['filters']
 
 	result = tc.operation_ls(endpoint, path=path)
-	return result.data
+	ls_data = result.data
+	contents = ls_data['DATA']
+	
+	console_logger.info("Number of items: {0}\nDATA_TYPE: {1}\npath: {2}\nendpoint: {3}".format(ls_data['length'], ls_data['DATA_TYPE'],ls_data['path'], ls_data['endpoint]))
+
+	for i in range(len(contents)):
+		type = contents['DATA_TYPE']
+		group = contents['group']
+		last_modified = contents['last_modified']
+		name = contents['name']
+		permissions = contents['permissions']
+		size = contents['size']
+		user = contents['user']		
+		console_msg = "{0} {1} {2} {3} {4} {5} {6}".format(type, user, group, permissions, size, last_modified, name)
+		console_logger.info(console_msg)
+	
+	return ls_data
 
 #=========================================================================================
 def read_json_from_stdin():
@@ -920,6 +936,12 @@ def configure_log(**kwargs):
 	handler.setFormatter(formatter)
 	my_logger.addHandler(handler)
 	
+	""" Console logger """
+	console = logging.StreamHandler()
+	console.setLevel(logging.INFO)
+	console.setFormatter(formatter)
+	console_logger.addHandler(console)
+	
 	return
 
 #=========================================================================================
@@ -940,6 +962,7 @@ def handle_error(err, **kwargs):
 #=========================================================================================
 """ Set up logging """
 my_logger = logging.getLogger(__name__)
+console_logger = logging.getLogger('console')
 configure_log(level='info')
 
 if __name__ == "__main__":
