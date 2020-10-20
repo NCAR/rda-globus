@@ -932,14 +932,13 @@ def configure_log(**kwargs):
 	level = LEVELS.get(loglevel, logging.INFO)
 	my_logger.setLevel(level)
 	handler = logging.handlers.RotatingFileHandler(LOGPATH+'/'+LOGFILE,maxBytes=10000000,backupCount=5)
-	handler.setLevel(level)
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 	handler.setFormatter(formatter)
 	my_logger.addHandler(handler)
 	
 	""" Console logger """
+	console_logger.setLevel(logging.INFO)
 	console = logging.StreamHandler()
-	console.setLevel(logging.INFO)
 	console.setFormatter(formatter)
 	console_logger.addHandler(console)
 	
