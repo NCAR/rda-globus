@@ -776,13 +776,13 @@ def list_endpoint_files(data):
 	console_logger.info(console_msg)
 
 	for i in range(len(contents)):
-		type = contents['DATA_TYPE']
-		group = contents['group']
-		last_modified = contents['last_modified']
-		name = contents['name']
-		permissions = contents['permissions']
-		size = contents['size']
-		user = contents['user']		
+		type = contents[i]['DATA_TYPE']
+		group = contents[i]['group']
+		last_modified = contents[i]['last_modified']
+		name = contents[i]['name']
+		permissions = contents[i]['permissions']
+		size = contents[i]['size']
+		user = contents[i]['user']		
 		console_msg = "{0} {1} {2} {3} {4} {5} {6}".format(type, user, group, permissions, size, last_modified, name)
 		console_logger.info(console_msg)
 	
