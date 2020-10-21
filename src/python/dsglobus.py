@@ -45,7 +45,7 @@ except:
 
 from MyLOG import show_usage
 from PyDBI import myget, myupdt, myadd, mymget
-from MyGlobus import MyGlobus
+from MyGlobus import MyGlobus, MyEndpoints
 
 from globus_sdk import (TransferClient, TransferAPIError,
                         TransferData, RefreshTokenAuthorizer, AuthClient, 
