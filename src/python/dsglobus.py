@@ -608,15 +608,8 @@ def get_session(sid):
 def submit_rda_transfer(data):
 	""" General data transfer to RDA endpoints.  Input is JSON dict. """
 
-	try:
-		endpoint_ids = get_endpoint_ids(data)
-	except KeyError:
-		msg = "[submit_rda_transfer] source_endpoint and/or destination_endpoint missing from JSON input."
-		my_logger.error(msg)
-		sys.exit(1)
-	
-	source_endpoint = endpoint_ids['source_endpoint']
-	destination_endpoint = endpoint_ids['destination_endpoint']
+	source_endpoint = get_endpoint_id(data['source_endpoint_name'])
+	destination_endpoint = get_endpoint_id(data['destination_endpoint_name'])	
 	client_id = get_client_id(data)
 	tokens = get_tokens(client_id)
 	transfer_refresh_token = tokens['transfer_rt']
@@ -674,36 +667,16 @@ def submit_rda_transfer(data):
 	print(msg)
 
 #=========================================================================================
-def get_endpoint_ids(data):
+def get_endpoint_id(endpoint_name):
 
 	try:
-		source_endpoint_name = data['source_endpoint_name']
-		destination_endpoint_name = data['destination_endpoint_name']
+		endpoint_id = MyEndpoints[endpoint_name]
 	except KeyError:
-		msg = "[get_endpoint_ids] source_endpoint_name and/or destination_endpoint_name not defined in JSON input."
-		my_logger.error(msg)
-		sys.exit(1)
-
-	if source_endpoint_name == "NCAR RDA GLADE":
-		source_endpoint = MyGlobus['rda_glade_endpoint']
-	else:
-		msg = "[submit_rda_transfer] Unknown source endpoint"
-		my_logger.error(msg)
-		sys.exit(1)
-
-	if destination_endpoint_name == "NCAR RDA Quasar":
-		dest_endpoint = MyGlobus['quasar_endpoint']
-	elif destination_endpoint_name == "NCAR RDA Quasar DRDATA":
-		dest_endpoint = MyGlobus['quasar_dr_endpoint']
-	else:
-		msg = "[submit_rda_transfer] Unknown destination endpoint"
+		msg = "[get_endpoint_id] Unknown endpoint name: {}".format(endpoint_name)
 		my_logger.error(msg)
 		sys.exit(1)
 	
-	endpoints = {'source_endpoint': source_endpoint,
-	             'destination_endpoint': dest_endpoint}
-	
-	return endpoints
+	return endpoint_id
 
 #=========================================================================================
 def get_client_id(data):
@@ -753,17 +726,39 @@ def get_task_info(data):
 
 #=========================================================================================
 def list_endpoint_files(data):
-	""" List endpoint directory contents """
+	""" List endpoint directory contents 
+	
+	=== Filtering
+	List files and dirs on a specific path on an endpoint, filtering in various ways.
+
+    Filter patterns must start with "=", "~", "!", or "!~"
+    If none of these are given, "=" will be used
+
+    "=" does exact matching
+    "~" does regex matching, supporting globs (*)
+    "!" does inverse "=" matching
+    "!~" does inverse "~" matching
+
+    "~*.txt" matches all .txt files, for example
+    
+	$ dsglobus -ls -ep <endpoint> -p <path> --filter '~*.txt'  # all txt files
+	$ dsglobus -ls -ep <endpoint> -p <path> --filter '!~file1.*'  # not starting in "file1."
+	$ dsglobus -ls -ep <endpoint> -p <path> --filter '~*ile3.tx*'  # anything with "ile3.tx"
+	$ dsglobus -ls -ep <endpoint> -p <path> --filter '=file2.txt'  # only "file2.txt"
+	$ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
+	$ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
+
+	"""
 	
 	client_id = MyGlobus['rda_quasar_client_id']
 	tokens = get_tokens(client_id)
 	transfer_refresh_token = tokens['transfer_rt']
+	endpoint = get_endpoint_id(data['endpoint'])
 	
 	client = load_rda_native_client(client_id)
 	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
 	tc = TransferClient(authorizer=tc_authorizer)
 
-	endpoint = data['endpoint']
 	ls_params = {"path": data['path']}
 	if data['filters']:
 		ls_params.update({"filter": "name:{}".format(data['filters'])})
@@ -772,8 +767,8 @@ def list_endpoint_files(data):
 	ls_data = result.data
 	contents = ls_data['DATA']
 
-	console_msg = "Number of items: {0}\nDATA_TYPE: {1}\npath: {2}\nendpoint: {3}".format(ls_data['length'], ls_data['DATA_TYPE'],ls_data['path'], ls_data['endpoint'])
-	console_logger.info(console_msg)
+	msg = "Number of items: {0}\nDATA_TYPE: {1}\npath: {2}\nendpoint: {3}".format(ls_data['length'], ls_data['DATA_TYPE'],ls_data['path'], ls_data['endpoint'])
+	print(msg)
 
 	for i in range(len(contents)):
 		type = contents[i]['DATA_TYPE']
@@ -782,9 +777,8 @@ def list_endpoint_files(data):
 		name = contents[i]['name']
 		permissions = contents[i]['permissions']
 		size = contents[i]['size']
-		user = contents[i]['user']		
-		console_msg = "{0} {1} {2} {3} {4} {5} {6}".format(type, user, group, permissions, size, last_modified, name)
-		console_logger.info(console_msg)
+		user = contents[i]['user']
+		print("{0} {1} {2} {3} {4} {5} {6}".format(type, user, group, permissions, size, last_modified, name))
 	
 	return ls_data
 
