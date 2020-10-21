@@ -81,3 +81,15 @@ MyGlobus = {
    'quasar_endpoint': RDA_QUASAR_ENDPOINT,
    'quasar_dr_endpoint': RDA_QUASAR_DR_ENDPOINT
 }
+
+# Endpoint dict mapping endpoint display names and aliases to endpoint IDs
+MyEndpoints = {
+    'NCAR RDA Data Requests': RDA_DSRQST_ENDPOINT,
+    'NCAR RDA Dataset Archive': RDA_DATASET_ENDPOINT,
+    'NCAR RDA GLADE': RDA_GLADE_ENDPOINT,
+    'NCAR RDA Quasar': RDA_QUASAR_ENDPOINT,
+    'NCAR RDA Quasar DRDATA': RDA_QUASAR_DR_ENDPOINT,
+    'rda-glade': RDA_GLADE_ENDPOINT,
+    'rda-quasar': RDA_QUASAR_ENDPOINT,
+    'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT
+}
