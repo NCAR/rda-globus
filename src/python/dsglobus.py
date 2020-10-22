@@ -767,7 +767,7 @@ def list_endpoint_files(data):
 	ls_data = result.data
 	contents = ls_data['DATA']
 
-	msg = "Number of items: {0}\nDATA_TYPE: {1}\npath: {2}\nendpoint: {3}".format(ls_data['length'], ls_data['DATA_TYPE'],ls_data['path'], ls_data['endpoint'])
+	msg = "Number of items: {0}\nDATA_TYPE: {1}\nendpoint: {2}\npath: {3}".format(ls_data['length'], ls_data['DATA_TYPE'], ls_data['endpoint'], ls_data['path'])
 	print(msg)
 
 	for i in range(len(contents)):
@@ -778,7 +778,7 @@ def list_endpoint_files(data):
 		permissions = contents[i]['permissions']
 		size = contents[i]['size']
 		user = contents[i]['user']
-		print("{0} {1} {2} {3} {4} {5} {6}".format(type, user, group, permissions, size, last_modified, name))
+		print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(user, group, permissions, size, last_modified, type, name))
 	
 	return ls_data
 
@@ -826,6 +826,7 @@ def parse_input():
 	parser.add_argument('--endpoint', '-ep', action="store", dest="ENDPOINT", help='Endpoint ID or name.  Required with -ls argument.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER", help='Filter applied to file listing.')
+	parser.add_argument('--recursive', )
 	
 	if len(sys.argv)==1:
 		parser.print_help()
