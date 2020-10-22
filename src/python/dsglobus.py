@@ -767,8 +767,10 @@ def list_endpoint_files(data):
 	ls_data = result.data
 	contents = ls_data['DATA']
 
-	msg = "Number of items: {0}\nDATA_TYPE: {1}\nendpoint: {2}\npath: {3}".format(ls_data['length'], ls_data['DATA_TYPE'], ls_data['endpoint'], ls_data['path'])
+	msg = "Number of items: {0}\nDATA_TYPE: {1}\nendpoint: {2}\npath: {3}\n".format(ls_data['length'], ls_data['DATA_TYPE'], ls_data['endpoint'], ls_data['path'])
 	print(msg)
+	header = "user |\tgroup |\tpermissions |\tsize |\tlast modified |\ttype |\tname"
+	print(header)
 
 	for i in range(len(contents)):
 		type = contents[i]['DATA_TYPE']
