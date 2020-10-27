@@ -991,6 +991,8 @@ def parse_input():
 			opts.update({'filters': args.FILTER})
 		else:
 			opts.update({'filters': None})
+	elif args.transfer:
+		pass
 	else:
 		parser.print_help()
 		sys.exit(1)
