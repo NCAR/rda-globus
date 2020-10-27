@@ -704,7 +704,7 @@ def get_client_id(data):
 	}
 
 	if action in client_map:
-		client_id = MyGlobus[action]
+		client_id = MyGlobus[client_map[action]]
 	else:
 		msg = "[get_client_id] Unknown action.  Cannot map to valid client ID."
 		my_logger.error(msg)
