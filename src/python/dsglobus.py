@@ -630,7 +630,7 @@ def submit_rda_transfer(data):
 	try:
 		files = data['files']
 	except KeyError:
-		msg = "[submit_rda_transfer] Local files missing from JSON input"
+		msg = "[submit_rda_transfer] Files missing from JSON or command-line input"
 		my_logger.error(msg)
 		sys.exit(1)
 
@@ -992,7 +992,8 @@ def parse_input():
 		else:
 			opts.update({'filters': None})
 	elif args.transfer:
-		pass
+		opts.update({"source_endpoint": args.SOURCE_ENDPOINT, "destination_endpoint": args.DESTINATION_ENDPOINT})
+		opts.update({"files": [{"source_file": args.SOURCE_FILE, "destination_file": args.DESTINATION_FILE}]})
 	else:
 		parser.print_help()
 		sys.exit(1)
