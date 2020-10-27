@@ -622,10 +622,10 @@ def submit_rda_transfer(data):
 	source_endpoint = get_endpoint_by_name(data['source_endpoint'])
 	destination_endpoint = get_endpoint_by_name(data['destination_endpoint'])	
 
-	if (data['label']):
+	try:
 		label = data['label']
-	else:
-		label = 'RDA transfer'
+	except KeyError:
+		label=''
 
 	try:
 		files = data['files']
