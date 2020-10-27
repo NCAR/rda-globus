@@ -860,39 +860,39 @@ def parse_input():
 	epilog = textwrap.dedent('''\
 	Examples:
 	  - Grant share permission to a user for dsrqst index 1234:
-	              dsglobus -ap -ri 1234
+	        dsglobus -ap -ri 1234
 	
 	  - Delete permission from a user and delete the access share rule for dsrqst index 1234:
-	              dsglobus -rp -ri 1234
+	        dsglobus -rp -ri 1234
 	
 	  - Share all files from RDA dataset ds131.2 with a user:
-	             dsglobus -ap -ds 131.2 -em tcram@ucar.edu
+	        dsglobus -ap -ds 131.2 -em tcram@ucar.edu
 
 	  - Transfer data from GLADE to the NCAR Quasar tape system
-	  			 dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/data_file.txt --destination-file /ds999.9/data_file.txt
+	        dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/data_file.txt --destination-file /ds999.9/data_file.txt
 	  			 
 	  - List files on the 'NCAR RDA Quasar' endpoint:
-	             dsglobus -ls -ep 'NCAR RDA Quasar' -p /ds999.9/cmorph_v1.0/2019
+	        dsglobus -ls -ep 'NCAR RDA Quasar' -p /ds999.9/cmorph_v1.0/2019
 
 	Filtering:
-	  When using the --filter option, you can list files and dirs on a specific path on an endpoint based on the filter criterion.
+	    When using the --filter option, you can list files and dirs on a specific path on an endpoint based on the filter criterion.
 
-      Filter patterns must start with "=", "~", "!", or "!~"
-      If none of these are given, "=" will be used
+        Filter patterns must start with "=", "~", "!", or "!~"
+        If none of these are given, "=" will be used
 
-      "=" does exact matching
-      "~" does regex matching, supporting globs (*)
-      "!" does inverse "=" matching
-      "!~" does inverse "~" matching
+        "=" does exact matching
+        "~" does regex matching, supporting globs (*)
+        "!" does inverse "=" matching
+        "!~" does inverse "~" matching
 
-      "~*.txt" matches all .txt files, for example
+        "~*.txt" matches all .txt files, for example
     
-	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*.txt'  # all txt files
-	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '!~file1.*'  # not starting in "file1."
-	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*ile3.tx*'  # anything with "ile3.tx"
-	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '=file2.txt'  # only "file2.txt"
-	  $ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
-	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
+	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*.txt'  # all txt files
+	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '!~file1.*'  # not starting in "file1."
+	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*ile3.tx*'  # anything with "ile3.tx"
+	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '=file2.txt'  # only "file2.txt"
+	    $ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
+	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
 	''')
 
 	parser = argparse.ArgumentParser(prog='dsglobus', formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
@@ -915,7 +915,6 @@ def parse_input():
 	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER", help='Filter applied to file listing.')
-	parser.add_argument('--recursive', )
 	
 	if len(sys.argv)==1:
 		parser.print_help()
