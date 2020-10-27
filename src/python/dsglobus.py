@@ -612,7 +612,8 @@ def get_session(sid):
 
 #=========================================================================================
 def submit_rda_transfer(data):
-	""" General data transfer to RDA endpoints.  Input is JSON dict. """
+	""" General data transfer to RDA endpoints.  Input should be JSON formatted input 
+	    if transferring multiple files. """
 
 	client_id = get_client_id(data)
 	tokens = get_tokens(client_id)
@@ -672,6 +673,8 @@ def submit_rda_transfer(data):
 	msg = "{0}\nTask ID: {1}".format(transfer_result['message'], task_id)
 	my_logger.info(msg)
 	print(msg)
+	
+	return transfer_result
 
 #=========================================================================================
 def get_endpoint_by_name(endpoint_name):
