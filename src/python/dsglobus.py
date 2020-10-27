@@ -55,34 +55,32 @@ from globus_utils import load_app_client, load_rda_native_client
 #=========================================================================================
 def main(json_input = None):
 	if json_input:
-		result = submit_rda_transfer(json_input)
+		result = do_action(json_input)
 	else:
 		opts = parse_input()
-		action = opts['action']
-	
-		if opts['remove_permission']:
-			result = delete_endpoint_acl_rule(action, opts)
-		elif opts['add_permission']:
-			result = add_endpoint_acl_rule(action, opts)
-		elif opts['submit_transfer']:
-			result = submit_dsrqst_transfer(opts)
-		elif opts['list_files']:
-			result = list_endpoint_files(opts)
+		result = do_action(opts)	
 
 	return result
 
 #=========================================================================================
-def add_endpoint_acl_rule(action, data):
-	""" Create a new endpoint access rule
-	    action = 1: dsrqst share
-	           = 2: standard dataset share
+def add_endpoint_acl_rule(data):
+	""" Create a new endpoint access rule.  'type' must be defined in the input dict:
+	    type = 'dsrqst':  dsrqst share
+	         = 'dataset': standard dataset share
 	"""
 	if 'print' in data:
 		print_stdout = data['print']
 	else:
 		print_stdout = False
 	
-	if (action == 1):
+	try:
+		type = data['type']
+	except KeyError:
+		msg = "[add_endpoint_acl_rule] 'type' not defined in input dict."
+		my_logger.error(msg)
+		sys.exit(1)
+		
+	if (type == 'dsrqst'):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
@@ -104,11 +102,11 @@ def add_endpoint_acl_rule(action, data):
 					sys.exit(msg)
 				return {'access_id': myrqst['globus_rid'], 'share_url': myrqst['globus_url']}
 			share_data = {'ridx': ridx, 'dsid': dsid, 'email': email}
-			path = construct_share_path(1, share_data)
+			path = construct_share_path(type, share_data)
 		except KeyError as err:
 			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
 
-	elif (action == 2):
+	elif (type == 'dataset'):
 		try:
 			endpoint_id = MyGlobus['datashare_ep']
 			dsid = data['dsid']
@@ -122,7 +120,7 @@ def add_endpoint_acl_rule(action, data):
 					sys.exit(msg)
 				return {'access_id': myshare['globus_rid'], 'share_url': myshare['globus_url']}
 			share_data = {'dsid': dsid}
-			path = construct_share_path(2, share_data)
+			path = construct_share_path(type, share_data)
 			share_data.update({'email': email})
 		except KeyError as err:
 			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
@@ -168,24 +166,31 @@ def add_endpoint_acl_rule(action, data):
 	if 'print' in data and data['print']:
 		share_data.update({'print': True})
 	
-	url = construct_share_url(action, share_data)
+	url = construct_share_url(type, share_data)
 	share_data.update({'globus_rid': result['access_id'],'globus_url': url})	
-	update_share_record(action, share_data)
+	update_share_record(type, share_data)
 	
 	return {'access_id': result["access_id"], 'share_url': url}
 
 #=========================================================================================
-def delete_endpoint_acl_rule(action, data):
-	""" Delete a specific endpoint access rule
-	    action = 1: dsrqst share
-	           = 2: standard dataset share
+def delete_endpoint_acl_rule(data):
+	""" Delete a specific endpoint access rule. 'type' must be defined in input dict:
+	    type = 'dsrqst':  dsrqst share
+	         = 'dataset': standard dataset share
 	""" 
 	if 'print' in data:
 		print_stdout = data['print']
 	else:
 		print_stdout = False
 
-	if (action == 1):
+	try:
+		type = data['type']
+	except KeyError:
+		msg = "[delete_endpoint_acl_rule] 'type' not defined in input dict."
+		my_logger.error(msg)
+		sys.exit(1)
+
+	if (type == 'dsrqst'):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
@@ -235,7 +240,7 @@ def delete_endpoint_acl_rule(action, data):
 				                    'status': 'DELETED'}
 					myupdt('goshare', share_record, share_cond)
 
-	elif (action == 2):
+	elif (type == 'dataset'):
 		try:
 			endpoint_id = MyGlobus['datashare_ep']
 			email = data['email']
@@ -304,6 +309,7 @@ def submit_dsrqst_transfer(data):
 	session = get_session(myrqst['session_id'])
 	email = session['email']
 	dsid = session['dsid']
+	type = 'dsrqst'
 	
 	""" Define source endpoint ID and paths """
 	host_endpoint = MyGlobus['host_endpoint_id']
@@ -312,9 +318,9 @@ def submit_dsrqst_transfer(data):
 
 	""" Check if user has a share set up for this endpoint & path """
 	share_data = {'ridx': ridx, 'notify': True}
-	if not query_acl_rule(1, share_data):
+	if not query_acl_rule(type, share_data):
 		acl_data = add_endpoint_acl_rule(1, share_data)
-	directory = construct_share_path(1, share_data)
+	directory = construct_share_path(type, share_data)
 
 	""" Instantiate the Globus SDK transfer client """
 	refresh_token = session['transfer.api.globus.org']['refresh_token']
@@ -374,19 +380,19 @@ def submit_dsrqst_transfer(data):
 	return task_id
 	
 #=========================================================================================
-def construct_share_path(action, data):
+def construct_share_path(type, data):
 	""" Construct the path to the shared data.  Path is relative to the 
 	    shared endpoint base path.
 	    
-	    action = 1: dsrqst share
-	           = 2: standard dataset share
+	    type = 'dsrqst': dsrqst share
+	         = 'dataset': standard dataset share
 	"""
 	if 'print' in data:
 		print_stdout = data['print']
 	else:
 		print_stdout = False
 
-	if (action == 1):
+	if (type == 'dsrqst'):
 		try:
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
@@ -410,7 +416,7 @@ def construct_share_path(action, data):
 				return {'Error': msg}
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_path]", print_stdout=print_stdout)
-	elif (action == 2):
+	elif (type == 'dataset'):
 		try:
 			path = "/{0}/".format(data['dsid'])
 		except KeyError as err:
@@ -420,25 +426,25 @@ def construct_share_path(action, data):
 	return path
 
 #=========================================================================================
-def construct_share_url(action, data):
+def construct_share_url(type, data):
 	""" Construct the URL to the shared data on the Globus web app 
 	
-		action = 1: dsrqst shares
-		       = 2: standard dataset share
+		type = 'dsrqst': dsrqst shares
+		     = 'dataset': standard dataset share
 	"""
 	if 'print' in data:
 		print_stdout = data['print']
 	else:
 		print_stdout = False
 
-	if (action == 1):
+	if (type == 'dsrqst'):
 		try:
 			ridx = data['ridx']
 			cond = ' WHERE rindex={0}'.format(ridx)
 			myrqst = myget('dsrqst', ['*'], cond)
 			if (len(myrqst) > 0):
 				origin_id = MyGlobus['data_request_ep']
-				origin_path = construct_share_path(1, {'ridx': ridx})
+				origin_path = construct_share_path(type, {'ridx': ridx})
 			else:
 				msg = "[construct_share_url] Request {0} not found in RDADB".format(ridx)
 				my_logger.warning(msg)
@@ -448,10 +454,10 @@ def construct_share_url(action, data):
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
 
-	if (action == 2):
+	if (type == 'dataset'):
 		try:
 			origin_id = MyGlobus['datashare_ep']
-			origin_path = construct_share_path(2, {'dsid': data['dsid']})
+			origin_path = construct_share_path(type, {'dsid': data['dsid']})
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
 
@@ -495,22 +501,22 @@ def get_user_id(identity):
 	return uuid
 
 #=========================================================================================
-def query_acl_rule(action, data):
+def query_acl_rule(type, data):
 	""" Check if an active ACL rule exists for a given RDA user
-	    action = 1: dsrqst share
-	           = 2: standard dataset share
+	    type = 'dsrqst': dsrqst share
+	         = 'dataset': standard dataset share
 	"""
 	if 'print' in data:
 		print_stdout = data['print']
 	else:
 		print_stdout = False
 	
-	if (action == 1):
+	if (type == 'dsrqst'):
 		""" dsrqst shares """
 		cond = " WHERE rindex='{0}'".format(data['ridx'])
 		myrule = myget('dsrqst', ['*'], cond)
 		
-	elif (action == 2):
+	elif (type == 'dataset'):
 		""" standard dataset shares """
 		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
 		myrule = myget('goshare', ['*'], cond)
@@ -526,10 +532,10 @@ def query_acl_rule(action, data):
 		return None
 
 #=========================================================================================
-def update_share_record(action, data):
+def update_share_record(type, data):
 	""" Update the user's Globus share in RDADB
-	    action = 1: dsrqst share
-	           = 2: standard dataset share
+	    type = 'dsrqst': dsrqst share
+	         = 'dataset': standard dataset share
 	"""
 	if ('print' in data):
 		print_stdout = data['print']
@@ -559,7 +565,7 @@ def update_share_record(action, data):
                     'dsid': '{0}'.format(dsid),
                     'status': 'ACTIVE'}
 	
-	if (action == 1):
+	if (type == 'dsrqst'):
 		try:
 			ridx = data['ridx']
 			cond = " WHERE rindex='{0}'".format(ridx)
@@ -568,7 +574,7 @@ def update_share_record(action, data):
 			              }
 			myupdt('dsrqst', rqst_record, cond)
 			my_logger.info("[update_share_record] dsrqst record updated. Request index: {0}.  ACL rule ID: {1}.".format(ridx, globus_rid))
-			path = construct_share_path(1, {'ridx': ridx})
+			path = construct_share_path(type, {'ridx': ridx})
 			share_record.update({'source_endpoint': '{0}'.format(MyGlobus['data_request_legacy']),
 			                     'acl_path': '{0}'.format(path),
 			                     'rindex': '{0}'.format(ridx)
@@ -577,9 +583,9 @@ def update_share_record(action, data):
 			my_logger.info("[update_share_record] Record added to goshare. Request index: {0}, ACL rule ID: {1}.".format(ridx, globus_rid)) 
 		except KeyError as err:
 			return handle_error(err, name="[update_share_record]", print_stdout=print_stdout) 
-	elif (action == 2):
+	elif (type == 'dataset'):
 		try:
-			path = construct_share_path(2, {'dsid': dsid})
+			path = construct_share_path(type, {'dsid': dsid})
 			share_record.update({'source_endpoint': '{0}'.format(MyGlobus['datashare_legacy']),
 			                     'acl_path': '{0}'.format(path)
 			                    })
@@ -608,12 +614,13 @@ def get_session(sid):
 def submit_rda_transfer(data):
 	""" General data transfer to RDA endpoints.  Input is JSON dict. """
 
-	source_endpoint = get_endpoint_id(data['source_endpoint_name'])
-	destination_endpoint = get_endpoint_id(data['destination_endpoint_name'])	
 	client_id = get_client_id(data)
 	tokens = get_tokens(client_id)
 	transfer_refresh_token = tokens['transfer_rt']
 	auth_refresh_token = tokens['auth_rt']
+
+	source_endpoint = get_endpoint_by_name(data['source_endpoint'])
+	destination_endpoint = get_endpoint_by_name(data['destination_endpoint'])	
 
 	if (data['label']):
 		label = data['label']
@@ -667,7 +674,7 @@ def submit_rda_transfer(data):
 	print(msg)
 
 #=========================================================================================
-def get_endpoint_id(endpoint_name):
+def get_endpoint_by_name(endpoint_name):
 
 	try:
 		endpoint_id = MyEndpoints[endpoint_name]
@@ -680,11 +687,26 @@ def get_endpoint_id(endpoint_name):
 
 #=========================================================================================
 def get_client_id(data):
-	dest_endpoint_name = data['destination_endpoint_name']
-	if dest_endpoint_name == "NCAR RDA Quasar" or dest_endpoint_name == "NCAR RDA Quasar DRDATA":
-		client_id = MyGlobus['rda_quasar_client_id']
+	""" Get valid client ID based on command-line or JSON input action """
+
+	action = data['action']
+	
+	client_map = {
+			"ap": "client-id",
+			"rp": "client-id",
+			"st": "client-id",
+			"ls": "rda_quasar_client_id",
+			"transfer": "rda_quasar_client_id",
+			"tb": "rda_quasar_client_id",
+			"dr": "rda_quasar_client_id",
+			"tb-quasar" : "rda_quasar_client_id",
+			"dr-quasar" : "rda_quasar_client_id"
+	}
+
+	if action in client_map:
+		client_id = MyGlobus[action]
 	else:
-		msg = "[get_client_id] Unknown destination endpoint"
+		msg = "[get_client_id] Unknown action.  Cannot map to valid client ID."
 		my_logger.error(msg)
 		sys.exit(1)
 
@@ -695,6 +717,9 @@ def get_tokens(client_id):
 	if client_id == MyGlobus['rda_quasar_client_id']:
 		transfer_rt = MyGlobus['transfer_rt_quasar']
 		auth_rt = MyGlobus['auth_rt_quasar']
+	elif client_id == MyGlobus['client_id']:
+		transfer_rt = MyGlobus['transfer_refresh_token']
+		auth_rt = MyGlobus['auth_refresh_token']
 	else:
 		msg = "[get_tokens] Unknown client ID"
 		my_logger.error(msg)
@@ -753,7 +778,7 @@ def list_endpoint_files(data):
 	client_id = MyGlobus['rda_quasar_client_id']
 	tokens = get_tokens(client_id)
 	transfer_refresh_token = tokens['transfer_rt']
-	endpoint = get_endpoint_id(data['endpoint'])
+	endpoint = get_endpoint_by_name(data['endpoint'])
 	
 	client = load_rda_native_client(client_id)
 	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
@@ -773,7 +798,7 @@ def list_endpoint_files(data):
 	print(header)
 
 	for i in range(len(contents)):
-		type = contents[i]['DATA_TYPE']
+		type = contents[i]['type']
 		group = contents[i]['group']
 		last_modified = contents[i]['last_modified']
 		name = contents[i]['name']
@@ -792,6 +817,39 @@ def read_json_from_stdin():
 		in_json += line
 	json_dict = json.loads(in_json)
 	return json_dict
+
+#=========================================================================================
+def do_action(data):
+	""" Run operations based on command line or JSON input """
+	
+	try:
+		action = data['action']
+	except KeyError:
+		msg = "[do_action] 'action' missing from JSON or command-line input.  Run dsglobus -h for usage instructions."
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	command = data['action']
+	
+	dispatch = {
+			"ap": add_endpoint_acl_rule,
+			"rp": delete_endpoint_acl_rule,
+			"st": submit_dsrqst_transfer,
+			"ls": list_endpoint_files,
+			"transfer": submit_rda_transfer,
+			"tb": submit_rda_transfer,
+			"dr": submit_rda_transfer,
+			"tb-quasar" : submit_rda_transfer,
+			"dr-quasar" : submit_rda_transfer
+	}
+	if command in dispatch:
+		command = dispatch[command]
+	else:
+		msg = "[do_action] command {} not found.".format(command)
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	return command(data)
 
 #=========================================================================================
 def parse_input():
@@ -820,12 +878,17 @@ def parse_input():
 	group.add_argument('--remove-permission', '-rp', action="store_true", default=False, help='Delete endpoint permission')
 	group.add_argument('--submit-transfer', '-st', action="store_true", default=False, help='Submit Globus transfer on behalf of user.  For dsrqst push transfers.')
 	group.add_argument('--list-files', '-ls', action="store_true", default=False, help='List files on a specified endpoint path.')
+	group.add_argument('--transfer', '-t', action="store_true", default=False, help='Transfer data between RDA endpoints.')
 
 	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
 	parser.add_argument('--email', '-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
 	parser.add_argument('--no-email', '-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
 	parser.add_argument('--endpoint', '-ep', action="store", dest="ENDPOINT", help='Endpoint ID or name.  Required with -ls argument.')
+	parser.add_argument('--source-endpoint', '-se', action="store", dest="SOURCE_ENDPOINT", help='Source endpoint ID or name.  Required with --transfer option.')
+	parser.add_argument('--destination-endpoint', '-de', action="store", dest="DESTINATION_ENDPOINT", help='Destination endpoint ID or name.  Required with --transfer.')
+	parser.add_argument('--source-file', '-sf', action="store", dest="SOURCE_FILE", help='Path to source file name, relative to source endpoint host path.  Required with --transfer option.')
+	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER", help='Filter applied to file listing.')
 	parser.add_argument('--recursive', )
@@ -839,20 +902,25 @@ def parse_input():
 
 	opts = vars(args)
 	if args.add_permission:
-		opts.update({'add_permission': True})
+		opts.update({"action": "ap"})
 	if args.remove_permission:
-		opts.update({'remove_permission': True})
+		opts.update({"action": "rp"})
 	if args.submit_transfer:
-		opts.update({'submit_transfer': True})
+		opts.update({"action": "st"})
 	if args.list_files:
-		opts.update({'list_files': True})
-		opts.update({'action': 3})
+		opts.update({"action": "ls"})
+	if args.transfer:
+		opts.update({"action": "transfer"})
 	
 	if args.no_email:
 		opts.update({'notify': False})
 	else:
 		opts.update({'notify': True})
 	
+	if args.transfer and (args.SOURCE_ENDPOINT is None or args.DESTINATION_ENDPOINT is None or args.SOURCE_FILE is None or args.DESTINATION_FILE is None):
+		msg = "Option --transfer requires arguments [--source-endpoint, --destination-endpoint, --source-file, --destination-file]."
+		my_logger.error(msg)
+		parser.error(msg)
 	if args.list_files and (args.ENDPOINT is None or args.PATH is None):
 		msg = "Option --list-files requires both --endpoint and --directory."
 		my_logger.error(msg)
@@ -880,7 +948,7 @@ def parse_input():
 
 	if args.REQUESTINDEX:
 		opts.update({'ridx': args.REQUESTINDEX})
-		opts.update({'action': 1})
+		opts.update({'type': 'dsrqst'})
 	elif args.DATASETID:
 		dsid = args.DATASETID
 		if not re.match(r'^(ds){0,1}\d{3}\.\d{1}$', dsid, re.I):
@@ -892,7 +960,7 @@ def parse_input():
 			dsid = "ds%s" % dsid
 		opts.update({'dsid': dsid.lower()})
 		opts.update({'email': args.EMAIL})
-		opts.update({'action': 2})
+		opts.update({'type': 'dataset'})
 	elif args.list_files:
 		opts.update({'endpoint': args.ENDPOINT})
 		opts.update({'path': args.PATH})
