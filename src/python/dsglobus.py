@@ -840,7 +840,8 @@ def do_action(data):
 			"tb": submit_rda_transfer,
 			"dr": submit_rda_transfer,
 			"tb-quasar" : submit_rda_transfer,
-			"dr-quasar" : submit_rda_transfer
+			"dr-quasar" : submit_rda_transfer,
+			"gt": get_task_info
 	}
 	if command in dispatch:
 		command = dispatch[command]
@@ -867,8 +868,31 @@ def parse_input():
 	  - Share all files from RDA dataset ds131.2 with a user:
 	             dsglobus -ap -ds 131.2 -em tcram@ucar.edu
 
+	  - Transfer data from GLADE to the NCAR Quasar tape system
+	  			 dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/data_file.txt --destination-file /ds999.9/data_file.txt
+	  			 
 	  - List files on the 'NCAR RDA Quasar' endpoint:
-	             dsglobus -ls -ep 'NCAR RDA Quasar' -dir /ds999.9/cmorph_v1.0/2019
+	             dsglobus -ls -ep 'NCAR RDA Quasar' -p /ds999.9/cmorph_v1.0/2019
+
+	Filtering:
+	  When using the --filter option, you can list files and dirs on a specific path on an endpoint based on the filter criterion.
+
+      Filter patterns must start with "=", "~", "!", or "!~"
+      If none of these are given, "=" will be used
+
+      "=" does exact matching
+      "~" does regex matching, supporting globs (*)
+      "!" does inverse "=" matching
+      "!~" does inverse "~" matching
+
+      "~*.txt" matches all .txt files, for example
+    
+	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*.txt'  # all txt files
+	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '!~file1.*'  # not starting in "file1."
+	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*ile3.tx*'  # anything with "ile3.tx"
+	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '=file2.txt'  # only "file2.txt"
+	  $ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
+	  $ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
 	''')
 
 	parser = argparse.ArgumentParser(prog='dsglobus', formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
