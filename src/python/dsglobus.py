@@ -735,7 +735,7 @@ def get_tokens(client_id):
 
 #=========================================================================================
 def get_task_info(data):
-	""" Get transfer task info for transfers to Quasar endpoints """
+	""" Get Globus task info for a specified task ID """
 	if 'task_id' not in data:
 		msg = "[get_task_info] Task ID missing from input."
 		my_logger.error(msg)
@@ -749,7 +749,47 @@ def get_task_info(data):
 	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
 	tc = TransferClient(authorizer=tc_authorizer)
 	
-	task_info = tc.get_task(datta['task_id'])
+	task_info = tc.get_task(data['task_id'])
+	
+	common_fields = [
+    	("Label", "label"),
+		("Task ID", "task_id"),
+		("Is Paused", "is_paused"),
+		("Type", "type"),
+		("Directories", "directories"),
+		("Files", "files"),
+		("Status", "status"),
+		("Request Time", "request_time"),
+	]
+	completed_fields = [("Completion Time", "completion_time")]
+	delete_fields = [
+		("Endpoint", "source_endpoint_display_name"),
+		("Endpoint ID", "source_endpoint_id"),
+	]
+	transfer_fields = [
+		("Source Endpoint", "source_endpoint_display_name"),
+		("Source Endpoint ID", "source_endpoint_id"),
+		("Destination Endpoint", "destination_endpoint_display_name"),
+		("Destination Endpoint ID", "destination_endpoint_id"),
+		("Bytes Transferred", "bytes_transferred"),
+		("Bytes Per Second", "effective_bytes_per_second"),
+	]
+
+	for field in common_fields:
+		print("{0}:\t{1}".format(field[0], task_info[field[1]]))
+	
+	if task_info['status'] == 'SUCCEEDED':
+		for field in completed_fields:
+			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
+
+	if task_info['type'] == 'TRANSFER':
+		for field in transfer_fields:
+			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
+
+	if task_info['type'] == 'DELETE':
+		for field in delete_fields:
+			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
+	
 	return task_info.data
 
 #=========================================================================================
@@ -906,7 +946,8 @@ def parse_input():
 	group.add_argument('--submit-transfer', '-st', action="store_true", default=False, help='Submit Globus transfer on behalf of user.  For dsrqst push transfers.')
 	group.add_argument('--list-files', '-ls', action="store_true", default=False, help='List files on a specified endpoint path.')
 	group.add_argument('--transfer', '-t', action="store_true", default=False, help='Transfer data between RDA endpoints.')
-
+	group.add_argument('--get-task', '-gt', action="store_true", default=False, help='Show information about a Globus task.')
+	
 	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
 	parser.add_argument('--email', '-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
@@ -918,6 +959,7 @@ def parse_input():
 	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER", help='Filter applied to file listing.')
+	parser.add_argument('--task-id', action="store", dest="TASK_ID", help='Globus task ID.')
 	
 	if len(sys.argv)==1:
 		parser.print_help()
@@ -937,12 +979,18 @@ def parse_input():
 		opts.update({"action": "ls"})
 	if args.transfer:
 		opts.update({"action": "transfer"})
+	if args.get_task:
+		opts.update({"action": "gt"})
 	
 	if args.no_email:
 		opts.update({'notify': False})
 	else:
 		opts.update({'notify': True})
 	
+	if args.get_task and args.TASK_ID is None:
+		msg = "Option --get-task requires --task-id."
+		my_logger.error(msg)
+		parser.error(msg)
 	if args.transfer and (args.SOURCE_ENDPOINT is None or args.DESTINATION_ENDPOINT is None or args.SOURCE_FILE is None or args.DESTINATION_FILE is None):
 		msg = "Option --transfer requires arguments [--source-endpoint, --destination-endpoint, --source-file, --destination-file]."
 		my_logger.error(msg)
@@ -997,6 +1045,8 @@ def parse_input():
 	elif args.transfer:
 		opts.update({"source_endpoint": args.SOURCE_ENDPOINT, "destination_endpoint": args.DESTINATION_ENDPOINT})
 		opts.update({"files": [{"source_file": args.SOURCE_FILE, "destination_file": args.DESTINATION_FILE}]})
+	elif args.get_task:
+		opts.update({"task_id": args.TASK_ID})
 	else:
 		parser.print_help()
 		sys.exit(1)
