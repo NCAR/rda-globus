@@ -812,7 +812,7 @@ def task_list(data):
 	filter_requested_after:  Filter results to tasks submitted after given date, formatted as YYYY-MM-DD
 	filter_completed_before: Filter results to tasks completed before given date, formatted as YYYY-MM-DD
 	filter_completed_after:  Filter results to tasks completed after given date, formatted as YYYY-MM-DD
-	""""
+	"""
 	
 	client_id = MyGlobus['rda_quasar_client_id']
 	tokens = get_tokens(client_id)
