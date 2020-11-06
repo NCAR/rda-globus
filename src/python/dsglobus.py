@@ -797,8 +797,23 @@ def get_task_info(data):
 
 #=========================================================================================
 def task_list(data):
-	""" Get a list of Globus tasks submitted by the current user """
+	""" Get a list of Globus tasks submitted by the current user
 
+	The parameter 'limit' can be passed in the input dict 'data' to limit the number of 
+	results, e.g. data['limit'] = 10.
+	
+	=== Filtering
+	The following parameters can be included in the input dict 'data' to filter the results:
+	
+	filter_task_id: Comma separated list of task IDs, formatted as UUID strings
+	filter_type:    Comma separated list of task type (TRANSFER, DELETE)
+	filter_status:  Comma separated list of status codes (ACTIVE, INACTIVE, FAILED, SUCCEEDED)
+	filter_requested_before: Filter results to tasks submitted before given date, formatted as YYYY-MM-DD
+	filter_requested_after:  Filter results to tasks submitted after given date, formatted as YYYY-MM-DD
+	filter_completed_before: Filter results to tasks completed before given date, formatted as YYYY-MM-DD
+	filter_completed_after:  Filter results to tasks completed after given date, formatted as YYYY-MM-DD
+	""""
+	
 	client_id = MyGlobus['rda_quasar_client_id']
 	tokens = get_tokens(client_id)
 	transfer_refresh_token = tokens['transfer_rt']
@@ -835,7 +850,7 @@ def task_list(data):
 	for field in fields:
 		print("{0}\t| ".format(field[0]))
 		
-	list = tc.task_list(num_results=limit, filter=filter_string):
+	list = tc.task_list(num_results=limit, filter=filter_string)
 	list_data = list.data
 	
 	for task in list.data:
