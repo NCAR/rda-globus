@@ -35,6 +35,7 @@ import logging
 import logging.handlers
 import json
 import textwrap
+import six
 from datetime import datetime
 from time import strftime
 from phpserialize import unserialize
@@ -703,7 +704,9 @@ def get_client_id(data):
 			"tb": "rda_quasar_client_id",
 			"dr": "rda_quasar_client_id",
 			"tb-quasar" : "rda_quasar_client_id",
-			"dr-quasar" : "rda_quasar_client_id"
+			"dr-quasar" : "rda_quasar_client_id",
+			"gt": "rda_quasar_client_id",
+			"tl": "rda_quasar_client_id"
 	}
 
 	if action in client_map:
@@ -793,6 +796,65 @@ def get_task_info(data):
 	return task_info.data
 
 #=========================================================================================
+def task_list(data):
+	""" Get a list of Globus tasks submitted by the current user """
+
+	client_id = MyGlobus['rda_quasar_client_id']
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	limit = data['limit']
+	
+	# make filter string
+	filter_string = ""
+	filter_string += process_filterval("task_id", data['filter_task_id'])
+	filter_string += process_filterval("status", data['filter_status'])
+	filter_string += process_filterval(
+		"type", data['filter_type'], default="type:TRANSFER,DELETE/"
+	)
+	filter_string += process_filterval(
+		"request_time", [data['filter_requested_after'], data['filter_requested_before']]
+	)
+	filter_string += process_filterval(
+		"completion_time", [data['filter_completed_after'], data['filter_completed_before']]
+	)
+
+	fields = [
+		("Task ID", "task_id"),
+		("Status", "status"),
+		("Type", "type"),
+		("Source Display Name", "source_endpoint_display_name"),
+		("Dest Display Name", "destination_endpoint_display_name"),
+		("Label", "label"),
+	]
+
+	for field in fields:
+		print("{0}\t| ".format(field[0]))
+		
+	list = tc.task_list(num_results=limit, filter=filter_string):
+	list_data = list.data
+	
+	for task in list.data:
+		for field in fields:
+			print("{}\t| ".format(task[field[1]]))
+
+	return list
+
+#=========================================================================================
+def process_filterval(prefix, value, default=None):
+	""" Create filter string for task_list """
+	if value:
+		if isinstance(value, six.string_types):
+			return "{}:{}/".format(prefix, value)
+		return "{}:{}/".format(prefix, ",".join(str(x) for x in value))
+	else:
+		return default or ""
+            
+#=========================================================================================
 def list_endpoint_files(data):
 	""" List endpoint directory contents 
 	
@@ -828,8 +890,8 @@ def list_endpoint_files(data):
 	tc = TransferClient(authorizer=tc_authorizer)
 
 	ls_params = {"path": data['path']}
-	if data['filters']:
-		ls_params.update({"filter": "name:{}".format(data['filters'])})
+	if data['filter_pattern']:
+		ls_params.update({"filter": "name:{}".format(data['filter_pattern'])})
 
 	result = tc.operation_ls(endpoint, **ls_params)
 	ls_data = result.data
@@ -884,7 +946,8 @@ def do_action(data):
 			"dr": submit_rda_transfer,
 			"tb-quasar" : submit_rda_transfer,
 			"dr-quasar" : submit_rda_transfer,
-			"gt": get_task_info
+			"gt": get_task_info,
+			"tl": task_list
 	}
 	if command in dispatch:
 		command = dispatch[command]
@@ -896,9 +959,22 @@ def do_action(data):
 	return command(data)
 
 #=========================================================================================
+def valid_date(date_str):
+	""" Validate date input """
+	from time import strptime
+	fmt = "%Y-%m-%d"
+	try:
+		return strptime(date_str, fmt)
+	except ValueError:
+		msg = "Not a valid date: '{0}'.".format(date_str)
+		raise argparse.ArgumentTypeError(msg)
+
+#=========================================================================================
 def parse_input():
 	""" Parse command line arguments """
 	import re
+	from time import strptime
+	
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
 	epilog = textwrap.dedent('''\
 	Examples:
@@ -937,6 +1013,8 @@ def parse_input():
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
 	''')
+	
+	date_fmt = "%Y-%m-%d"
 
 	parser = argparse.ArgumentParser(prog='dsglobus', formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
 
@@ -947,6 +1025,7 @@ def parse_input():
 	group.add_argument('--list-files', '-ls', action="store_true", default=False, help='List files on a specified endpoint path.')
 	group.add_argument('--transfer', '-t', action="store_true", default=False, help='Transfer data between RDA endpoints.')
 	group.add_argument('--get-task', '-gt', action="store_true", default=False, help='Show information about a Globus task.')
+	group.add_argument('--task-list', '-tl', action="store_true", default=False, help='List Globus tasks for the current user.')
 	
 	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
@@ -958,8 +1037,16 @@ def parse_input():
 	parser.add_argument('--source-file', '-sf', action="store", dest="SOURCE_FILE", help='Path to source file name, relative to source endpoint host path.  Required with --transfer option.')
 	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
-	parser.add_argument('--filter', action="store", dest="FILTER", help='Filter applied to file listing.')
+	parser.add_argument('--filter', action="store", dest="FILTER_PATTERN", help='Filter applied to --list-files.')
 	parser.add_argument('--task-id', action="store", dest="TASK_ID", help='Globus task ID.')
+	parser.add_argument('--limit', action="store", dest="LIMIT", type=int, help='Limit number of results.')
+	parser.add_argument('--filter-task-id', action="store", dest="UUID", help='task UUID to filter by.')
+	parser.add_argument('--filter-type', action="store", dest="FILTER_TYPE", help='Filter results to only TRANSFER or DELETE tasks.', choices=['TRANSFER', 'DELETE'])
+	parser.add_argument('--filter-status', action="store", dest="FILTER_STATUS", help='Filter results to given task status.', choices=['ACTIVE', 'INACTIVE', 'FAILED', 'SUCCEEDED'])
+	parser.add_argument('--filter-requested-before', action="store", dest="FILTER_REQUESTED_BEFORE", help='Filter results to tasks submitted before given time.', type=valid_date)
+	parser.add_argument('--filter-requested-after', action="store", dest="FILTER_REQUESTED_AFTER", help='Filter results to tasks submitted after given time.', type=valid_date)
+	parser.add_argument('--filter-completed-before', action="store", dest="FILTER_COMPLETED_BEFORE", help='Filter results to tasks completed before given time.', type=valid_date)
+	parser.add_argument('--filter-completed-after', action="store", dest="FILTER_COMPLETED_AFTER", help='Filter results to tasks completed after given time.', type=valid_date)
 	
 	if len(sys.argv)==1:
 		parser.print_help()
@@ -981,6 +1068,8 @@ def parse_input():
 		opts.update({"action": "transfer"})
 	if args.get_task:
 		opts.update({"action": "gt"})
+	if args.task_list:
+		opts.update({"action": "tl"})
 	
 	if args.no_email:
 		opts.update({'notify': False})
@@ -1036,22 +1125,21 @@ def parse_input():
 		opts.update({'email': args.EMAIL})
 		opts.update({'type': 'dataset'})
 	elif args.list_files:
-		opts.update({'endpoint': args.ENDPOINT})
-		opts.update({'path': args.PATH})
-		if args.FILTER:
-			opts.update({'filters': args.FILTER})
-		else:
-			opts.update({'filters': None})
+		pass
 	elif args.transfer:
-		opts.update({"source_endpoint": args.SOURCE_ENDPOINT, "destination_endpoint": args.DESTINATION_ENDPOINT})
 		opts.update({"files": [{"source_file": args.SOURCE_FILE, "destination_file": args.DESTINATION_FILE}]})
 	elif args.get_task:
-		opts.update({"task_id": args.TASK_ID})
+		pass
+	elif args.task_list:
+		pass
 	else:
 		parser.print_help()
 		sys.exit(1)
 
 	opts.update({'print': True})
+	
+	# convert all keys in opts to lower case
+	opts = {k.lower(): v for k,v in opts.items()}
 
 	return opts
 	
