@@ -826,14 +826,33 @@ def task_list(data):
 	
 	try:
 		filter_task_id = data['filter_task_id']
+	except KeyError:
+		filter_task_id = None
+
+	try:
 		filter_type = data['filter_type']
+	except KeyError:
+		filter_type = None
+	try:
 		filter_status = data['filter_status']
+	except KeyError:
+		filter_status = None
+	try:
 		filter_requested_before = data['filter_requested_before']
+	except KeyError:
+		filter_requested_before = None
+	try:
 		filter_requested_after = data['filter_requested_after']
+	except KeyError:
+		filter_requested_after = None
+	try:
 		filter_completed_before = data['filter_completed_before']
+	except KeyError:
+		filter_completed_before = None
+	try:
 		filter_completed_after = data['filter_completed_after']
 	except KeyError:
-		pass
+		filter_completed_after = None
 
 	# make filter string
 	filter_string = ""
