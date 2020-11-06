@@ -881,8 +881,9 @@ def task_list(data):
 
 	for field in fields:
 		print("{0}\t| ".format(field[0]))
-		
-	list = tc.task_list(num_results=limit, filter=filter_string)
+	
+	# get list, ignore trailing '/' in filter_string
+	list = tc.task_list(num_results=limit, filter=filter_string[:-1])
 	list_data = list.data
 	
 	for task in list.data:
