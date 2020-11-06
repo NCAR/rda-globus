@@ -824,18 +824,29 @@ def task_list(data):
 	
 	limit = data['limit']
 	
+	try:
+		filter_task_id = data['filter_task_id']
+		filter_type = data['filter_type']
+		filter_status = data['filter_status']
+		filter_requested_before = data['filter_requested_before']
+		filter_requested_after = data['filter_requested_after']
+		filter_completed_before = data['filter_completed_before']
+		filter_completed_after = data['filter_completed_after']
+	except KeyError:
+		pass
+
 	# make filter string
 	filter_string = ""
-	filter_string += process_filterval("task_id", data['filter_task_id'])
-	filter_string += process_filterval("status", data['filter_status'])
+	filter_string += process_filterval("task_id", filter_task_id)
+	filter_string += process_filterval("status", filter_status)
 	filter_string += process_filterval(
-		"type", data['filter_type'], default="type:TRANSFER,DELETE/"
+		"type", filter_type, default="type:TRANSFER,DELETE/"
 	)
 	filter_string += process_filterval(
-		"request_time", [data['filter_requested_after'], data['filter_requested_before']]
+		"request_time", [filter_requested_after, filter_requested_before]
 	)
 	filter_string += process_filterval(
-		"completion_time", [data['filter_completed_after'], data['filter_completed_before']]
+		"completion_time", [filter_completed_after, filter_completed_before]
 	)
 
 	fields = [
