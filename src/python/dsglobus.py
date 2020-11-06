@@ -876,6 +876,8 @@ def task_list(data):
 		("Dest Display Name", "destination_endpoint_display_name"),
 		("Label", "label"),
 	]
+	
+	print("task_list filter string:\n{}".format(filter_string))
 
 	for field in fields:
 		print("{0}\t| ".format(field[0]))
