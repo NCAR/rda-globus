@@ -823,50 +823,50 @@ def task_list(data):
 	tc = TransferClient(authorizer=tc_authorizer)
 	
 	limit = data['limit']
-	
-	try:
-		filter_task_id = data['filter_task_id']
-	except KeyError:
-		filter_task_id = None
-
-	try:
-		filter_type = data['filter_type']
-	except KeyError:
-		filter_type = None
-	try:
-		filter_status = data['filter_status']
-	except KeyError:
-		filter_status = None
-	try:
-		filter_requested_before = data['filter_requested_before']
-	except KeyError:
-		filter_requested_before = None
-	try:
-		filter_requested_after = data['filter_requested_after']
-	except KeyError:
-		filter_requested_after = None
-	try:
-		filter_completed_before = data['filter_completed_before']
-	except KeyError:
-		filter_completed_before = None
-	try:
-		filter_completed_after = data['filter_completed_after']
-	except KeyError:
-		filter_completed_after = None
 
 	# make filter string
 	filter_string = ""
-	filter_string += process_filterval("task_id", filter_task_id)
-	filter_string += process_filterval("status", filter_status)
-	filter_string += process_filterval(
-		"type", filter_type, default="type:TRANSFER,DELETE/"
-	)
-	filter_string += process_filterval(
-		"request_time", [filter_requested_after, filter_requested_before]
-	)
-	filter_string += process_filterval(
-		"completion_time", [filter_completed_after, filter_completed_before]
-	)
+	try:
+		filter_task_id = data['filter_task_id']
+		filter_string += process_filterval("task_id", filter_task_id)
+	except KeyError:
+		pass
+	try:
+		filter_status = data['filter_status']
+		filter_string += process_filterval("status", filter_status)
+	except KeyError:
+		pass
+	try:
+		filter_type = data['filter_type']
+		filter_string += process_filterval("type", filter_type, default="type:TRANSFER,DELETE/")
+	except KeyError:
+		pass
+	
+	try:
+		filter_requested_before = data['filter_requested_before']
+	except KeyError:
+		filter_requested_before = ""
+	try:
+		filter_requested_after = data['filter_requested_after']
+	except KeyError:
+		filter_requested_after = ""
+	try:
+		filter_completed_before = data['filter_completed_before']
+	except KeyError:
+		filter_completed_before = ""
+	try:
+		filter_completed_after = data['filter_completed_after']
+	except KeyError:
+		filter_completed_after = ""
+
+	if (filter_requested_before or filter_requested_after):
+		filter_string += process_filterval(
+			"request_time", [filter_requested_after, filter_requested_before]
+		)
+	if (filter_completed_before or filter_completed_after):
+		filter_string += process_filterval(
+			"completion_time", [filter_completed_after, filter_completed_before]
+		)
 
 	fields = [
 		("Task ID", "task_id"),
