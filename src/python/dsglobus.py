@@ -787,6 +787,9 @@ def get_task_info(data):
 			  + (completed_fields if task_info["completion_time"] else active_fields)
 			  + (delete_fields if task_info["type"] == "DELETE" else transfer_fields)			  
 			  )
+
+	print(fields:\n{}.format(fields))
+	
 	print_table(task_info, fields)
 
 	"""
