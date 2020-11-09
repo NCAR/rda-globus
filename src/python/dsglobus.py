@@ -1080,7 +1080,7 @@ def parse_input():
 	parser.add_argument('--filter', action="store", dest="FILTER_PATTERN", help='Filter applied to --list-files.')
 	parser.add_argument('--task-id', action="store", dest="TASK_ID", help='Globus task ID.')
 	parser.add_argument('--limit', action="store", dest="LIMIT", type=int, help='Limit number of results.')
-	parser.add_argument('--filter-task-id', action="store", dest="UUID", help='task UUID to filter by.')
+	parser.add_argument('--filter-task-id', action="store", dest="FILTER_TASK_ID", help='task UUID to filter by.')
 	parser.add_argument('--filter-type', action="store", dest="FILTER_TYPE", help='Filter results to only TRANSFER or DELETE tasks.', choices=['TRANSFER', 'DELETE'])
 	parser.add_argument('--filter-status', action="store", dest="FILTER_STATUS", help='Filter results to given task status.', choices=['ACTIVE', 'INACTIVE', 'FAILED', 'SUCCEEDED'])
 	parser.add_argument('--filter-requested-before', action="store", dest="FILTER_REQUESTED_BEFORE", help='Filter results to tasks submitted before given time.', type=valid_date)
