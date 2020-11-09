@@ -790,7 +790,7 @@ def get_task_info(data):
 
 	print("fields:\n{}".format(fields))
 	
-	print_table(task_info, fields)
+	colon_formatted_print(task_info, fields)
 
 	"""
 	for field in common_fields:
@@ -1340,6 +1340,13 @@ def print_table(iterable, headers_and_keys, print_headers=True):
 	for i in iterable:
 		print(format_str.format(*[none_to_null(kf(i)) for kf in keyfuncs]))
 
+#=========================================================================================
+def colon_formatted_print(data, named_fields):
+	maxlen = max(len(n) for n, f in named_fields) + 1
+	for name, field in named_fields:
+		field_keyfunc = _key_to_keyfunc(field)
+		print("{} {}".format((name + ":").ljust(maxlen), field_keyfunc(data)))
+        
 #=========================================================================================
 """ Set up logging """
 my_logger = logging.getLogger(__name__)
