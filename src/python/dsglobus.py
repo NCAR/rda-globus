@@ -943,11 +943,24 @@ def list_endpoint_files(data):
 	ls_params = {"path": data['path']}
 	if data['filter_pattern']:
 		ls_params.update({"filter": "name:{}".format(data['filter_pattern'])})
+	
+	fields=[
+			("Permissions", "permissions"),
+			("User", "user"),
+			("Group", "group"),
+			("Size", "size"),
+			("Last Modified", "last_modified"),
+			("File Type", "type"),
+			("Filename", cleaned_item_name),
+	]
 
-	result = tc.operation_ls(endpoint, **ls_params)
-	ls_data = result.data
+	ls_response = tc.operation_ls(endpoint, **ls_params)
+	print_table(ls_response, fields)
+	
+	ls_data = ls_response.data
 	contents = ls_data['DATA']
 
+	"""
 	msg = "Number of items: {0}\nDATA_TYPE: {1}\nendpoint: {2}\npath: {3}\n".format(ls_data['length'], ls_data['DATA_TYPE'], ls_data['endpoint'], ls_data['path'])
 	print(msg)
 	header = "user |\tgroup |\tpermissions |\tsize |\tlast modified |\ttype |\tname"
@@ -962,6 +975,7 @@ def list_endpoint_files(data):
 		size = contents[i]['size']
 		user = contents[i]['user']
 		print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(user, group, permissions, size, last_modified, type, name))
+	"""
 	
 	return ls_data
 
