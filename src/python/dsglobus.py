@@ -844,30 +844,32 @@ def task_list(data):
 	
 	try:
 		filter_requested_before = data['filter_requested_before']
+		if not filter_requested_before:
+			filter_requested_before = ""
 	except KeyError:
 		filter_requested_before = ""
+
 	try:
 		filter_requested_after = data['filter_requested_after']
+		if not filter_requested_after:
+			filter_requested_after = ""
 	except KeyError:
 		filter_requested_after = ""
+
 	try:
 		filter_completed_before = data['filter_completed_before']
+		if not filter_completed_before:
+			filter_completed_before = ""
 	except KeyError:
 		filter_completed_before = ""
+
 	try:
 		filter_completed_after = data['filter_completed_after']
+		if not filter_completed_after:
+			filter_completed_after = ""
 	except KeyError:
 		filter_completed_after = ""
 	
-	if not filter_requested_before:
-		filter_requested_before = ""
-	if not filter_requested_after:
-		filter_requested_after = ""
-	if not filter_completed_before:
-		filter_completed_before = ""
-	if not filter_completed_after:
-		filter_completed_after = ""
-
 	if (filter_requested_before or filter_requested_after):
 		filter_string += process_filterval(
 			"request_time", [filter_requested_after, filter_requested_before]
