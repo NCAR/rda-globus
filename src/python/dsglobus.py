@@ -880,25 +880,9 @@ def task_list(data):
 	]
 
 	list_response = tc.task_list(num_results=limit, filter=filter_string[:-1])
-	# iterable_list = iterable_response_to_dict(list_response)
-	# print_table(iterable_list, fields)
 	print_table(list_response, fields)
 
-	"""
-	for field in fields:
-		print("{0}\t| ".format(field[0]))
-	
-	# get list, ignore trailing '/' in filter_string
-	list = []
-	for task in tc.task_list(num_results=limit, filter=filter_string[:-1])
-		list.append(task)
-		string = ""
-		for key in fields:
-			string += "{}\t| ".format(task[key[1]])
-		print(string)
-	"""
-
-	return iterable_list
+	return list_response
 
 #=========================================================================================
 def process_filterval(prefix, value, default=None):
