@@ -948,9 +948,9 @@ def list_endpoint_files(data):
 		return item["name"] + ("/" if item["type"] == "dir" else "")
         
 	fields=[
-			("Permissions", "permissions"),
 			("User", "user"),
 			("Group", "group"),
+			("Permissions", "permissions"),
 			("Size", "size"),
 			("Last Modified", "last_modified"),
 			("File Type", "type"),
