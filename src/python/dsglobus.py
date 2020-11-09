@@ -880,8 +880,9 @@ def task_list(data):
 	]
 
 	list_response = tc.task_list(num_results=limit, filter=filter_string[:-1])
-	iterable_list = iterable_response_to_dict(list_response)
-	print_table(iterable_list, fields)	
+	# iterable_list = iterable_response_to_dict(list_response)
+	# print_table(iterable_list, fields)
+	print_table(list_response, fields)
 
 	"""
 	for field in fields:
@@ -1285,7 +1286,7 @@ def print_table(iterable, headers_and_keys, print_headers=True):
 	# only once -- however, to let us write things naturally, convert it to a
 	# list and we can assume it is safe to walk repeatedly
 
-	# iterable = list(iterable)
+	iterable = list(iterable)
 
 	# extract headers and keys as separate lists
 	headers = [h for (h, k) in headers_and_keys]
