@@ -788,27 +788,8 @@ def get_task_info(data):
 			  + (delete_fields if task_info["type"] == "DELETE" else transfer_fields)			  
 			  )
 
-	print("fields:\n{}".format(fields))
-	
 	colon_formatted_print(task_info, fields)
 
-	"""
-	for field in common_fields:
-		print("{0}:\t{1}".format(field[0], task_info[field[1]]))
-	
-	if task_info['status'] == 'SUCCEEDED':
-		for field in completed_fields:
-			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
-
-	if task_info['type'] == 'TRANSFER':
-		for field in transfer_fields:
-			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
-
-	if task_info['type'] == 'DELETE':
-		for field in delete_fields:
-			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
-	"""
-	
 	return task_info.data
 
 #=========================================================================================
