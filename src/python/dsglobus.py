@@ -764,6 +764,7 @@ def get_task_info(data):
 		("Status", "status"),
 		("Request Time", "request_time"),
 	]
+	active_fields = [("Deadline", "deadline"), ("Details", "nice_status")]
 	completed_fields = [("Completion Time", "completion_time")]
 	delete_fields = [
 		("Endpoint", "source_endpoint_display_name"),
@@ -777,7 +778,18 @@ def get_task_info(data):
 		("Bytes Transferred", "bytes_transferred"),
 		("Bytes Per Second", "effective_bytes_per_second"),
 	]
+	successful_transfer_fields = [
+		("Source Path", "source_path"),
+		("Destination Path", "destination_path"),
+	]
 
+	fields = (common_fields
+			  + (completed_fields if task_info["completion_time"] else active_fields)
+			  + (delete_fields if task_info["type"] == "DELETE" else transfer_fields)			  
+			  )
+	print_table(task_info, fields)
+
+	"""
 	for field in common_fields:
 		print("{0}:\t{1}".format(field[0], task_info[field[1]]))
 	
@@ -792,6 +804,7 @@ def get_task_info(data):
 	if task_info['type'] == 'DELETE':
 		for field in delete_fields:
 			print("{0}:\t{1}".format(field[0], task_info[field[1]]))
+	"""
 	
 	return task_info.data
 
@@ -960,27 +973,7 @@ def list_endpoint_files(data):
 	ls_response = tc.operation_ls(endpoint, **ls_params)
 	print_table(ls_response, fields)
 	
-	ls_data = ls_response.data
-	contents = ls_data['DATA']
-
-	"""
-	msg = "Number of items: {0}\nDATA_TYPE: {1}\nendpoint: {2}\npath: {3}\n".format(ls_data['length'], ls_data['DATA_TYPE'], ls_data['endpoint'], ls_data['path'])
-	print(msg)
-	header = "user |\tgroup |\tpermissions |\tsize |\tlast modified |\ttype |\tname"
-	print(header)
-
-	for i in range(len(contents)):
-		type = contents[i]['type']
-		group = contents[i]['group']
-		last_modified = contents[i]['last_modified']
-		name = contents[i]['name']
-		permissions = contents[i]['permissions']
-		size = contents[i]['size']
-		user = contents[i]['user']
-		print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(user, group, permissions, size, last_modified, type, name))
-	"""
-	
-	return ls_data
+	return ls_response.data
 
 #=========================================================================================
 def read_json_from_stdin():
