@@ -1284,7 +1284,8 @@ def print_table(iterable, headers_and_keys, print_headers=True):
 	# the iterable may not be safe to walk multiple times, so we must walk it
 	# only once -- however, to let us write things naturally, convert it to a
 	# list and we can assume it is safe to walk repeatedly
-	iterable = list(iterable)
+
+	# iterable = list(iterable)
 
 	# extract headers and keys as separate lists
 	headers = [h for (h, k) in headers_and_keys]
