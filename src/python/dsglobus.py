@@ -944,6 +944,9 @@ def list_endpoint_files(data):
 	if data['filter_pattern']:
 		ls_params.update({"filter": "name:{}".format(data['filter_pattern'])})
 	
+	def cleaned_item_name(item):
+		return item["name"] + ("/" if item["type"] == "dir" else "")
+        
 	fields=[
 			("Permissions", "permissions"),
 			("User", "user"),
