@@ -1004,7 +1004,8 @@ def valid_date(date_str):
 	from time import strptime
 	fmt = "%Y-%m-%d"
 	try:
-		return strptime(date_str, fmt)
+		date_struct = strptime(date_str, fmt)
+		return datetime(date_struct[0], date_struct[1], date_struct[2]).isoformat()
 	except ValueError:
 		msg = "Not a valid date: '{0}'.".format(date_str)
 		raise argparse.ArgumentTypeError(msg)
