@@ -788,7 +788,7 @@ def get_task_info(data):
 			  + (delete_fields if task_info["type"] == "DELETE" else transfer_fields)			  
 			  )
 
-	print(fields:\n{}.format(fields))
+	print("fields:\n{}".format(fields))
 	
 	print_table(task_info, fields)
 
