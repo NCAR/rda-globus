@@ -859,10 +859,14 @@ def task_list(data):
 	except KeyError:
 		filter_completed_after = ""
 	
-	print("filter_requested_before: {}".format(filter_requested_before))
-	print("filter_requested_after: {}".format(filter_requested_after))
-	print("filter_completed_before: {}".format(filter_completed_before))
-	print("filter_completed_after: {}".format(filter_completed_after))
+	if not filter_requested_before:
+		filter_requested_before = ""
+	if not filter_requested_after:
+		filter_requested_after = ""
+	if not filter_completed_before:
+		filter_completed_before = ""
+	if not filter_completed_after:
+		filter_completed_after = ""
 
 	if (filter_requested_before or filter_requested_after):
 		filter_string += process_filterval(
