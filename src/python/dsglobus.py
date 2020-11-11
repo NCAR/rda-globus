@@ -782,7 +782,7 @@ def rename_multiple_filedir(data):
 		new_path = files[i]['new_path']
 		rename_response = tc.operation_rename(endpoint, oldpath=old_path, newpath=new_path)
 
-		msg = "{}".format(rename_response['message'])
+		msg = "old file: {0}\nnew file: {1}\n{2}".format(old_path, new_path, rename_response['message'])
 		my_logger.info(msg)
 		print(msg)
 
