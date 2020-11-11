@@ -49,7 +49,7 @@ from PyDBI import myget, myupdt, myadd, mymget
 from MyGlobus import MyGlobus, MyEndpoints
 
 from globus_sdk import (TransferClient, TransferAPIError,
-                        TransferData, RefreshTokenAuthorizer, AuthClient, 
+                        TransferData, DeleteData, RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client, load_rda_native_client
 
@@ -678,6 +678,65 @@ def submit_rda_transfer(data):
 	return transfer_result
 
 #=========================================================================================
+def submit_rda_delete(data):
+	""" Delete files and/or directories from RDA endpoints.  Input should be JSON formatted input 
+	    if transferring multiple files. Command line input can be used if deleting a
+	    single file/directory with the action --delete. """
+
+	client_id = get_client_id(data)
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	auth_refresh_token = tokens['auth_rt']
+
+	target_endpoint = get_endpoint_by_name(data['endpoint'])
+
+	try:
+		label = data['label']
+	except KeyError:
+		label=''
+
+	try:
+		files = data['files']
+	except KeyError:
+		msg = "[submit_rda_delete] File(s) missing from JSON or command-line input"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	delete_data = DeleteData(tc, target_endpoint, label=label)
+
+	for i in range(len(files)):
+		target_file = files[i]
+		delete_data.add_item(target_file)
+
+	try:
+		delete_result = tc.submit_delete(delete_data)
+		task_id = transfer_result['task_id']
+	except GlobusAPIError as e:
+		msg = ("[submit_rda_delete] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		raise e
+	except NetworkError:
+		my_logger.error(("[submit_rda_delete] Network Failure. "
+                   "Possibly a firewall or connectivity issue"))
+		raise
+	except GlobusError:
+		logging.exception("[submit_rda_delete] Totally unexpected GlobusError!")
+		raise
+	
+	msg = "{0}\nTask ID: {1}".format(delete_result['message'], task_id)
+	my_logger.info(msg)
+	print(msg)
+	
+	return delete_result
+
+#=========================================================================================
 def get_endpoint_by_name(endpoint_name):
 
 	try:
@@ -992,7 +1051,8 @@ def do_action(data):
 			"tb-quasar" : submit_rda_transfer,
 			"dr-quasar" : submit_rda_transfer,
 			"gt": get_task_info,
-			"tl": task_list
+			"tl": task_list,
+			"delete", submit_rda_delete
 	}
 	if command in dispatch:
 		command = dispatch[command]
@@ -1072,16 +1132,18 @@ def parse_input():
 	group.add_argument('--transfer', '-t', action="store_true", default=False, help='Transfer data between RDA endpoints.')
 	group.add_argument('--get-task', '-gt', action="store_true", default=False, help='Show information about a Globus task.')
 	group.add_argument('--task-list', '-tl', action="store_true", default=False, help='List Globus tasks for the current user.')
+	group.add_argument('--delete', '-d', action="store_true", default=False, help='Delete files and/or directories on an endpoint.')
 	
 	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
 	parser.add_argument('--email', '-em', action="store", dest="EMAIL", help='User e-mail.  Required with the -ds argument.')
 	parser.add_argument('--no-email', '-ne', action="store_true", default=False, help='Do not send notification e-mail.  Default = False.')
-	parser.add_argument('--endpoint', '-ep', action="store", dest="ENDPOINT", help='Endpoint ID or name.  Required with -ls argument.')
+	parser.add_argument('--endpoint', '-ep', action="store", dest="ENDPOINT", help='Endpoint ID or name.  Required with --list-files and --delete arguments.')
 	parser.add_argument('--source-endpoint', '-se', action="store", dest="SOURCE_ENDPOINT", help='Source endpoint ID or name.  Required with --transfer option.')
 	parser.add_argument('--destination-endpoint', '-de', action="store", dest="DESTINATION_ENDPOINT", help='Destination endpoint ID or name.  Required with --transfer.')
 	parser.add_argument('--source-file', '-sf', action="store", dest="SOURCE_FILE", help='Path to source file name, relative to source endpoint host path.  Required with --transfer option.')
 	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
+	parser.add_argument('--target-file', '-tf', action="store", dest="TARGET_FILE", help='Path to target file name, relative to endpoint host path.  Required with --delete.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER_PATTERN", help='Filter applied to --list-files.')
 	parser.add_argument('--task-id', action="store", dest="TASK_ID", help='Globus task ID.')
@@ -1116,6 +1178,8 @@ def parse_input():
 		opts.update({"action": "gt"})
 	if args.task_list:
 		opts.update({"action": "tl"})
+	if args.delete:
+		opts.update({"action": "delete"})
 	
 	if args.no_email:
 		opts.update({'notify': False})
@@ -1128,6 +1192,10 @@ def parse_input():
 		parser.error(msg)
 	if args.transfer and (args.SOURCE_ENDPOINT is None or args.DESTINATION_ENDPOINT is None or args.SOURCE_FILE is None or args.DESTINATION_FILE is None):
 		msg = "Option --transfer requires arguments [--source-endpoint, --destination-endpoint, --source-file, --destination-file]."
+		my_logger.error(msg)
+		parser.error(msg)
+	if args.delete and (args.ENDPOINT is None or args.TARGET_FILE is None):
+		msg = "Option --delete requires --endpoint."
 		my_logger.error(msg)
 		parser.error(msg)
 	if args.list_files and (args.ENDPOINT is None or args.PATH is None):
@@ -1174,6 +1242,8 @@ def parse_input():
 		pass
 	elif args.transfer:
 		opts.update({"files": [{"source_file": args.SOURCE_FILE, "destination_file": args.DESTINATION_FILE}]})
+	elif args.delete:
+		opts.update({"files": [args.TARGET_FILE]})
 	elif args.get_task:
 		pass
 	elif args.task_list:
