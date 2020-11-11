@@ -714,7 +714,7 @@ def submit_rda_delete(data):
 
 	try:
 		delete_result = tc.submit_delete(delete_data)
-		task_id = transfer_result['task_id']
+		task_id = delete_result['task_id']
 	except GlobusAPIError as e:
 		msg = ("[submit_rda_delete] Globus API Error\n"
 		       "HTTP status: {}\n"
