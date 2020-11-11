@@ -737,6 +737,60 @@ def submit_rda_delete(data):
 	return delete_result
 
 #=========================================================================================
+def rename_multiple_filedir(data):
+	""" Renames files and/or directories on an endpoint. This function takes 
+	    multiple file name pairs as input, where the input key 'files' is a list 
+	    specifying individual dicts of 'old_path' and 'new_path'.  Example:
+	    
+	    files = [
+	              {
+	                "old_path": "/path/to/old/file/file_1_old.txt",
+	                "new_path": "/path/to/old/file/file_1_new.txt"
+	               }
+	              {
+	                "old_path": "/path/to/old/file/file_2_old.txt",
+	                "new_path": "/path/to/old/file/file_2_new.txt"
+	               }
+	              {
+	                "old_path": "/path/to/old/file/file_3_old.txt",
+	                "new_path": "/path/to/old/file/file_3_new.txt"
+	               }	              
+	            ]
+	"""
+
+	client_id = get_client_id(data)
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	auth_refresh_token = tokens['auth_rt']
+
+	try:
+		endpoint = get_endpoint_by_name(data['endpoint'])
+		files = data['files']
+	except KeyError:
+		msg = "[rename_filedir] Endpoint name or file(s) missing from JSON or command-line input"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	responses = []
+
+	for i in range(len(files)):
+		old_path = files[i]['old_path']
+		new_path = files[i]['new_path']
+		rename_response = tc.operation_rename(endpoint, oldpath=old_path, newpath=new_path)
+
+		msg = "{0}\nTask ID: {1}".format(rename_response['message'])
+		my_logger.info(msg)
+		print(msg)
+
+		responses.append(rename_response)
+	
+	return responses
+
+#=========================================================================================
 def get_endpoint_by_name(endpoint_name):
 
 	try:
@@ -766,7 +820,8 @@ def get_client_id(data):
 			"dr-quasar" : "rda_quasar_client_id",
 			"gt": "rda_quasar_client_id",
 			"tl": "rda_quasar_client_id",
-			"delete": "rda_quasar_client_id"
+			"delete": "rda_quasar_client_id",
+			"rename": "rda_quasar_client_id"
 	}
 
 	if action in client_map:
@@ -1053,7 +1108,8 @@ def do_action(data):
 			"dr-quasar" : submit_rda_transfer,
 			"gt": get_task_info,
 			"tl": task_list,
-			"delete": submit_rda_delete
+			"delete": submit_rda_delete,
+			"rename": rename_multiple_filedir
 	}
 	if command in dispatch:
 		command = dispatch[command]
@@ -1134,6 +1190,7 @@ def parse_input():
 	group.add_argument('--get-task', '-gt', action="store_true", default=False, help='Show information about a Globus task.')
 	group.add_argument('--task-list', '-tl', action="store_true", default=False, help='List Globus tasks for the current user.')
 	group.add_argument('--delete', '-d', action="store_true", default=False, help='Delete files and/or directories on an endpoint.')
+	group.add_argument('--rename', action="store_true", default=False, help='Rename a file or directory on an endpoint.')
 	
 	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
@@ -1156,6 +1213,8 @@ def parse_input():
 	parser.add_argument('--filter-requested-after', action="store", dest="FILTER_REQUESTED_AFTER", help='Filter results to tasks submitted after given time.', type=valid_date)
 	parser.add_argument('--filter-completed-before', action="store", dest="FILTER_COMPLETED_BEFORE", help='Filter results to tasks completed before given time.', type=valid_date)
 	parser.add_argument('--filter-completed-after', action="store", dest="FILTER_COMPLETED_AFTER", help='Filter results to tasks completed after given time.', type=valid_date)
+	parser.add_argument('--oldpath', action="store", dest="OLDPATH", help='Name of existing file or directory, including path.  Required with --rename argument.')
+	parser.add_argument('--newpath', action="store", dest="NEWPATH", help='Name of new file or directory, including path.  Required with --rename argument.')
 	
 	if len(sys.argv)==1:
 		parser.print_help()
@@ -1181,6 +1240,8 @@ def parse_input():
 		opts.update({"action": "tl"})
 	if args.delete:
 		opts.update({"action": "delete"})
+	if args.rename:
+		opts.update({"action": "rename"})
 	
 	if args.no_email:
 		opts.update({'notify': False})
@@ -1223,6 +1284,10 @@ def parse_input():
 		msg = "Option email (--email) requires dataset ID (--dataset)."
 		my_logger.error(msg)
 		parser.error(msg)
+	if args.rename and (args.OLDPATH is None or args.NEWPATH is None or args.ENDPOINT):
+		msg = "Option rename (--rename) requires endpoint name (--endpoint), old path (--oldpath), and new path (--newpath)."
+		my_logger.error(msg)
+		parser.error(msg)
 
 	if args.REQUESTINDEX:
 		opts.update({'ridx': args.REQUESTINDEX})
@@ -1249,6 +1314,8 @@ def parse_input():
 		pass
 	elif args.task_list:
 		pass
+	elif args.rename:
+		opts.update({"files": [{"old_path": args.OLDPATH, "new_path": args.NEWPATH}]})
 	else:
 		parser.print_help()
 		sys.exit(1)
