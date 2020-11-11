@@ -1284,7 +1284,7 @@ def parse_input():
 		msg = "Option email (--email) requires dataset ID (--dataset)."
 		my_logger.error(msg)
 		parser.error(msg)
-	if args.rename and (args.OLDPATH is None or args.NEWPATH is None or args.ENDPOINT):
+	if args.rename and (args.OLDPATH is None or args.NEWPATH is None or args.ENDPOINT is None):
 		msg = "Option rename (--rename) requires endpoint name (--endpoint), old path (--oldpath), and new path (--newpath)."
 		my_logger.error(msg)
 		parser.error(msg)
