@@ -1052,7 +1052,7 @@ def do_action(data):
 			"dr-quasar" : submit_rda_transfer,
 			"gt": get_task_info,
 			"tl": task_list,
-			"delete", submit_rda_delete
+			"delete": submit_rda_delete
 	}
 	if command in dispatch:
 		command = dispatch[command]
