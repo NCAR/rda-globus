@@ -765,7 +765,8 @@ def get_client_id(data):
 			"tb-quasar" : "rda_quasar_client_id",
 			"dr-quasar" : "rda_quasar_client_id",
 			"gt": "rda_quasar_client_id",
-			"tl": "rda_quasar_client_id"
+			"tl": "rda_quasar_client_id",
+			"delete": "rda_quasar_client_id"
 	}
 
 	if action in client_map:
