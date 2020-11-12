@@ -821,7 +821,8 @@ def get_client_id(data):
 			"gt": "rda_quasar_client_id",
 			"tl": "rda_quasar_client_id",
 			"delete": "rda_quasar_client_id",
-			"rename": "rda_quasar_client_id"
+			"rename": "rda_quasar_client_id",
+			"cancel": "rda_quasar_client_id"
 	}
 
 	if action in client_map:
@@ -1008,6 +1009,34 @@ def task_list(data):
 	return list_response
 
 #=========================================================================================
+def task_cancel(data):
+	""" Cancel a Globus task """
+	
+	client_id = get_client_id(data)
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	auth_refresh_token = tokens['auth_rt']
+
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	try:
+		task_id = data['task_id']
+	except KeyError:
+		msg = "[task_cancel] Task ID missing from JSON or command-line input"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	cancel_response = tc.cancel_task(task_id)
+
+	msg = "Task ID: {0}\n{1}".format(task_id, cancel_response['message'])
+	my_logger.info(msg)
+	print(msg)
+	
+	return cancel_response
+
+#=========================================================================================
 def process_filterval(prefix, value, default=None):
 	""" Create filter string for task_list """
 	if value:
@@ -1109,7 +1138,8 @@ def do_action(data):
 			"gt": get_task_info,
 			"tl": task_list,
 			"delete": submit_rda_delete,
-			"rename": rename_multiple_filedir
+			"rename": rename_multiple_filedir,
+			"cancel": task_cancel
 	}
 	if command in dispatch:
 		command = dispatch[command]
@@ -1191,6 +1221,7 @@ def parse_input():
 	group.add_argument('--task-list', '-tl', action="store_true", default=False, help='List Globus tasks for the current user.')
 	group.add_argument('--delete', '-d', action="store_true", default=False, help='Delete files and/or directories on an endpoint.')
 	group.add_argument('--rename', action="store_true", default=False, help='Rename a file or directory on an endpoint.')
+	group.add_argument('--cancel-task', '-ct', action="store_true", default=False, help='Cancel a Globus task.')
 	
 	parser.add_argument('--request-index', '-ri', action="store", dest="REQUESTINDEX", type=int, help='dsrqst request index')
 	parser.add_argument('--dataset', '-ds', action="store", dest="DATASETID", help='Dataset ID.  Specify as dsnnn.n or nnn.n.  Required with the -em argument.')
@@ -1242,6 +1273,8 @@ def parse_input():
 		opts.update({"action": "delete"})
 	if args.rename:
 		opts.update({"action": "rename"})
+	if args.cancel_task:
+		opts.update({"action": "cancel"})
 	
 	if args.no_email:
 		opts.update({'notify': False})
@@ -1288,6 +1321,10 @@ def parse_input():
 		msg = "Option rename (--rename) requires endpoint name (--endpoint), old path (--oldpath), and new path (--newpath)."
 		my_logger.error(msg)
 		parser.error(msg)
+	if args.cancel_task and (args.TASK_ID is None):
+		msg = "Option --cancel-task requires --task-id."
+		my_logger.error(msg)
+		parser.error(msg)
 
 	if args.REQUESTINDEX:
 		opts.update({'ridx': args.REQUESTINDEX})
@@ -1316,6 +1353,8 @@ def parse_input():
 		pass
 	elif args.rename:
 		opts.update({"files": [{"old_path": args.OLDPATH, "new_path": args.NEWPATH}]})
+	elif args.cancel_task:
+		pass
 	else:
 		parser.print_help()
 		sys.exit(1)
