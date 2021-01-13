@@ -34,6 +34,7 @@ import argparse
 import logging
 import logging.handlers
 import json
+import select
 import textwrap
 import six
 from datetime import datetime
@@ -1514,7 +1515,11 @@ configure_log(level='info')
 if __name__ == "__main__":
 	from_pipe = not os.isatty(sys.stdin.fileno())
 	if from_pipe:
-		json_input = read_json_from_stdin()
-		main(json_input=json_input)
+		from_pipe = select.select([sys.stdin,],[],[],0.0)[0]
+		if len(sys.argv) > 1:
+			main()
+		elif from_pipe:
+			json_input = read_json_from_stdin()
+			main(json_input=json_input)
 	else:
 		main()
