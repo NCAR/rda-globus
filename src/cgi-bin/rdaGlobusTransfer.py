@@ -188,7 +188,7 @@ def submit_transfer(session, form):
     try:
         label = form.getvalue('label')[0]
     except TypeError:
-    	label = ''
+        label = ''
 
     """ Check if user has a share set up for this endpoint & path """
     share_data = {'email': email, 'dsid': dsid, 'notify': True}
