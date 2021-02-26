@@ -1400,6 +1400,8 @@ def parse_input():
 		pass
 	elif args.task_list:
 		pass
+	elif args.mkdir:
+		pass
 	elif args.rename:
 		opts.update({"files": [{"old_path": args.OLDPATH, "new_path": args.NEWPATH}]})
 	elif args.cancel_task:
