@@ -862,6 +862,7 @@ def get_client_id(data):
 			"gt": "rda_quasar_client_id",
 			"tl": "rda_quasar_client_id",
 			"delete": "rda_quasar_client_id",
+			"mkdir": "rda_quasar_clientt_id",
 			"rename": "rda_quasar_client_id",
 			"cancel": "rda_quasar_client_id"
 	}
