@@ -826,6 +826,7 @@ def make_directory(data):
 		my_logger.error(msg)
 		if 'Exists' in e.code:
 			print(msg)
+			return e
 		else:
 			raise e
 	
