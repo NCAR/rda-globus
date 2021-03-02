@@ -792,6 +792,47 @@ def rename_multiple_filedir(data):
 	return responses
 
 #=========================================================================================
+def make_directory(data):
+	""" Creates a directory on an endpoint. """
+
+	try:
+		endpoint = get_endpoint_by_name(data['endpoint'])
+		path = data['path']
+	except KeyError:
+		msg = "[make_directory] Endpoint name or path missing from JSON or command-line input"
+		my_logger.error(msg)
+		sys.exit(1)
+
+	client_id = get_client_id(data)
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+	auth_refresh_token = tokens['auth_rt']
+
+	client = load_rda_native_client(client_id)
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	tc = TransferClient(authorizer=tc_authorizer)
+	
+	""" Print warning message and return gracefully if directory already exists. """
+	try:
+		mkdir_response = tc.operation_mkdir(endpoint, path=path)
+		msg = "{}".format(mkdir_response['message'])
+		my_logger.info(msg)
+		print(msg)
+	except GlobusAPIError as e:
+		msg = ("[make_directory] Globus API Error\n"
+		       "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		if 'Exists' in e.code:
+			print(msg)
+			return e
+		else:
+			raise e
+	
+	return mkdir_response
+
+#=========================================================================================
 def get_endpoint_by_name(endpoint_name):
 
 	try:
@@ -822,6 +863,7 @@ def get_client_id(data):
 			"gt": "rda_quasar_client_id",
 			"tl": "rda_quasar_client_id",
 			"delete": "rda_quasar_client_id",
+			"mkdir": "rda_quasar_client_id",
 			"rename": "rda_quasar_client_id",
 			"cancel": "rda_quasar_client_id"
 	}
@@ -1139,6 +1181,7 @@ def do_action(data):
 			"gt": get_task_info,
 			"tl": task_list,
 			"delete": submit_rda_delete,
+			"mkdir": make_directory,
 			"rename": rename_multiple_filedir,
 			"cancel": task_cancel
 	}
@@ -1221,6 +1264,7 @@ def parse_input():
 	group.add_argument('--get-task', '-gt', action="store_true", default=False, help='Show information about a Globus task.')
 	group.add_argument('--task-list', '-tl', action="store_true", default=False, help='List Globus tasks for the current user.')
 	group.add_argument('--delete', '-d', action="store_true", default=False, help='Delete files and/or directories on an endpoint.')
+	group.add_argument('--mkdir', action="store_true", default=False, help='Create a directory on an endpoint.')
 	group.add_argument('--rename', action="store_true", default=False, help='Rename a file or directory on an endpoint.')
 	group.add_argument('--cancel-task', '-ct', action="store_true", default=False, help='Cancel a Globus task.')
 	
@@ -1272,6 +1316,8 @@ def parse_input():
 		opts.update({"action": "tl"})
 	if args.delete:
 		opts.update({"action": "delete"})
+	if args.mkdir:
+		opts.update({"action": "mkdir"})
 	if args.rename:
 		opts.update({"action": "rename"})
 	if args.cancel_task:
@@ -1318,6 +1364,10 @@ def parse_input():
 		msg = "Option email (--email) requires dataset ID (--dataset)."
 		my_logger.error(msg)
 		parser.error(msg)
+	if args.mkdir and (args.ENDPOINT is None or args.PATH is None):
+		msg = "Option mkdir (--mkdir) requires both --endpoint and --path."
+		my_logger.error(msg)
+		parser.error(msg)
 	if args.rename and (args.OLDPATH is None or args.NEWPATH is None or args.ENDPOINT is None):
 		msg = "Option rename (--rename) requires endpoint name (--endpoint), old path (--oldpath), and new path (--newpath)."
 		my_logger.error(msg)
@@ -1351,6 +1401,8 @@ def parse_input():
 	elif args.get_task:
 		pass
 	elif args.task_list:
+		pass
+	elif args.mkdir:
 		pass
 	elif args.rename:
 		opts.update({"files": [{"old_path": args.OLDPATH, "new_path": args.NEWPATH}]})
