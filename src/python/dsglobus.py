@@ -1228,10 +1228,28 @@ def parse_input():
 	        dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/file.txt --destination-file /ds999.9/file.txt
 	  			 
 	  - List files on the 'NCAR RDA Quasar' endpoint:
-	        dsglobus -ls -ep 'NCAR RDA Quasar' -p /ds999.9/cmorph_v1.0/2019
+	        dsglobus --list-files --endpoint 'NCAR RDA Quasar' --path /ds999.9/cmorph_v1.0/2019
 
+	  - Get detailed information for an individual transfer task:
+	        dsglobus --get-task --task-id <TASK_ID>
+
+	  - List transfer tasks completed in February 2021:
+	        dsglobus --task-list --filter-completed-after 2021-02-01 --filter-completed-before 2021-02-28
+	        
+	  - Delete files or directories on the NCAR RDA Quasar (rda-quasar) endpoint:
+	        dsglobus --delete --endpoint rda-quasar --path /ds999.9/file.txt
+	        
+	  - Create a directory on an endpoint:
+	        dsglobus --mkdir --endpoint rda-quasar --path /ds999.9/new_path/
+	        
+	  - Rename a file or directory on an endpoint:
+	        dsglobus --rename --endpoint rda-quasar --oldpath /ds999.9/oldfile.txt --newpath /ds999.9/newfile.txt
+	        
+	  - Cancel a transfer task:
+	        dsglobus --cancel-task --task-id <TASK_ID>
+	  
 	Filtering:
-	    When using the --filter option, you can list files and dirs on a specific path on an endpoint based on the filter criterion.
+	    When using the --filter option with --list-files, you can list files and dirs on a specific path on an endpoint based on the filter criterion.
 	    
         Filter patterns must start with "=", "~", "!", or "!~"
         If none of these are given, "=" will be used
@@ -1249,6 +1267,47 @@ def parse_input():
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '=file2.txt'  # only "file2.txt"
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
+
+	Valid RDA endpoint names:
+	    NCAR RDA GLADE: rda-glade
+	    NCAR RDA Quasar: rda-quasar
+	    NCAR RDA Quasar DRDATA: rda-quasar-drdata
+
+	Transferring multiple files (JSON input):
+	    Multiple files can be transferred in a single call using JSON input.  Required 
+	    fields in the JSON input are 'action' (set to 'transfer'), 'source_endpoint', 'destination_endpoint', 
+	    'files', 'source_file', and 'destination_file'.  The field 'label' is optional.  
+	    JSON input can be passed into dsglobus in one of the following ways:
+	    
+	    1. dsglobus < files.json
+	    2. cat files.json | dsglobus
+	    3. dsglobus << EOF
+	       {
+	        JSON input format
+	       }
+	       EOF
+	       
+	    Example JSON input format:
+	    {
+	      "action": "transfer",
+	      "source_endpoint": "rda-glade",
+	      "destination_endpoint": "rda-quasar",
+	      "label": "RDA Quasar transfer"
+	      "files": [
+	         {
+	           "source_file": "/data/ds999.9/file1.tar",
+	           "destination_file": "/ds999.9/file1.tar"
+	         },
+	         {
+	           "source_file": "/data/ds999.9/file2.tar",
+	           "destination_file": "/ds999.9/file2.tar"
+	         },
+	         {
+	           "source_file": "/data/ds999.9/file3.tar",
+	           "destination_file": "/ds999.9/file3.tar"
+	         }
+	      ]
+	    }
 	''')
 	
 	date_fmt = "%Y-%m-%d"
