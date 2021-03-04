@@ -1214,7 +1214,51 @@ def parse_input():
 	
 	desc = "Manage RDA Globus shared endpoints and endpoint permissions."	
 	epilog = textwrap.dedent('''\
+	======================================================================================
 	Examples:
+	  - Transfer data from GLADE to the NCAR Quasar tape system.  Required arguments: 
+	    --transfer, --source-endpoint, --destination-endpoint, --source-file, and 
+	    --destination-file:
+	    
+	        dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/file.txt --destination-file /ds999.9/file.txt
+	  			 
+	  - List files on the 'NCAR RDA Quasar' endpoint.  Required arguments: --list-files,
+	    --endpoint, --path:
+
+	        dsglobus --list-files --endpoint 'NCAR RDA Quasar' --path /ds999.9/cmorph_v1.0/2019
+
+	  - Get detailed information for an individual transfer task.  Required arguments:
+	    --get-task, --task-id:
+	    
+	        dsglobus --get-task --task-id <TASK_ID>
+
+	  - List transfer tasks completed in February 2021.  Required argument: --task-list.
+	    Optional filtering arguments: --filter-completed-before, --filter-completed-after:
+
+	        dsglobus --task-list --filter-completed-after 2021-02-01 --filter-completed-before 2021-02-28
+	        
+	  - Delete files or directories on the NCAR RDA Quasar (rda-quasar) endpoint. Required
+	    arguments: --delete, --endpoint, --target-file:
+
+	        dsglobus --delete --endpoint rda-quasar --target-file /ds999.9/file.txt
+	        
+	  - Create a directory on an endpoint.  Required arguments: --mkdir, --endpoint, 
+	    --path:
+
+	        dsglobus --mkdir --endpoint rda-quasar --path /ds999.9/new_path/
+	        
+	  - Rename a file or directory on an endpoint.  Required arguments: --rename, 
+	    --endpoint, --oldpath, --newpath:
+
+	        dsglobus --rename --endpoint rda-quasar --oldpath /ds999.9/oldfile.txt --newpath /ds999.9/newfile.txt
+	        
+	  - Cancel a transfer task.  Required arguments: --cancel-task, --task-id:
+
+	        dsglobus --cancel-task --task-id <TASK_ID>
+
+	--------------------------------------------------------------------------------------
+	Examples to manage data shares with RDA users:
+
 	  - Grant share permission to a user for dsrqst index 1234:
 	        dsglobus -ap -ri 1234
 	
@@ -1223,43 +1267,21 @@ def parse_input():
 	
 	  - Share all files from RDA dataset ds131.2 with a user:
 	        dsglobus -ap -ds 131.2 -em tcram@ucar.edu
-
-	  - Transfer data from GLADE to the NCAR Quasar tape system
-	        dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/file.txt --destination-file /ds999.9/file.txt
-	  			 
-	  - List files on the 'NCAR RDA Quasar' endpoint:
-	        dsglobus --list-files --endpoint 'NCAR RDA Quasar' --path /ds999.9/cmorph_v1.0/2019
-
-	  - Get detailed information for an individual transfer task:
-	        dsglobus --get-task --task-id <TASK_ID>
-
-	  - List transfer tasks completed in February 2021:
-	        dsglobus --task-list --filter-completed-after 2021-02-01 --filter-completed-before 2021-02-28
-	        
-	  - Delete files or directories on the NCAR RDA Quasar (rda-quasar) endpoint:
-	        dsglobus --delete --endpoint rda-quasar --path /ds999.9/file.txt
-	        
-	  - Create a directory on an endpoint:
-	        dsglobus --mkdir --endpoint rda-quasar --path /ds999.9/new_path/
-	        
-	  - Rename a file or directory on an endpoint:
-	        dsglobus --rename --endpoint rda-quasar --oldpath /ds999.9/oldfile.txt --newpath /ds999.9/newfile.txt
-	        
-	  - Cancel a transfer task:
-	        dsglobus --cancel-task --task-id <TASK_ID>
 	  
+	======================================================================================
 	Filtering:
-	    When using the --filter option with --list-files, you can list files and dirs on a specific path on an endpoint based on the filter criterion.
+	    When using the --filter option with --list-files, you can list files and dirs on a 
+	    specific path on an endpoint based on the filter criterion.
 	    
-        Filter patterns must start with "=", "~", "!", or "!~"
-        If none of these are given, "=" will be used
+	    Filter patterns must start with "=", "~", "!", or "!~"
+	    If none of these are given, "=" will be used
 
-        "=" does exact matching
-        "~" does regex matching, supporting globs (*)
-        "!" does inverse "=" matching
-        "!~" does inverse "~" matching
+	    "=" does exact matching
+	    "~" does regex matching, supporting globs (*)
+	    "!" does inverse "=" matching
+	    "!~" does inverse "~" matching
 	    
-        "~*.txt" matches all .txt files, for example
+	    "~*.txt" matches all .txt files, for example
 	    
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '~*.txt'  # all txt files
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '!~file1.*'  # not starting in "file1."
@@ -1268,11 +1290,31 @@ def parse_input():
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter 'file2.txt'  # same as '=file2.txt'
 	    $ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
 
+	======================================================================================
 	Valid RDA endpoint names:
-	    NCAR RDA GLADE: rda-glade
-	    NCAR RDA Quasar: rda-quasar
-	    NCAR RDA Quasar DRDATA: rda-quasar-drdata
+	    NCAR RDA GLADE: 'rda-glade'
+	    NCAR RDA Quasar: 'rda-quasar'
+	    NCAR RDA Quasar DRDATA: 'rda-quasar-drdata'
 
+	======================================================================================
+	Path values:
+	    When using the --path, --oldpath, --newpath, or --target-file arguments, the path
+	    given is relative to the host path on the specified endpoint.  
+	    
+	    For example, the host path on the 'NCAR RDA GLADE' endpoint is 
+	    /glade/collections/rda/, therefore any file operation to/from this endpoint must 
+	    be specified relative to this host path.  To retrieve a listing of files stored
+	    under /glade/collections/rda/data/ds540.0/, specify the relative path of 
+	    /data/ds540.0/:
+	    
+	        dsglobus --list-files --endpoint 'rda-glade' --path /data/ds540.0/
+	    
+	    Host paths on RDA shared endpoints: 
+	        NCAR RDA GLADE: /glade/collections/rda/
+	        NCAR RDA Quasar: /gpfs/gpfs0/archive/rda/
+	        NCAR RDA Quasar DRDATA: /gpfs/gpfs0/archive/rda_dr/
+
+	======================================================================================
 	Transferring multiple files (JSON input):
 	    Multiple files can be transferred in a single call using JSON input.  Required 
 	    fields in the JSON input are 'action' (set to 'transfer'), 'source_endpoint', 'destination_endpoint', 
