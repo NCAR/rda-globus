@@ -1316,38 +1316,31 @@ def parse_input():
 
 	======================================================================================
 	Transferring multiple files (JSON input):
-	    Multiple files can be transferred in a single call using JSON input.  Required 
-	    fields in the JSON input are 'action' (set to 'transfer'), 'source_endpoint', 'destination_endpoint', 
-	    'files', 'source_file', and 'destination_file'.  The field 'label' is optional.  
-	    JSON input can be passed into dsglobus in one of the following ways:
+	    Multiple files can be transferred in a single call using JSON formatted input.  
+	    Required fields in the JSON input are 'action' (set to 'transfer'), 
+	    'source_endpoint', 'destination_endpoint', and 'files', specified as an array of
+	    JSON objects with 'source_file', and 'destination_file' key-value pairs.  The 
+	    field 'label' is optional.  JSON input can be passed into dsglobus in one of the 
+	    following ways:
 	    
 	    1. dsglobus < files.json
 	    2. cat files.json | dsglobus
 	    3. dsglobus << EOF
 	       {
-	        JSON input format
+	         <JSON formatted input>
 	       }
 	       EOF
 	       
-	    Example JSON input format:
+	    Example JSON input:
 	    {
 	      "action": "transfer",
 	      "source_endpoint": "rda-glade",
 	      "destination_endpoint": "rda-quasar",
 	      "label": "RDA Quasar transfer"
 	      "files": [
-	         {
-	           "source_file": "/data/ds999.9/file1.tar",
-	           "destination_file": "/ds999.9/file1.tar"
-	         },
-	         {
-	           "source_file": "/data/ds999.9/file2.tar",
-	           "destination_file": "/ds999.9/file2.tar"
-	         },
-	         {
-	           "source_file": "/data/ds999.9/file3.tar",
-	           "destination_file": "/ds999.9/file3.tar"
-	         }
+	         {"source_file": "/data/ds999.9/file1.tar", "destination_file": "/ds999.9/file1.tar"},
+	         {"source_file": "/data/ds999.9/file2.tar", "destination_file": "/ds999.9/file2.tar"},
+	         {"source_file": "/data/ds999.9/file3.tar", "destination_file": "/ds999.9/file3.tar"}
 	      ]
 	    }
 	''')
