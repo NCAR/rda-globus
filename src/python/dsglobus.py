@@ -65,6 +65,166 @@ def main(json_input = None):
 	return result
 
 #=========================================================================================
+def get_transfer_client(client_id):
+	""" Instantiate a Globus Transfer client """
+	
+	if client_id is None:
+		my_logger.error("[get_transfer_client] Missing client_id from input.")
+		sys.exit(1)
+
+	client = load_client(client_id)
+	tokens = get_tokens(client_id)
+	transfer_refresh_token = tokens['transfer_rt']
+
+	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	transfer_client = TransferClient(authorizer=tc_authorizer)
+
+	return transfer_client
+	
+#=========================================================================================
+def get_auth_client(client_id):
+	""" Instantiate a Globus Auth client """
+	
+	if client_id is None:
+		msg = "[get_transfer_client] Missing client_id."
+		my_logger.error(msg)
+		sys.exit(1)
+
+	client = load_client(client_id)
+	tokens = get_tokens(client_id)
+	auth_refresh_token = tokens['auth_rt']
+
+	ac_authorizer = RefreshTokenAuthorizer(auth_refresh_token, client)
+	auth_client = AuthClient(authorizer=ac_authorizer)
+
+	return auth_client
+	
+#=========================================================================================
+def get_client_id(action):
+	""" Get valid client ID based on command-line or JSON input action """
+	
+	client_map = {
+			"ap": "client-id",
+			"rp": "client-id",
+			"st": "client-id",
+			"ls": "rda_quasar_client_id",
+			"transfer": "rda_quasar_client_id",
+			"tb": "rda_quasar_client_id",
+			"dr": "rda_quasar_client_id",
+			"tb-quasar" : "rda_quasar_client_id",
+			"dr-quasar" : "rda_quasar_client_id",
+			"gt": "rda_quasar_client_id",
+			"tl": "rda_quasar_client_id",
+			"delete": "rda_quasar_client_id",
+			"mkdir": "rda_quasar_client_id",
+			"rename": "rda_quasar_client_id",
+			"cancel": "rda_quasar_client_id"
+	}
+
+	if action is None:
+		msg = "[get_client_id] Missing action in input argument."
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	if action in client_map:
+		client_id = MyGlobus[client_map[action]]
+	else:
+		msg = "[get_client_id] Unknown action: {}.  Cannot map to valid client ID.".format(action)
+		my_logger.error(msg)
+		sys.exit(1)
+
+	return client_id
+
+#=========================================================================================
+def load_client(client_id):
+	""" Load the correct Globus client based on client ID """
+
+	if client_id is None:
+		my_logger.error("[load_client] Missing client_id from input.")
+		sys.exit(1)
+	
+	if client_id == MyGlobus['client_id']:
+		client = load_app_client()
+	else:
+		client = load_rda_native_client(client_id)
+	
+	return client
+
+#=========================================================================================
+def get_tokens(client_id):
+	if client_id is None:
+		my_logger.error("[load_client] Missing client_id from input.")
+		sys.exit(1)
+
+	if client_id == MyGlobus['rda_quasar_client_id']:
+		transfer_rt = MyGlobus['transfer_rt_quasar']
+		auth_rt = MyGlobus['auth_rt_quasar']
+	elif client_id == MyGlobus['client_id']:
+		transfer_rt = MyGlobus['transfer_refresh_token']
+		auth_rt = MyGlobus['auth_refresh_token']
+	else:
+		my_logger.error("[get_tokens] Unknown client ID")
+		sys.exit(1)
+
+	tokens = {'transfer_rt': transfer_rt,
+	          'auth_rt': auth_rt}
+
+	return tokens
+
+#=========================================================================================
+def do_action(data):
+	""" Run operations based on command line or JSON input """
+	
+	try:
+		command = data['action']
+	except KeyError:
+		msg = "[do_action] 'action' missing from JSON or command-line input.  Run dsglobus -h for usage instructions."
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	dispatch = {
+			"ap": add_endpoint_acl_rule,
+			"rp": delete_endpoint_acl_rule,
+			"st": submit_dsrqst_transfer,
+			"ls": list_endpoint_files,
+			"transfer": submit_rda_transfer,
+			"tb": submit_rda_transfer,
+			"dr": submit_rda_transfer,
+			"tb-quasar" : submit_rda_transfer,
+			"dr-quasar" : submit_rda_transfer,
+			"gt": get_task_info,
+			"tl": task_list,
+			"delete": submit_rda_delete,
+			"mkdir": make_directory,
+			"rename": rename_multiple_filedir,
+			"cancel": task_cancel
+	}
+	
+	""" Get client ID and add it to data dict """
+	data.update({'client_id': get_client_id(command)})
+	
+	if command in dispatch:
+		command = dispatch[command]
+	else:
+		msg = "[do_action] command {} not found.".format(command)
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	return command(data)
+
+#=========================================================================================
+def get_endpoint_by_name(endpoint_name):
+
+	try:
+		endpoint_id = MyEndpoints[endpoint_name]
+	except KeyError:
+		msg = "[get_endpoint_id] Unknown endpoint name: {}".format(endpoint_name)
+		my_logger.error(msg)
+		sys.exit(1)
+	
+	return endpoint_id
+
+#=========================================================================================
 def add_endpoint_acl_rule(data):
 	""" Create a new endpoint access rule.  'type' must be defined in the input dict:
 	    type = 'dsrqst':  dsrqst share
@@ -140,9 +300,10 @@ def add_endpoint_acl_rule(data):
 	if 'notify' in data:
  		rule_data.update({"notify_email": email})
 
+	tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
+	tc = TransferClient(authorizer=tc_authorizer)
+
 	try:
-		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
-		tc = TransferClient(authorizer=tc_authorizer)
 		result = tc.add_endpoint_acl_rule(endpoint_id, rule_data)
 	except GlobusAPIError as e:
 		msg = ("[add_endpoint_acl_rule] Globus API Error\n"
@@ -617,30 +778,28 @@ def submit_rda_transfer(data):
 	""" General data transfer to RDA endpoints.  Input should be JSON formatted input 
 	    if transferring multiple files. """
 
-	client_id = get_client_id(data)
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	auth_refresh_token = tokens['auth_rt']
-
-	source_endpoint = get_endpoint_by_name(data['source_endpoint'])
-	destination_endpoint = get_endpoint_by_name(data['destination_endpoint'])	
-
+	try:
+		source_endpoint = get_endpoint_by_name(data['source_endpoint'])
+		destination_endpoint = get_endpoint_by_name(data['destination_endpoint'])
+	except KeyError:
+		my_logger.error("[submit_rda_transfer] source_endpoint and/or destination_endpoint missing from input.")
+		sys.exit(1)
 	try:
 		label = data['label']
 	except KeyError:
 		label=''
-
 	try:
 		files = data['files']
 	except KeyError:
-		msg = "[submit_rda_transfer] Files missing from JSON or command-line input"
-		my_logger.error(msg)
+		my_logger.error("[submit_rda_transfer] Files missing from JSON or command-line input")
 		sys.exit(1)
 
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
-	
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[submit_rda_transfer] client_id is missing from input.")
+		sys.exit(1)
+		
 	transfer_data = TransferData(transfer_client=tc,
 							     source_endpoint=source_endpoint,
 							     destination_endpoint=destination_endpoint,
@@ -684,28 +843,25 @@ def submit_rda_delete(data):
 	    if transferring multiple files. Command line input can be used if deleting a
 	    single file/directory with the action --delete. """
 
-	client_id = get_client_id(data)
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	auth_refresh_token = tokens['auth_rt']
-
-	target_endpoint = get_endpoint_by_name(data['endpoint'])
-
+	try:
+		target_endpoint = get_endpoint_by_name(data['endpoint'])
+	except KeyError:
+		my_logger.error("[submit_rda_delete] Endpoint name/ID missing from input.")
+		raise
 	try:
 		label = data['label']
 	except KeyError:
 		label=''
-
 	try:
 		files = data['files']
 	except KeyError:
-		msg = "[submit_rda_delete] File(s) missing from JSON or command-line input"
-		my_logger.error(msg)
-		sys.exit(1)
-
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
+		my_logger.error("[submit_rda_delete] File(s) missing from JSON or command-line input")
+		raise
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[submit_rda_delete] client_id is missing from input.")
+		raise
 	
 	delete_data = DeleteData(tc, target_endpoint, label=label)
 
@@ -759,11 +915,6 @@ def rename_multiple_filedir(data):
 	            ]
 	"""
 
-	client_id = get_client_id(data)
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	auth_refresh_token = tokens['auth_rt']
-
 	try:
 		endpoint = get_endpoint_by_name(data['endpoint'])
 		files = data['files']
@@ -771,13 +922,13 @@ def rename_multiple_filedir(data):
 		msg = "[rename_filedir] Endpoint name or file(s) missing from JSON or command-line input"
 		my_logger.error(msg)
 		sys.exit(1)
-
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[rename_multiple_filedir] client_id is missing from input.")
+		raise
 	
 	responses = []
-
 	for i in range(len(files)):
 		old_path = files[i]['old_path']
 		new_path = files[i]['new_path']
@@ -799,18 +950,14 @@ def make_directory(data):
 		endpoint = get_endpoint_by_name(data['endpoint'])
 		path = data['path']
 	except KeyError:
-		msg = "[make_directory] Endpoint name or path missing from JSON or command-line input"
-		my_logger.error(msg)
-		sys.exit(1)
+		my_logger.error("[make_directory] Endpoint name or path missing from JSON or command-line input")
+		raise
 
-	client_id = get_client_id(data)
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	auth_refresh_token = tokens['auth_rt']
-
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[make_directory] client_id is missing from input.")
+		raise
 	
 	""" Print warning message and return gracefully if directory already exists. """
 	try:
@@ -833,69 +980,6 @@ def make_directory(data):
 	return mkdir_response
 
 #=========================================================================================
-def get_endpoint_by_name(endpoint_name):
-
-	try:
-		endpoint_id = MyEndpoints[endpoint_name]
-	except KeyError:
-		msg = "[get_endpoint_id] Unknown endpoint name: {}".format(endpoint_name)
-		my_logger.error(msg)
-		sys.exit(1)
-	
-	return endpoint_id
-
-#=========================================================================================
-def get_client_id(data):
-	""" Get valid client ID based on command-line or JSON input action """
-
-	action = data['action']
-	
-	client_map = {
-			"ap": "client-id",
-			"rp": "client-id",
-			"st": "client-id",
-			"ls": "rda_quasar_client_id",
-			"transfer": "rda_quasar_client_id",
-			"tb": "rda_quasar_client_id",
-			"dr": "rda_quasar_client_id",
-			"tb-quasar" : "rda_quasar_client_id",
-			"dr-quasar" : "rda_quasar_client_id",
-			"gt": "rda_quasar_client_id",
-			"tl": "rda_quasar_client_id",
-			"delete": "rda_quasar_client_id",
-			"mkdir": "rda_quasar_client_id",
-			"rename": "rda_quasar_client_id",
-			"cancel": "rda_quasar_client_id"
-	}
-
-	if action in client_map:
-		client_id = MyGlobus[client_map[action]]
-	else:
-		msg = "[get_client_id] Unknown action.  Cannot map to valid client ID."
-		my_logger.error(msg)
-		sys.exit(1)
-
-	return client_id
-
-#=========================================================================================
-def get_tokens(client_id):
-	if client_id == MyGlobus['rda_quasar_client_id']:
-		transfer_rt = MyGlobus['transfer_rt_quasar']
-		auth_rt = MyGlobus['auth_rt_quasar']
-	elif client_id == MyGlobus['client_id']:
-		transfer_rt = MyGlobus['transfer_refresh_token']
-		auth_rt = MyGlobus['auth_refresh_token']
-	else:
-		msg = "[get_tokens] Unknown client ID"
-		my_logger.error(msg)
-		sys.exit(1)
-
-	tokens = {'transfer_rt': transfer_rt,
-	          'auth_rt': auth_rt}
-
-	return tokens
-
-#=========================================================================================
 def get_task_info(data):
 	""" Get Globus task info for a specified task ID """
 	if 'task_id' not in data:
@@ -903,13 +987,11 @@ def get_task_info(data):
 		my_logger.error(msg)
 		sys.exit(1)
 
-	client_id = MyGlobus['rda_quasar_client_id']
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[get_task_info] client_id is missing from input.")
+		raise
 	
 	task_info = tc.get_task(data['task_id'])
 	
@@ -970,16 +1052,6 @@ def task_list(data):
 	filter_completed_after:  Filter results to tasks completed after given date, formatted as YYYY-MM-DD
 	"""
 	
-	client_id = MyGlobus['rda_quasar_client_id']
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
-	
-	limit = data['limit']
-
 	# make filter string
 	filter_string = ""
 	try:
@@ -1034,6 +1106,10 @@ def task_list(data):
 		filter_string += process_filterval(
 			"completion_time", [filter_completed_after, filter_completed_before]
 		)
+	try:
+		limit = data['limit']
+	except KeyError:
+		limit = None
 
 	fields = [
 		("Task ID", "task_id"),
@@ -1046,6 +1122,12 @@ def task_list(data):
 		("Label", "label")
 	]
 
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[task_list] client_id is missing from input.")
+		raise
+
 	list_response = tc.task_list(num_results=limit, filter=filter_string[:-1])
 	print_table(list_response, fields)
 
@@ -1055,20 +1137,15 @@ def task_list(data):
 def task_cancel(data):
 	""" Cancel a Globus task """
 	
-	client_id = get_client_id(data)
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	auth_refresh_token = tokens['auth_rt']
-
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
-	
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[task_cancel] client_id is missing from input.")
+		raise
 	try:
 		task_id = data['task_id']
 	except KeyError:
-		msg = "[task_cancel] Task ID missing from JSON or command-line input"
-		my_logger.error(msg)
+		my_logger.error("[task_cancel] Task ID missing from JSON or command-line input")
 		sys.exit(1)
 
 	cancel_response = tc.cancel_task(task_id)
@@ -1115,17 +1192,18 @@ def list_endpoint_files(data):
 
 	"""
 	
-	client_id = MyGlobus['rda_quasar_client_id']
-	tokens = get_tokens(client_id)
-	transfer_refresh_token = tokens['transfer_rt']
-	endpoint = get_endpoint_by_name(data['endpoint'])
-	
-	client = load_rda_native_client(client_id)
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
-	tc = TransferClient(authorizer=tc_authorizer)
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[task_cancel] client_id is missing from input.")
+		raise
 
-	ls_params = {"path": data['path']}
-	if data['filter_pattern']:
+	try:
+		ls_params = {"path": data['path']}
+	except KeyError:
+		my_logger.error("[list_endpoint_files] Path missing from input.")
+		raise
+	if 'filter_pattern' in data and data['filter_pattern'] is not None:
 		ls_params.update({"filter": "name:{}".format(data['filter_pattern'])})
 	
 	def cleaned_item_name(item):
@@ -1154,45 +1232,6 @@ def read_json_from_stdin():
 		in_json += line
 	json_dict = json.loads(in_json)
 	return json_dict
-
-#=========================================================================================
-def do_action(data):
-	""" Run operations based on command line or JSON input """
-	
-	try:
-		action = data['action']
-	except KeyError:
-		msg = "[do_action] 'action' missing from JSON or command-line input.  Run dsglobus -h for usage instructions."
-		my_logger.error(msg)
-		sys.exit(1)
-	
-	command = data['action']
-	
-	dispatch = {
-			"ap": add_endpoint_acl_rule,
-			"rp": delete_endpoint_acl_rule,
-			"st": submit_dsrqst_transfer,
-			"ls": list_endpoint_files,
-			"transfer": submit_rda_transfer,
-			"tb": submit_rda_transfer,
-			"dr": submit_rda_transfer,
-			"tb-quasar" : submit_rda_transfer,
-			"dr-quasar" : submit_rda_transfer,
-			"gt": get_task_info,
-			"tl": task_list,
-			"delete": submit_rda_delete,
-			"mkdir": make_directory,
-			"rename": rename_multiple_filedir,
-			"cancel": task_cancel
-	}
-	if command in dispatch:
-		command = dispatch[command]
-	else:
-		msg = "[do_action] command {} not found.".format(command)
-		my_logger.error(msg)
-		sys.exit(1)
-	
-	return command(data)
 
 #=========================================================================================
 def valid_date(date_str):
