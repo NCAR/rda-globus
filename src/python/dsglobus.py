@@ -1191,13 +1191,12 @@ def list_endpoint_files(data):
 	$ dsglobus -ls -ep <endpoint> -p <path> --filter '!=file2.txt'  # anything but "file2.txt"
 
 	"""
-	
-	try:
-		tc = get_transfer_client(data['client_id'])
-	except KeyError:
-		my_logger.error("[task_cancel] client_id is missing from input.")
-		raise
 
+	try:
+		endpoint = get_endpoint_by_name(data['endpoint'])
+	except KeyError:
+		my_logger.error("[list_endpoint_files] Endpoint name/ID missing from input.")
+		
 	try:
 		ls_params = {"path": data['path']}
 	except KeyError:
@@ -1218,6 +1217,12 @@ def list_endpoint_files(data):
 			("File Type", "type"),
 			("Filename", cleaned_item_name),
 	]
+
+	try:
+		tc = get_transfer_client(data['client_id'])
+	except KeyError:
+		my_logger.error("[task_cancel] client_id is missing from input.")
+		raise
 
 	ls_response = tc.operation_ls(endpoint, **ls_params)
 	print_table(ls_response, fields)
