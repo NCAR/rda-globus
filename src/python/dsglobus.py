@@ -1021,6 +1021,7 @@ def get_task_info(data):
 		("Destination Endpoint ID", "destination_endpoint_id"),
 		("Bytes Transferred", "bytes_transferred"),
 		("Bytes Per Second", "effective_bytes_per_second"),
+		("Verify Checksum", "verify_checksum"),
 	]
 	successful_transfer_fields = [
 		("Source Path", "source_path"),
@@ -1267,7 +1268,7 @@ def parse_input():
 	    --transfer, --source-endpoint, --destination-endpoint, --source-file, and 
 	    --destination-file:
 	    
-	        dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /ds999.9/file.txt --destination-file /ds999.9/file.txt
+	        dsglobus --transfer --source-endpoint 'rda-glade' --destination-endpoint 'rda-quasar' --source-file /data/ds999.9/file.txt --destination-file /ds999.9/file.txt
 	  			 
 	  - List files on the 'NCAR RDA Quasar' endpoint.  Required arguments: --list-files,
 	    --endpoint, --path:
@@ -1418,7 +1419,7 @@ def parse_input():
 	parser.add_argument('--destination-endpoint', '-de', action="store", dest="DESTINATION_ENDPOINT", help='Destination endpoint ID or name.  Required with --transfer.')
 	parser.add_argument('--source-file', '-sf', action="store", dest="SOURCE_FILE", help='Path to source file name, relative to source endpoint host path.  Required with --transfer option.')
 	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
-	parser.add_argument('--verify-checksum', '-vc', action="store_true", default=False, help='Verify checksum after transfer.  Default = False.')
+	parser.add_argument('--verify-checksum', '-vc', action="store_true", default=False, help='Verify checksum after transfer.  Use with the --transfer action.  Default = False.')
 	parser.add_argument('--target-file', '-tf', action="store", dest="TARGET_FILE", help='Path to target file name, relative to endpoint host path.  Required with --delete.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER_PATTERN", help='Filter applied to --list-files.')
