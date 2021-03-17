@@ -790,6 +790,8 @@ def submit_rda_transfer(data):
 		label=''
 	if 'verify_checksum' in data:
 		verify_checksum = data['verify_checksum']
+	else:
+		verify_checksum = False
 	try:
 		files = data['files']
 	except KeyError:
