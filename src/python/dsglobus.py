@@ -1368,8 +1368,8 @@ def parse_input():
 	    Required fields in the JSON input are 'action' (set to 'transfer'), 
 	    'source_endpoint', 'destination_endpoint', and 'files', specified as an array of
 	    JSON objects with 'source_file', and 'destination_file' key-value pairs.  The 
-	    field 'label' is optional.  JSON input can be passed into dsglobus in one of the 
-	    following ways:
+	    fields 'label' and 'verify_checksum' are optional.  JSON input can be passed into 
+	    dsglobus in one of the following ways:
 	    
 	    1. dsglobus < files.json
 	    2. cat files.json | dsglobus
@@ -1384,7 +1384,8 @@ def parse_input():
 	      "action": "transfer",
 	      "source_endpoint": "rda-glade",
 	      "destination_endpoint": "rda-quasar",
-	      "label": "RDA Quasar transfer"
+	      "label": "RDA Quasar transfer",
+	      "verify_checksum": True,
 	      "files": [
 	         {"source_file": "/data/ds999.9/file1.tar", "destination_file": "/ds999.9/file1.tar"},
 	         {"source_file": "/data/ds999.9/file2.tar", "destination_file": "/ds999.9/file2.tar"},
