@@ -788,6 +788,8 @@ def submit_rda_transfer(data):
 		label = data['label']
 	except KeyError:
 		label=''
+	if 'verify_checksum' in data:
+		verify_checksum = data['verify_checksum']
 	try:
 		files = data['files']
 	except KeyError:
@@ -803,7 +805,8 @@ def submit_rda_transfer(data):
 	transfer_data = TransferData(transfer_client=tc,
 							     source_endpoint=source_endpoint,
 							     destination_endpoint=destination_endpoint,
-							     label=label)
+							     label=label,
+							     verify_checksum=verify_checksum)
 
 	for i in range(len(files)):
 		source_file = files[i]['source_file']
@@ -1415,6 +1418,7 @@ def parse_input():
 	parser.add_argument('--destination-endpoint', '-de', action="store", dest="DESTINATION_ENDPOINT", help='Destination endpoint ID or name.  Required with --transfer.')
 	parser.add_argument('--source-file', '-sf', action="store", dest="SOURCE_FILE", help='Path to source file name, relative to source endpoint host path.  Required with --transfer option.')
 	parser.add_argument('--destination-file', '-df', action="store", dest="DESTINATION_FILE", help='Path to destination file name, relative to destination endpoint host path.  Required with --transfer.')
+	parser.add_argument('--verify-checksum', '-vc', action="store_true", default=False, help='Verify checksum after transfer.  Default = False.')
 	parser.add_argument('--target-file', '-tf', action="store", dest="TARGET_FILE", help='Path to target file name, relative to endpoint host path.  Required with --delete.')
 	parser.add_argument('--path', '-p', action="store", dest="PATH", help='Directory path on endpoint.  Required with -ls argument.')
 	parser.add_argument('--filter', action="store", dest="FILTER_PATTERN", help='Filter applied to --list-files.')
