@@ -104,9 +104,9 @@ def get_client_id(action):
 	""" Get valid client ID based on command-line or JSON input action """
 	
 	client_map = {
-			"ap": "client-id",
-			"rp": "client-id",
-			"st": "client-id",
+			"ap": "client_id",
+			"rp": "client_id",
+			"st": "client_id",
 			"ls": "rda_quasar_client_id",
 			"transfer": "rda_quasar_client_id",
 			"tb": "rda_quasar_client_id",
