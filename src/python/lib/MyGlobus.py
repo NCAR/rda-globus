@@ -93,7 +93,7 @@ MyEndpoints = {
     'NCAR RDA GLADE': RDA_GLADE_ENDPOINT,
     'NCAR RDA Quasar': RDA_QUASAR_ENDPOINT,
     'NCAR RDA Quasar DRDATA': RDA_QUASAR_DR_ENDPOINT,
-    'NCAR RDA Stratus'; RDA_STRATUS_ENDPOINT,
+    'NCAR RDA Stratus': RDA_STRATUS_ENDPOINT,
     'rda-glade': RDA_GLADE_ENDPOINT,
     'rda-quasar': RDA_QUASAR_ENDPOINT,
     'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT,
