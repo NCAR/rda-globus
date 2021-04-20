@@ -793,7 +793,7 @@ def get_dataset_location(dsid):
 	""" Get the RDA dataset location (Glade, stratus, or other) """
 	
 	try:
-		cond = "dsid='{}'".format(dsid)
+		cond = " WHERE dsid='{}'".format(dsid)
 		myrec = myget('dataset', ['locflag'], cond)
 	except:
 		msg = "[get_dataset_location] Error getting location flag for dataset {}.".format(dsid)
