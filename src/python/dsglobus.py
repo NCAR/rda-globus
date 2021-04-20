@@ -270,9 +270,13 @@ def add_endpoint_acl_rule(data):
 
 	elif (type == 'dataset'):
 		try:
-			endpoint_id = MyGlobus['datashare_ep']
 			dsid = data['dsid']
 			email = data['email']
+			loc = get_dataset_location(dsid)
+			if loc == 'O':
+				endpoint_id = MyGlobus['rda-stratus']
+			else:
+				endpoint_id = MyGlobus['datashare_ep']
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) > 0 and myshare['globus_rid']):
@@ -405,9 +409,13 @@ def delete_endpoint_acl_rule(data):
 
 	elif (type == 'dataset'):
 		try:
-			endpoint_id = MyGlobus['datashare_ep']
 			email = data['email']
 			dsid = data['dsid']
+			loc = get_dataset_location(dsid)
+			if loc == 'O':
+				endpoint_id = MyGlobus['rda-stratus']
+			else:
+				endpoint_id = MyGlobus['datashare_ep']
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 		else:
@@ -619,7 +627,10 @@ def construct_share_url(type, data):
 
 	if (type == 'dataset'):
 		try:
-			origin_id = MyGlobus['datashare_ep']
+			if get_dataset_location(dsid) == 'O':
+				origin_id = MyGlobus['rda_stratus_endpoint']
+			else:
+				origin_id = MyGlobus['datashare_ep']
 			origin_path = construct_share_path(type, {'dsid': data['dsid']})
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
@@ -749,7 +760,11 @@ def update_share_record(type, data):
 	elif (type == 'dataset'):
 		try:
 			path = construct_share_path(type, {'dsid': dsid})
-			share_record.update({'source_endpoint': '{0}'.format(MyGlobus['datashare_legacy']),
+			if get_dataset_location(dsid) == 'O':
+				legacy_endpoint = MyGlobus['datashare_stratus']
+			else:
+				legacy_endpoint = MyGlobus['datashare_legacy']
+			share_record.update({'source_endpoint': '{0}'.format(legacy_endpoint),
 			                     'acl_path': '{0}'.format(path)
 			                    })
 			myadd('goshare', share_record)
@@ -772,6 +787,20 @@ def get_session(sid):
 		sys.exit(1)
 
 	return unserialize(myrec['data'])
+
+#=========================================================================================
+def get_dataset_location(dsid):
+	""" Get the RDA dataset location (Glade, stratus, or other) """
+	
+	try:
+		cond = "dsid='{}'".format(dsid)
+		myrec = myget('dataset', ['locflag'], cond)
+	except:
+		msg = "[get_dataset_location] Error getting location flag for dataset {}.".format(dsid)
+		my_logger.error(msg)
+		print(msg)
+	
+	return myrec['locflag']
 
 #=========================================================================================
 def submit_rda_transfer(data):

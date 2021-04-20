@@ -45,6 +45,8 @@ RDA_GLADE_ENDPOINT = 'c3dd5dac-0279-11eb-892e-0a5521ff3f4b'
 RDA_QUASAR_ENDPOINT = 'e50caa88-feae-11ea-81a2-0e2f230cc907'
 RDA_QUASAR_DR_ENDPOINT = '4c42c32c-feaf-11ea-81a2-0e2f230cc907'
 
+RDA_STRATUS_ENDPOINT = 'be4aa6a8-9e35-11eb-8a8e-d70d98a40c8d'
+
 """ Legacy endpoints no longer used """
 RDA_DATASET_ENDPOINT_LEGACY = '2869611a-36aa-11e8-b95e-0ac6873fc732'
 RDA_DSRQST_ENDPOINT_LEGACY = '68823254-36aa-11e8-b95e-0ac6873fc732'
@@ -66,6 +68,7 @@ MyGlobus = {
    'data_request_ep' : RDA_DSRQST_ENDPOINT,
    'datashare_legacy' : 'rda#datashare',
    'data_request_legacy' : 'rda#data_request',
+   'datashare_stratus' : 'rda#stratus',
    'datashare_ep_base' : RDA_DATA_PATH + '/data/',
    'data_request_ep_base' : RDA_DATA_PATH + '/transfer/',
    'host_endpoint_id' : NCAR_HOST_ENDPOINT,
@@ -79,7 +82,8 @@ MyGlobus = {
    'auth_rt_quasar': AUTH_RT_QUASAR,
    'rda_glade_endpoint': RDA_GLADE_ENDPOINT,
    'quasar_endpoint': RDA_QUASAR_ENDPOINT,
-   'quasar_dr_endpoint': RDA_QUASAR_DR_ENDPOINT
+   'quasar_dr_endpoint': RDA_QUASAR_DR_ENDPOINT,
+   'rda_stratus_endpoint': RDA_STRATUS_ENDPOINT
 }
 
 # Endpoint dict mapping endpoint display names and aliases to endpoint IDs
@@ -89,7 +93,9 @@ MyEndpoints = {
     'NCAR RDA GLADE': RDA_GLADE_ENDPOINT,
     'NCAR RDA Quasar': RDA_QUASAR_ENDPOINT,
     'NCAR RDA Quasar DRDATA': RDA_QUASAR_DR_ENDPOINT,
+    'NCAR RDA Stratus'; RDA_STRATUS_ENDPOINT,
     'rda-glade': RDA_GLADE_ENDPOINT,
     'rda-quasar': RDA_QUASAR_ENDPOINT,
-    'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT
+    'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT,
+    'rda-stratus': RDA_STRATUS_ENDPOINT
 }
