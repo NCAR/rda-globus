@@ -274,7 +274,7 @@ def add_endpoint_acl_rule(data):
 			email = data['email']
 			loc = get_dataset_location(dsid)
 			if loc == 'O':
-				endpoint_id = MyGlobus['rda-stratus']
+				endpoint_id = MyGlobus['rda_stratus_endpoint']
 			else:
 				endpoint_id = MyGlobus['datashare_ep']
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
@@ -413,7 +413,7 @@ def delete_endpoint_acl_rule(data):
 			dsid = data['dsid']
 			loc = get_dataset_location(dsid)
 			if loc == 'O':
-				endpoint_id = MyGlobus['rda-stratus']
+				endpoint_id = MyGlobus['rda_stratus_endpoint']
 			else:
 				endpoint_id = MyGlobus['datashare_ep']
 		except KeyError as err:
