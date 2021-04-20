@@ -627,6 +627,7 @@ def construct_share_url(type, data):
 
 	if (type == 'dataset'):
 		try:
+			dsid = data['dsid']
 			if get_dataset_location(dsid) == 'O':
 				origin_id = MyGlobus['rda_stratus_endpoint']
 			else:
