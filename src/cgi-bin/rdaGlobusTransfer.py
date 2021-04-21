@@ -185,8 +185,10 @@ def submit_transfer(session, form):
        myloc = myget('dataset', ['locflag'], cond)
        if myloc['locflag'] == 'O':
           source_endpoint_id = MyGlobus['rda_stratus_endpoint']
+          legacy_name = MyGlobus['datashare_stratus']
        else:
           source_endpoint_id = MyGlobus['datashare_ep']
+          legacy_name = MyGlobus['datashare_legacy']
 
     destination_endpoint_id = form.getvalue('endpoint_id')
     
@@ -196,7 +198,7 @@ def submit_transfer(session, form):
         label = 'NCAR RDA transfer'
 
     """ Check if user has a share set up for this endpoint & path """
-    share_data = {'email': email, 'dsid': dsid, 'notify': True}
+    share_data = {'email': email, 'dsid': dsid, 'notify': True, 'source_endpoint': legacy_name}
     if not query_acl_rule('dataset', share_data):
         share_data.update({'type': 'dataset'})
         data = add_endpoint_acl_rule(share_data)

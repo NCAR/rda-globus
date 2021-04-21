@@ -487,10 +487,11 @@ def submit_dsrqst_transfer(data):
 	""" Define source endpoint ID and paths """
 	host_endpoint = MyGlobus['host_endpoint_id']
 	source_endpoint_id = MyGlobus['data_request_ep']
+	source_endpoint_legacy_name = MyGlobus['data_request_legacy']
 	destination_endpoint_id = session['endpoint_id']
 
 	""" Check if user has a share set up for this endpoint & path """
-	share_data = {'ridx': ridx, 'notify': True}
+	share_data = {'ridx': ridx, 'notify': True, 'source_endpoint': source_endpoint_legacy_name}
 	if not query_acl_rule(type, share_data):
 		acl_data = add_endpoint_acl_rule(1, share_data)
 	directory = construct_share_path(type, share_data)
@@ -695,7 +696,7 @@ def query_acl_rule(type, data):
 		
 	elif (type == 'dataset'):
 		""" standard dataset shares """
-		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
+		cond = " WHERE email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(data['email'], data['dsid'], data['source_endpoint'])
 		myrule = myget('goshare', ['*'], cond)
 
 	try:
