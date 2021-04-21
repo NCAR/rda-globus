@@ -275,9 +275,11 @@ def add_endpoint_acl_rule(data):
 			loc = get_dataset_location(dsid)
 			if loc == 'O':
 				endpoint_id = MyGlobus['rda_stratus_endpoint']
+				legacy_name = MyGlobus['datashare_stratus']
 			else:
 				endpoint_id = MyGlobus['datashare_ep']
-			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
+				legacy_name = MyGlobus['datashare_legacy']
+			cond = " WHERE email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(email, dsid, legacy_name)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) > 0 and myshare['globus_rid']):
 				msg = "[add_endpoint_acl_rule] Globus ACL rule has already been created for user {0} and dataset {1}. ACL rule {2}".format(email, dsid, myshare['globus_rid'])
