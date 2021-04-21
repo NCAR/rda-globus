@@ -193,7 +193,7 @@ def submit_transfer(session, form):
     destination_endpoint_id = form.getvalue('endpoint_id')
     
     try:
-        label = form.getvalue('label')[0]
+        label = form.getvalue('label')
     except TypeError:
         label = 'NCAR RDA transfer'
 
