@@ -181,14 +181,19 @@ def submit_transfer(session, form):
     if(gtype == '1'):
        source_endpoint_id = MyGlobus['data_request_ep']
     if(gtype == '3'):
-       source_endpoint_id = MyGlobus['datashare_ep']
+       cond = " WHERE dsid='{}'".format(dsid)
+       myloc = myget('dataset', ['locflag'], cond)
+       if myloc['locflag'] == 'O':
+          source_endpoint_id = MyGlobus['rda_stratus_endpoint']
+       else:
+          source_endpoint_id = MyGlobus['datashare_ep']
 
     destination_endpoint_id = form.getvalue('endpoint_id')
     
     try:
         label = form.getvalue('label')[0]
     except TypeError:
-        label = ''
+        label = 'NCAR RDA transfer'
 
     """ Check if user has a share set up for this endpoint & path """
     share_data = {'email': email, 'dsid': dsid, 'notify': True}
