@@ -97,5 +97,8 @@ MyEndpoints = {
     'rda-glade': RDA_GLADE_ENDPOINT,
     'rda-quasar': RDA_QUASAR_ENDPOINT,
     'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT,
-    'rda-stratus': RDA_STRATUS_ENDPOINT
+    'rda-stratus': RDA_STRATUS_ENDPOINT,
+    'rda#datashare': RDA_DATASET_ENDPOINT,
+    'rda#data_request': RDA_DSRQST_ENDPOINT,
+    'rda#stratus': RDA_STRATUS_ENDPOINT
 }
