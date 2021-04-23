@@ -270,10 +270,16 @@ def add_endpoint_acl_rule(data):
 
 	elif (type == 'dataset'):
 		try:
-			endpoint_id = MyGlobus['datashare_ep']
 			dsid = data['dsid']
 			email = data['email']
-			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
+			loc = get_dataset_location(dsid)
+			if loc == 'O':
+				endpoint_id = MyGlobus['rda_stratus_endpoint']
+				legacy_name = MyGlobus['datashare_stratus']
+			else:
+				endpoint_id = MyGlobus['datashare_ep']
+				legacy_name = MyGlobus['datashare_legacy']
+			cond = " WHERE email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(email, dsid, legacy_name)
 			myshare = myget('goshare', ['*'], cond)
 			if (len(myshare) > 0 and myshare['globus_rid']):
 				msg = "[add_endpoint_acl_rule] Globus ACL rule has already been created for user {0} and dataset {1}. ACL rule {2}".format(email, dsid, myshare['globus_rid'])
@@ -353,6 +359,8 @@ def delete_endpoint_acl_rule(data):
 		my_logger.error(msg)
 		sys.exit(1)
 
+	tc = get_transfer_client(MyGlobus['client_id'])
+
 	if (type == 'dsrqst'):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
@@ -403,58 +411,79 @@ def delete_endpoint_acl_rule(data):
 				                    'status': 'DELETED'}
 					myupdt('goshare', share_record, share_cond)
 
+		try:
+			result = tc.delete_endpoint_acl_rule(endpoint_id, rule_id)
+		except GlobusAPIError as e:
+			my_logger.error(("[delete_endpoint_acl_rule] Globus API Error\n"
+		                 "HTTP status: {}\n"
+		                 "Error code: {}\n"
+		                 "Error message: {}").format(e.http_status, e.code, e.message))
+			raise e
+		except NetworkError:
+			my_logger.error(("[delete_endpoint_acl_rule] Network Failure. "
+                                 "Possibly a firewall or connectivity issue"))
+			raise
+		except GlobusError:
+			logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
+			raise
+    
+		msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
+		if 'print' in data and data['print']:
+			print (msg)
+		my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
+
 	elif (type == 'dataset'):
 		try:
-			endpoint_id = MyGlobus['datashare_ep']
 			email = data['email']
 			dsid = data['dsid']
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 		else:
 			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
-			myshare = myget('goshare', ['*'], cond)
-			if (len(myshare) == 0):
+			myshares = mymget('goshare', ['*'], cond)
+			if (len(myshares) == 0):
 				msg = "[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid)
 				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
 				return {'Error': msg}
-			if not myshare['globus_rid']:
+
+		for i in range(len(myshares)):
+			try:
+				endpoint_id = MyEndpoints[myshares[i]['source_endpoint']]
+				rule_id = myshares[i]['globus_rid']
+				record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
+				      'status': 'DELETED'}
+				myupdt('goshare', record, cond)
+			except KeyError:
 				msg = "[delete_endpoint_acl_rule] Globus ACL rule not found in Globus share record (e-mail: {0}, dsid: {1}).".format(email, dsid)
 				my_logger.warning(msg)
 				if 'print' in data and data['print']:
-					sys.exit("Error: {0}".format(msg))
-				return {'Error': msg}
-			else:
-				rule_id = myshare['globus_rid']
-				record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
-				          'status': 'DELETED'}
-				myupdt('goshare', record, cond)
+					print(msg)
+				continue
 
-	try:
-		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
-		tc = TransferClient(authorizer=tc_authorizer)
-		result = tc.delete_endpoint_acl_rule(endpoint_id, rule_id)
-	except GlobusAPIError as e:
-		my_logger.error(("[delete_endpoint_acl_rule] Globus API Error\n"
+			try:
+				result = tc.delete_endpoint_acl_rule(endpoint_id, rule_id)
+			except GlobusAPIError as e:
+				my_logger.error(("[delete_endpoint_acl_rule] Globus API Error\n"
 		                 "HTTP status: {}\n"
 		                 "Error code: {}\n"
 		                 "Error message: {}").format(e.http_status, e.code, e.message))
-		raise e
-	except NetworkError:
-		my_logger.error(("[delete_endpoint_acl_rule] Network Failure. "
-                   "Possibly a firewall or connectivity issue"))
-		raise
-	except GlobusError:
-		logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
-		raise
+				raise e
+			except NetworkError:
+				my_logger.error(("[delete_endpoint_acl_rule] Network Failure. "
+                                 "Possibly a firewall or connectivity issue"))
+				raise
+			except GlobusError:
+				logging.exception("[delete_endpoint_acl_rule] Totally unexpected GlobusError!")
+				raise
     
-	msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
-	if 'print' in data and data['print']:
-		print (msg)
-	my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
+			msg = "{0}\nResource: {1}\nRequest ID: {2}".format(result['message'], result['resource'], result['request_id'])
+			if 'print' in data and data['print']:
+				print (msg)
+			my_logger.info("[delete_endpoint_acl_rule] {0}".format(msg))
 	
-	return msg
+	return
 
 #=========================================================================================
 def submit_dsrqst_transfer(data):
@@ -477,10 +506,11 @@ def submit_dsrqst_transfer(data):
 	""" Define source endpoint ID and paths """
 	host_endpoint = MyGlobus['host_endpoint_id']
 	source_endpoint_id = MyGlobus['data_request_ep']
+	source_endpoint_legacy_name = MyGlobus['data_request_legacy']
 	destination_endpoint_id = session['endpoint_id']
 
 	""" Check if user has a share set up for this endpoint & path """
-	share_data = {'ridx': ridx, 'notify': True}
+	share_data = {'ridx': ridx, 'notify': True, 'source_endpoint': source_endpoint_legacy_name}
 	if not query_acl_rule(type, share_data):
 		acl_data = add_endpoint_acl_rule(1, share_data)
 	directory = construct_share_path(type, share_data)
@@ -619,7 +649,11 @@ def construct_share_url(type, data):
 
 	if (type == 'dataset'):
 		try:
-			origin_id = MyGlobus['datashare_ep']
+			dsid = data['dsid']
+			if get_dataset_location(dsid) == 'O':
+				origin_id = MyGlobus['rda_stratus_endpoint']
+			else:
+				origin_id = MyGlobus['datashare_ep']
 			origin_path = construct_share_path(type, {'dsid': data['dsid']})
 		except KeyError as err:
 			return handle_error(err, name="[construct_share_url]", print_stdout=print_stdout)
@@ -681,7 +715,7 @@ def query_acl_rule(type, data):
 		
 	elif (type == 'dataset'):
 		""" standard dataset shares """
-		cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(data['email'], data['dsid'])
+		cond = " WHERE email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(data['email'], data['dsid'], data['source_endpoint'])
 		myrule = myget('goshare', ['*'], cond)
 
 	try:
@@ -749,7 +783,11 @@ def update_share_record(type, data):
 	elif (type == 'dataset'):
 		try:
 			path = construct_share_path(type, {'dsid': dsid})
-			share_record.update({'source_endpoint': '{0}'.format(MyGlobus['datashare_legacy']),
+			if get_dataset_location(dsid) == 'O':
+				legacy_endpoint = MyGlobus['datashare_stratus']
+			else:
+				legacy_endpoint = MyGlobus['datashare_legacy']
+			share_record.update({'source_endpoint': '{0}'.format(legacy_endpoint),
 			                     'acl_path': '{0}'.format(path)
 			                    })
 			myadd('goshare', share_record)
@@ -772,6 +810,20 @@ def get_session(sid):
 		sys.exit(1)
 
 	return unserialize(myrec['data'])
+
+#=========================================================================================
+def get_dataset_location(dsid):
+	""" Get the RDA dataset location (Glade, stratus, or other) """
+	
+	try:
+		cond = " WHERE dsid='{}'".format(dsid)
+		myrec = myget('dataset', ['locflag'], cond)
+	except:
+		msg = "[get_dataset_location] Error getting location flag for dataset {}.".format(dsid)
+		my_logger.error(msg)
+		print(msg)
+	
+	return myrec['locflag']
 
 #=========================================================================================
 def submit_rda_transfer(data):
