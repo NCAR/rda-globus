@@ -271,7 +271,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		pathsplit = source_path.split("/")
 
 		if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
-			# Query file size from wfile.data_size or sfile.data_size
+			# Query file size from wfile.data_size
 		    
 			# Get dsid from source_path
 			a = re.search(r'/ds\d{3}\.\d{1}/', source_path)
@@ -302,13 +302,8 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				my_logger.info(msg)
 				return transfer_recs
 			
-			if (endpoint == endpoint_id_datashare):
-				field = 'wfile'
-				table = 'wfile'
-			if (endpoint == endpoint_id_stratus):
-				field = 'sfile'
-				table = 'sfile'
-			
+			field = 'wfile'
+			table = 'wfile'			
 			condition = " WHERE dsid='{0}' AND {1}='{2}'".format(dsid, field, tfile)
 			myrec = myget(table, ['data_size'], condition)
 			
