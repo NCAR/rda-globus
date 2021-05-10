@@ -28,7 +28,7 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus
+from MyGlobus import MyGlobus, MyEndpoints
 from PyDBI import myget, mymget, myadd, myupdt
 from MyLOG import *
 from MyDBI import build_customized_email
@@ -57,8 +57,9 @@ task_keys = ['status','bytes_transferred','task_id','username',\
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
 
 # Endpoint UUIDs
-data_requestID = MyGlobus['data_request_ep']
-datashareID = MyGlobus['datashare_ep']
+endpoint_id_data_request = MyEndpoints['rda#data_request']
+endpoint_id_datashare = MyEndpoints['rda#datashare']
+endpoint_id_stratus = MyEndpoints['rda#stratus']
 
 #=========================================================================================
 def main(filters):
@@ -269,8 +270,8 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		data_type = data[i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
-		if (endpoint == datashareID):
-			# Query file size from wfile.data_size
+		if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
+			# Query file size from wfile.data_size or sfile.data_size
 		    
 			# Get dsid from source_path
 			a = re.search(r'/ds\d{3}\.\d{1}/', source_path)
@@ -290,19 +291,27 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				my_logger.info(msg)
 				return transfer_recs
 
-			# Get wfile name
+			# Get transferred file name
 			c = re.split(a.group(), source_path)
 			if c:
-				wfile = unquote(c[1])
+				tfile = unquote(c[1])
 			else:
-				msg = "[prepare_transfer_recs] wfile not found"
+				msg = "[prepare_transfer_recs] transfer file not found"
 				my_logger.warning(msg)
 				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
 				my_logger.info(msg)
 				return transfer_recs
-				
-			condition = " WHERE dsid='{0}' AND wfile='{1}'".format(dsid, wfile)
-			myrec = myget('wfile', ['data_size'], condition)
+			
+			if (endpoint == endpoint_id_datashare):
+				field = 'wfile'
+				table = 'wfile'
+			if (endpoint == endpoint_id_stratus):
+				field = 'sfile'
+				table = 'sfile'
+			
+			condition = " WHERE dsid='{0}' AND {1}='{2}'".format(dsid, field, tfile)
+			myrec = myget(table, ['data_size'], condition)
+			
 			if (len(myrec) > 0):
 				transfer_recs.append({
 				             'destination_path':destination_path,
@@ -316,7 +325,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			                 'count':1})
 		
 		# rda#data_request
-		if (endpoint == data_requestID):
+		if (endpoint == endpoint_id_data_request):
 			# Get request ID from source_path
 			a = re.search(r'/[A-Z]+\d+/', source_path)
 			if a:
@@ -403,7 +412,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if searchObj:
 			continue
 		else:
-			if (endpoint == datashareID):
+			if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
 				condition = " WHERE task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
 				myrec = myget(go_table, keys, condition)
 				if (len(myrec) > 0):
@@ -415,17 +424,17 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 				else:
 					myadd(go_table, records[i])
 					count_add += 1
-			elif (endpoint == data_requestID):
+			elif (endpoint == endpoint_id_data_request):
 				dsrqst_count += 1
 			else:
 				my_logger.warning('[add_successful_transfers] Endpoint {0} not found'.format(endpoint))
 				return
 
-	# Insert usage from rda#datashare into table allusage
-	if (endpoint == datashareID and len(records) > 0):
+	# Insert usage from rda#datashare and rda#stratus into table allusage
+	if ((endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus) and (len(records) > 0)):
 		update_allusage(task_id)
 
-	if (endpoint == data_requestID and len(records) > 0):
+	if (endpoint == endpoint_id_data_request and len(records) > 0):
 		dsrqst_rec = []
 		pathsplit = records[0]['source_path'].split("/")
 		file_name = pathsplit.pop()
@@ -638,8 +647,8 @@ def parse_opts():
 
 	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
-	endpoint = MyGlobus['data_request_legacy']
-	endpointID = MyGlobus['data_request_ep']
+	endpoint = 'rda#data_request'
+	endpointID = MyEndpoints[endpoint]
 	user = ''
 	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
 	end_date = datetime.utcnow().isoformat()
@@ -648,7 +657,9 @@ def parse_opts():
 	if opts['ENDPOINT']:
 		if(re.search(r'datashare', opts['ENDPOINT'])):
 			endpoint = 'rda#datashare'
-			endpointID = MyGlobus['datashare_ep']
+		if(re.search(r'stratus', opts['ENDPOINT'])):
+			endpoint = 'rda#stratus'
+		endpointID = MyEndpoints[endpoint]
 		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
 		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
 	if opts['USERNAME']:
