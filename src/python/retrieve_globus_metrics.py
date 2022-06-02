@@ -31,7 +31,7 @@ if (path2 not in sys.path):
 from MyGlobus import MyGlobus, MyEndpoints
 from PyDBI import myget, mymget, myadd, myupdt
 from MyLOG import *
-from MyDBI import build_customized_email
+from MyDBI import build_customized_email, add_yearly_allusage
 
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
@@ -473,12 +473,10 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 
 def update_allusage(task_id):
 	from time import strftime
-	go_table = 'allusage'
 	method = 'GLOB'
 	source = 'G'
 	all_recs = []
-	count_updt = 0
-	count_add = 0
+	count = 0
 	
 	condition = " WHERE task_id='{0}'".format(task_id)
 	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)'], condition)
@@ -493,6 +491,7 @@ def update_allusage(task_id):
 	# Format date and time.
 	completion_date = myrec['completion_time'].strftime("%Y-%m-%d")
 	completion_time = myrec['completion_time'].strftime("%H:%M:%S")
+	completion_year = myrec['completion_time'].strftime("%Y")
 	
 	# Get user email, org_type, and country
 	condition = " WHERE email='{0}' AND end_date IS NULL".format(email)
@@ -528,46 +527,21 @@ def update_allusage(task_id):
 		return
 
 	for i in range(len(all_recs)):
-		dsid = all_recs[i]['dsid']
-		condition = " WHERE email='{0}' AND dsid='{1}' AND date='{2}' AND time='{3}' AND method='{4}'".format(email,dsid,completion_date,completion_time,method)
-		myrec = myget(go_table, ['*'], condition)
-		if (len(myrec) > 0):
-			myrec['date'] = myrec['date'].strftime("%Y-%m-%d")
-			myrec['time'] = str(myrec['time'])
-			if not (all_recs[i] == myrec):
-				try:
-					myupdt(go_table, all_recs[i], condition)
-					count_updt += 1
-				except:
-					msg = "[update_allusage] Error in updating allusage record.  Check logs."
-					my_logger.error(msg)
-					try:
-						if (MYLOG['DSCHECK']['cindex']):
-							MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
-							subject = "Warning/Error log from {}".format(get_command())
-							cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-							build_customized_email('dscheck', 'einfo', cond, subject)
-					except TypeError:
-						pass
-			else:
-				my_logger.info("[update_allusage] DB record already exists and is up to date.")
-		else:
+		try:
+			count += add_yearly_allusage(completion_year, all_recs[i], docheck=2)
+		except:
+			msg = "[update_allusage] Error adding/updating allusage record.  Check logs."
+			my_logger.error(msg)
 			try:
-				myadd(go_table, all_recs[i])
-				count_add += 1
-			except:
-				msg = "[update_allusage] Error in adding new allusage record.  Check logs."
-				my_logger.error(msg)
-				try:
-					if (MYLOG['DSCHECK']['cindex']):
-						MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
-						subject = "Warning/Error log from {}".format(get_command())
-						cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-						build_customized_email('dscheck', 'einfo', cond, subject)
-				except TypeError:
-					pass
+				if (MYLOG['DSCHECK']['cindex']):
+					MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+					subject = "Warning/Error log from {}".format(get_command())
+					cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+					build_customized_email('dscheck', 'einfo', cond, subject)
+			except TypeError:
+				pass
 
-	if (count_add+count_updt == 0):
+	if (count == 0):
 		msg = "[update_allusage] Warning: no metrics added/updated in allusage."
 		my_logger.warning(msg)
 		try:
