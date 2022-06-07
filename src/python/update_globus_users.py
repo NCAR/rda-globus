@@ -21,7 +21,7 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus
+from MyGlobus import MyEndpoints
 from PyDBI import myget, myadd, myupdt
 from globus_utils import load_app_client
 import logging
@@ -151,11 +151,9 @@ def parse_opts(argv):
 		elif opt in ('-h', '--help'):
 			print (usg)
 	
-	if (endpoint == 'rda#data_request'):
-		endpoint_id = MyGlobus['data_request_ep']
-	elif (endpoint == 'rda#datashare'):
-		endpoint_id = MyGlobus['datashare_ep']
-	else:
+	try:
+		endpoint_id = MyEndpoints[endpoint]
+	except KeyError:
 		msg = "[parse_opts] Globus endpoint {0} not found.".format(endpoint)
 		print (msg)
 		my_logger.warning(msg)
@@ -168,7 +166,7 @@ def parse_opts(argv):
 
 	return {'endpoint': endpoint, \
 	        'endpoint_id': endpoint_id, \
-            'rem': rem}
+            	'rem': rem}
 
 #=========================================================================================
 # Create a list of dictionaries (records) from the 'DATA' task document output, to be 
