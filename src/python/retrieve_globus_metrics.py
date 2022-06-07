@@ -81,11 +81,6 @@ def main(filters):
 		data_transfers = get_successful_transfers(task_id)
 		if (len(data_transfers) > 0):
 			add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
-
-			# Insert usage from rda#datashare and rda#stratus into table allusage
-			if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
-				update_allusage(task_id)
-
 		else:
 			msg = "[main] Warning: No successful transfers found."
 			my_logger.warning(msg)
@@ -97,6 +92,9 @@ def main(filters):
 					build_customized_email('dscheck', 'einfo', cond, subject)
 			except TypeError:
 				pass
+		# Update usage from rda#datashare and rda#stratus endpoints into table allusage
+		if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+			update_allusage(task_id)
 
 	my_logger.debug(__name__+': END')
 
