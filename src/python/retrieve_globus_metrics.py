@@ -370,6 +370,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	
 	count_add = 0
 	count_updt = 0
+	count_none = 0
 
 # Prepare database records
 
@@ -415,7 +416,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 						myupdt(go_table, records[i], condition)
 						count_updt += 1
 					else:
-						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
+						count_none += 1
 				else:
 					myadd(go_table, records[i])
 					count_add += 1
@@ -457,6 +458,8 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			count_add += 1
 	
 	msg = "[add_successful_transfers] {0} transfers added and {1} transfers updated for task id {2}".format(count_add, count_updt, task_id)
+	my_logger.info(msg)
+	msg = "[add_successful_transfers] {0} transfers already up to date for task id {1}".format(count_none, task_id)
 	my_logger.info(msg)
 	
 	try:
