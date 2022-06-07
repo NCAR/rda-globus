@@ -47,11 +47,11 @@ from subprocess import Popen, PIPE
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
-	         'type','request_time','completion_time','files',\
-	         'files_skipped','bytes_transferred',\
-	         'source_endpoint','source_host_endpoint','source_host_path',\
-	         'destination_endpoint','destination_host_endpoint',\
-	         'destination_host_path']
+	     'owner_id', 'type','request_time','completion_time','files',\
+	     'files_skipped','bytes_transferred',\
+	     'source_endpoint','source_host_endpoint','source_host_path',\
+	     'destination_endpoint','destination_host_endpoint',\
+	     'destination_host_path']
 
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
@@ -73,13 +73,14 @@ def main(filters):
 
 # Get list of successful transfers for each Globus task id.
 	my_logger.debug(__name__+': Getting and adding Globus transfers')
+	endpoint_id = filters['filter_endpoint']
 	for i in range(len(transfer_tasks)):
 		task_id = transfer_tasks[i]['task_id']
 		bytes = transfer_tasks[i]['bytes_transferred']
 		my_logger.debug(__name__+': task_id: '+task_id)
 		data_transfers = get_successful_transfers(task_id)
 		if (len(data_transfers) > 0):
-			add_successful_transfers('gofile', data_transfers, task_id, bytes, filters['filter_endpoint'])
+			add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
 		else:
 			msg = "[main] Warning: No successful transfers found."
 			my_logger.warning(msg)
@@ -91,6 +92,9 @@ def main(filters):
 					build_customized_email('dscheck', 'einfo', cond, subject)
 			except TypeError:
 				pass
+		# Update usage from rda#datashare and rda#stratus endpoints into table allusage
+		if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+			update_allusage(task_id)
 
 	my_logger.debug(__name__+': END')
 
@@ -370,6 +374,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	
 	count_add = 0
 	count_updt = 0
+	count_none = 0
 
 # Prepare database records
 
@@ -415,7 +420,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 						myupdt(go_table, records[i], condition)
 						count_updt += 1
 					else:
-						my_logger.info("[add_successful_transfers] task_id: "+task_id+" : "+go_table+" DB record exists and is up to date.")
+						count_none += 1
 				else:
 					myadd(go_table, records[i])
 					count_add += 1
@@ -424,10 +429,6 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			else:
 				my_logger.warning('[add_successful_transfers] Endpoint {0} not found'.format(endpoint))
 				return
-
-	# Insert usage from rda#datashare and rda#stratus into table allusage
-	if ((endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus) and (len(records) > 0)):
-		update_allusage(task_id)
 
 	if (endpoint == endpoint_id_data_request and len(records) > 0):
 		dsrqst_rec = []
@@ -451,12 +452,14 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 				myupdt(go_table, dsrqst_rec[0], condition)
 				count_updt += 1
 			else:
-				my_logger.info("[add_successful_transfers] task_id: {0}, rindex {1}: {2} DB record already exists and is up to date.".format(task_id,dsrqst_rec[0]['rindex'],go_table))
+				count_none += 1
 		else:
 			myadd(go_table, dsrqst_rec[0])
 			count_add += 1
 	
 	msg = "[add_successful_transfers] {0} transfers added and {1} transfers updated for task id {2}".format(count_add, count_updt, task_id)
+	my_logger.info(msg)
+	msg = "[add_successful_transfers] {0} transfers already up to date for task id {1}".format(count_none, task_id)
 	my_logger.info(msg)
 	
 	try:
@@ -500,8 +503,9 @@ def update_allusage(task_id):
 		org_type = myrec['org_type']
 		country = myrec['country']
 	else:
-		my_logger.warning("[update_allusage] User email {0} not found in table ruser.".format(email))
-		return
+		my_logger.warning("[update_allusage] User email {0} not found in table ruser for task ID {1}.".format(email, task_id))
+		org_type = None
+		country = None
 	
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
@@ -690,7 +694,7 @@ def create_recs(data, keys):
 def check_email(data):
 	emails = []
 	for i in range(len(data)):
-		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['username'])
+		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['owner_id'])
 		myrec = myget('gouser', ['email'], condition)
 		if 'email' in myrec:
 			emails.append(myrec)
