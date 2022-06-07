@@ -506,7 +506,8 @@ def update_allusage(task_id):
 		country = myrec['country']
 	else:
 		my_logger.warning("[update_allusage] User email {0} not found in table ruser for task ID {1}.".format(email, task_id))
-		return
+		org_type = None
+		country = None
 	
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
