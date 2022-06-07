@@ -47,11 +47,11 @@ from subprocess import Popen, PIPE
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','username',\
-	         'type','request_time','completion_time','files',\
-	         'files_skipped','bytes_transferred',\
-	         'source_endpoint','source_host_endpoint','source_host_path',\
-	         'destination_endpoint','destination_host_endpoint',\
-	         'destination_host_path']
+	     'owner_id', 'type','request_time','completion_time','files',\
+	     'files_skipped','bytes_transferred',\
+	     'source_endpoint','source_host_endpoint','source_host_path',\
+	     'destination_endpoint','destination_host_endpoint',\
+	     'destination_host_path']
 
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
@@ -690,7 +690,7 @@ def create_recs(data, keys):
 def check_email(data):
 	emails = []
 	for i in range(len(data)):
-		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['username'])
+		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['owner_id'])
 		myrec = myget('gouser', ['email'], condition)
 		if 'email' in myrec:
 			emails.append(myrec)
