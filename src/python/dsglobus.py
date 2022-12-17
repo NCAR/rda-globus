@@ -662,7 +662,7 @@ def construct_share_url(type, data):
 	if 'identity' in data:
 		params.update({'add_identity': data['identity']})
 	
-	url = '{0}transfer?{1}'.format(MyGlobus['globusURL'], urlencode(params))
+	url = '{0}?{1}'.format(MyGlobus['globus_share_url'], urlencode(params))
 	
 	my_logger.info("[construct_share_url] Globus share URL created: {0}".format(url))
 	return url
