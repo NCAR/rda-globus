@@ -33,6 +33,7 @@ from rda_globus_app_config import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
 GLOBUS_TRANSFER_BASE_URL = 'https://transfer.api.globusonline.org/v0.10/'
 GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://app.globus.org/'
+GLOBUS_SHARE_URL = 'https://app.globus.org/file-manager'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 RDA_DATA_PATH = '/glade/collections/rda'
 
@@ -77,6 +78,7 @@ MyGlobus = {
    'private_key': PRIVATE_KEY,
    'redirect_uri': REDIRECT_URI,
    'globusURL': GLOBUS_APP_URL,
+   'globus_share_url': GLOBUS_SHARE_URL,
    'rda_quasar_client_id': RDA_QUASAR_CLIENT_ID,
    'transfer_rt_quasar': TRANSFER_RT_QUASAR,
    'auth_rt_quasar': AUTH_RT_QUASAR,
