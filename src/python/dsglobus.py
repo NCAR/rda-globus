@@ -14,7 +14,7 @@
 #
 ##################################################################################
 
-import os, sys
+import os, sys, pwd
 import subprocess
 
 try:
@@ -1621,7 +1621,12 @@ def parse_input():
 def configure_log(**kwargs):
 	""" Set up log file """
 	LOGPATH = '/glade/scratch/tcram/logs/globus'
-	LOGFILE = 'dsglobus.log'
+
+	# write to different log file if user = apache
+	if (pwd.getpwuid(os.getuid())[0] == 'apache'):
+		LOGFILE = 'dsglobus.apache.log'
+	else:
+		LOGFILE = 'dsglobus.log'
 
 	if 'level' in kwargs:
 		loglevel = kwargs['level']
