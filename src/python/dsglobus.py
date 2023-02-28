@@ -294,7 +294,11 @@ def add_endpoint_acl_rule(data):
 			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
 
 	rda_identity = "{0}@rda.ucar.edu".format(email)
-	identity_id = get_user_id(rda_identity)
+	rda_oidc_identity = "{0}@oidc.rda.ucar.edu".format(email)
+	# identity_id = get_user_id(rda_identity)
+
+	# Update 2023-01-24.  Use NCAR RDA OIDC identity with new OIDC IdP service.
+	identity_id = get_user_id(rda_oidc_identity)
 	share_data.update({'identity': identity_id})
 	rule_data = {
 	    "DATA_TYPE": "access",
