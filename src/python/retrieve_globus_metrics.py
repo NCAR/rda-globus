@@ -50,8 +50,7 @@ task_keys = ['status','bytes_transferred','task_id', \
 	     'owner_id', 'type','request_time','completion_time','files',\
 	     'files_skipped','bytes_transferred',\
 	     'source_endpoint_id', 'source_endpoint_display_name', \
-	     'destination_endpoint_id', \
-	     'destination_host_path']
+	     'destination_endpoint_id']
 
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
