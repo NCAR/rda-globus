@@ -607,7 +607,7 @@ def parse_opts():
 	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
 	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
-	parser.add_argument('-to', action="store", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
+	parser.add_argument('-to', action="store_true", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
 	
 	if len(sys.argv)==1:
 		parser.print_help()
