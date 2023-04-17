@@ -49,8 +49,8 @@ from subprocess import Popen, PIPE
 task_keys = ['status','bytes_transferred','task_id','username',\
 	     'owner_id', 'type','request_time','completion_time','files',\
 	     'files_skipped','bytes_transferred',\
-	     'source_endpoint','source_host_endpoint','source_host_path',\
-	     'destination_endpoint','destination_host_endpoint',\
+	     'source_endpoint_id','source_host_endpoint','source_host_path',\
+	     'destination_endpoint_id','destination_host_endpoint',\
 	     'destination_host_path']
 
 # Keys for individual Globus task IDs
