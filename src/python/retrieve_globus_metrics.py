@@ -695,10 +695,10 @@ def create_recs(data, keys):
 	return records
 	
 #=========================================================================================
-# Map source endpoint ID to legacy canonical endpoint name
-
 def map_endpoint_names(data):
-	for i range(len(data)):
+	""" Map source endpoint ID to legacy canonical endpoint name """
+
+	for i in range(len(data)):
 		source_endpoint_id = data[i]['source_endpoint_id']
 		if source_endpoint_id == MyEndpoints['rda#datashare']:
 			data[i]['source_endpoint'] = 'rda#datashare'
