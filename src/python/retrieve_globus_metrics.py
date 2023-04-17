@@ -71,7 +71,7 @@ def main(filters):
 	add_tasks('gotask', transfer_tasks)
 
 # Get list of successful transfers for each Globus task id.
-	if task_only:
+	if not task_only:
 		my_logger.debug(__name__+': Getting and adding Globus transfers')
 		endpoint_id = filters['filter_endpoint']
 		for i in range(len(transfer_tasks)):
