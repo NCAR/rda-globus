@@ -134,6 +134,7 @@ def add_tasks(go_table, data):
 # Prepare database records
 	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
+		records = map_endpoint_names(records)
 		emails = check_email(data)
 		records = update_records(records, emails)
 	else:
@@ -693,6 +694,20 @@ def create_recs(data, keys):
 		go_dict = {}
 	return records
 	
+#=========================================================================================
+# Map source endpoint ID to legacy canonical endpoint name
+
+def map_endpoint_names(data):
+	for i range(len(data)):
+		source_endpoint_id = data[i]['source_endpoint_id']
+		if source_endpoint_id == MyEndpoints['rda#datashare']:
+			data[i]['source_endpoint'] = 'rda#datashare'
+		if source_endpoint_id == MyEndpoints['rda#stratus']:
+			data[i]['source_endpoint'] = 'rda#stratus'
+		if source_endpoint_id == MyEndpoints['rda#data_request']:
+			data[i]['source_endpoint'] = 'rda#datashare'
+	return data
+
 #=========================================================================================
 # Check for user's email address in the gouser table.  Add to records dictionary if found.
 
