@@ -37,6 +37,11 @@ GLOBUS_SHARE_URL = 'https://app.globus.org/file-manager'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 RDA_DATA_PATH = '/glade/collections/rda'
 
+""" HTTPS domains """
+GLOBUS_DATA_DOMAIN = 'https://data.rda.ucar.edu'
+GLOBUS_STRATUS_DOMAIN = 'https://stratus.rda.ucar.edu'
+GLOBUS_REQUEST_DOMAIN = 'https://request.rda.ucar.edu'
+
 """ Endpoint IDs """
 RDA_DATASET_ENDPOINT = '1e128d3c-852d-11e8-9546-0a6d4e044368'
 RDA_DSRQST_ENDPOINT = 'e61f9cde-8537-11e8-9546-0a6d4e044368'
