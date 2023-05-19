@@ -705,7 +705,7 @@ def map_endpoint_names(data):
 		if source_endpoint_id == MyEndpoints['rda#stratus']:
 			data[i]['source_endpoint'] = 'rda#stratus'
 		if source_endpoint_id == MyEndpoints['rda#data_request']:
-			data[i]['source_endpoint'] = 'rda#datashare'
+			data[i]['source_endpoint'] = 'rda#data_request'
 	return data
 
 #=========================================================================================
