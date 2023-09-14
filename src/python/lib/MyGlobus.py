@@ -35,7 +35,7 @@ GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://app.globus.org/'
 GLOBUS_SHARE_URL = 'https://app.globus.org/file-manager'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
-RDA_DATA_PATH = '/glade/collections/rda'
+RDA_DATA_PATH = '/glade/campaign/collections/rda'
 
 """ HTTPS domains """
 GLOBUS_DATA_DOMAIN = 'https://data.rda.ucar.edu'
@@ -43,8 +43,8 @@ GLOBUS_STRATUS_DOMAIN = 'https://stratus.rda.ucar.edu'
 GLOBUS_REQUEST_DOMAIN = 'https://request.rda.ucar.edu'
 
 """ Endpoint IDs """
-RDA_DATASET_ENDPOINT = '1e128d3c-852d-11e8-9546-0a6d4e044368'
-RDA_DSRQST_ENDPOINT = 'e61f9cde-8537-11e8-9546-0a6d4e044368'
+RDA_DATASET_ENDPOINT = 'b6b5d5e8-eb14-4f6b-8928-c02429d67998'
+RDA_DSRQST_ENDPOINT = 'e1e2997e-d794-4868-838e-d4b8d5590853'
 NCAR_HOST_ENDPOINT = 'dd1ee92a-6d04-11e5-ba46-22000b92c6ec'
 
 RDA_GLADE_ENDPOINT = 'c3dd5dac-0279-11eb-892e-0a5521ff3f4b'
@@ -60,8 +60,10 @@ RDA_DSRQST_ENDPOINT_LEGACY = '68823254-36aa-11e8-b95e-0ac6873fc732'
 """ Older legacy endpoints """
 RDA_DATASET_ENDPOINT_LEGACY1 = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
 RDA_DATASET_ENDPOINT_LEGACY2 = '2869611a-36aa-11e8-b95e-0ac6873fc732'
+RDA_DATASET_ENDPOINT_LEGACY3 = '1e128d3c-852d-11e8-9546-0a6d4e044368'
 RDA_DSRQST_ENDPOINT_LEGACY1 = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
 RDA_DSRQST_ENDPOINT_LEGACY2 = '68823254-36aa-11e8-b95e-0ac6873fc732'
+RDA_DSRQST_ENDPOINT_LEGACY3 = 'e61f9cde-8537-11e8-9546-0a6d4e044368'
 
 """ Authorization header for vanilla API requests.  No longer used """
 # headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
