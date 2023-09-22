@@ -46,12 +46,11 @@ from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
 # Task list keys to retain
-task_keys = ['status','bytes_transferred','task_id','username',\
+task_keys = ['status','bytes_transferred','task_id', \
 	     'owner_id', 'type','request_time','completion_time','files',\
 	     'files_skipped','bytes_transferred',\
-	     'source_endpoint','source_host_endpoint','source_host_path',\
-	     'destination_endpoint','destination_host_endpoint',\
-	     'destination_host_path']
+	     'source_endpoint_id', 'source_endpoint_display_name', \
+	     'destination_endpoint_id']
 
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
@@ -72,29 +71,30 @@ def main(filters):
 	add_tasks('gotask', transfer_tasks)
 
 # Get list of successful transfers for each Globus task id.
-	my_logger.debug(__name__+': Getting and adding Globus transfers')
-	endpoint_id = filters['filter_endpoint']
-	for i in range(len(transfer_tasks)):
-		task_id = transfer_tasks[i]['task_id']
-		bytes = transfer_tasks[i]['bytes_transferred']
-		my_logger.debug(__name__+': task_id: '+task_id)
-		data_transfers = get_successful_transfers(task_id)
-		if (len(data_transfers) > 0):
-			add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
-		else:
-			msg = "[main] Warning: No successful transfers found."
-			my_logger.warning(msg)
-			try:
-				if (MYLOG['DSCHECK']['cindex']):
-					MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
-					subject = "Warning/Error log from {}".format(get_command())
-					cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-					build_customized_email('dscheck', 'einfo', cond, subject)
-			except TypeError:
-				pass
-		# Update usage from rda#datashare and rda#stratus endpoints into table allusage
-		if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
-			update_allusage(task_id)
+	if not task_only:
+		my_logger.debug(__name__+': Getting and adding Globus transfers')
+		endpoint_id = filters['filter_endpoint']
+		for i in range(len(transfer_tasks)):
+			task_id = transfer_tasks[i]['task_id']
+			bytes = transfer_tasks[i]['bytes_transferred']
+			my_logger.debug(__name__+': task_id: '+task_id)
+			data_transfers = get_successful_transfers(task_id)
+			if (len(data_transfers) > 0):
+				add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
+			else:
+				msg = "[main] Warning: No successful transfers found."
+				my_logger.warning(msg)
+				try:
+					if (MYLOG['DSCHECK']['cindex']):
+						MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+						subject = "Warning/Error log from {}".format(get_command())
+						cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+						build_customized_email('dscheck', 'einfo', cond, subject)
+				except TypeError:
+					pass
+			# Update usage from rda#datashare and rda#stratus endpoints into table allusage
+			if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+				update_allusage(task_id)
 
 	my_logger.debug(__name__+': END')
 
@@ -134,6 +134,7 @@ def add_tasks(go_table, data):
 # Prepare database records
 	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
+		records = map_endpoint_names(records)
 		emails = check_email(data)
 		records = update_records(records, emails)
 	else:
@@ -591,7 +592,7 @@ def parse_opts():
 	import textwrap
 	
 	from datetime import timedelta
-	global doprint
+	global doprint, task_only
 
 	""" Parse command line arguments """
 	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
@@ -607,6 +608,7 @@ def parse_opts():
 	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
 	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
+	parser.add_argument('-to', action="store_true", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
 	
 	if len(sys.argv)==1:
 		parser.print_help()
@@ -626,6 +628,7 @@ def parse_opts():
 	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
 	end_date = datetime.utcnow().isoformat()
 	doprint = bool(False)
+	task_only = bool(False)
 
 	if opts['ENDPOINT']:
 		if(re.search(r'datashare', opts['ENDPOINT'])):
@@ -646,6 +649,8 @@ def parse_opts():
 		my_logger.info('END       : {0}'.format(end_date))
 	if opts['PRINTINFO']:
 		doprint = bool(True)
+	if opts['TASKONLY']:
+		task_only = bool(True)
 			
 	print ('ENDPOINT   :', endpoint)
 	print ('ENDPOINT ID:', endpointID)
@@ -653,6 +658,7 @@ def parse_opts():
 	print ('START      :', start_date)
 	print ('END        :', end_date)
 	print ('PRINT      :', doprint)
+	print ('TASK ONLY  :', task_only)
 
 	return {'endpoint': endpoint, \
 	        'endpointID': endpointID, \
@@ -688,6 +694,20 @@ def create_recs(data, keys):
 		go_dict = {}
 	return records
 	
+#=========================================================================================
+def map_endpoint_names(data):
+	""" Map source endpoint ID to legacy canonical endpoint name """
+
+	for i in range(len(data)):
+		source_endpoint_id = data[i]['source_endpoint_id']
+		if source_endpoint_id == MyEndpoints['rda#datashare']:
+			data[i]['source_endpoint'] = 'rda#datashare'
+		if source_endpoint_id == MyEndpoints['rda#stratus']:
+			data[i]['source_endpoint'] = 'rda#stratus'
+		if source_endpoint_id == MyEndpoints['rda#data_request']:
+			data[i]['source_endpoint'] = 'rda#data_request'
+	return data
+
 #=========================================================================================
 # Check for user's email address in the gouser table.  Add to records dictionary if found.
 
