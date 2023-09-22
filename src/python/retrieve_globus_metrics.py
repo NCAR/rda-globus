@@ -34,7 +34,7 @@ from MyLOG import *
 from MyDBI import build_customized_email, add_yearly_allusage
 
 from globus_utils import load_app_client
-from globus_sdk import (TransferClient, TransferAPIError, RefreshTokenAuthorizer,
+from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
 from datetime import datetime, tzinfo
@@ -135,7 +135,7 @@ def add_tasks(go_table, data):
 	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
 		records = map_endpoint_names(records)
-		emails = check_email(data)
+		emails = get_globus_email(data)
 		records = update_records(records, emails)
 	else:
 		msg = "[add_tasks] There are no transfer tasks in the return document."
@@ -351,7 +351,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			if (len(myrec) > 0):
 				dsid = myrec['dsid']
 			else:
-				logger.warning("Request index {0} not found".format(rindex))
+				my_logger.warning("Request index {0} not found".format(rindex))
 				dsid = None
 			
 			transfer_recs.append({
@@ -709,7 +709,41 @@ def map_endpoint_names(data):
 	return data
 
 #=========================================================================================
-# Check for user's email address in the gouser table.  Add to records dictionary if found.
+# Get user's email address associated with their Globus account
+
+def get_globus_email(data):
+	emails = []
+
+	for i in range(len(data)):
+		try:
+			ac_authorizer = RefreshTokenAuthorizer(MyGlobus['auth_refresh_token'], load_app_client())
+			ac = AuthClient(authorizer=ac_authorizer)
+			owner_id = data[i]['owner_id']
+			result = ac.get_identities(ids=owner_id)
+			email = result.data['identities'][0]['email']
+		except GlobusAPIError as e:
+			my_logger.error(("[get_user_id] Globus API Error\n"
+		    	             "HTTP status: {}\n"
+		        	         "Error code: {}\n"
+		            	     "Error message: {}").format(e.http_status, e.code, e.message))
+			raise e
+		except NetworkError:
+			my_logger.error(("[get_user_id] Network Failure. "
+            	       "Possibly a firewall or connectivity issue"))
+			raise
+		except GlobusError:
+			logging.exception("[get_user_id] Totally unexpected GlobusError!")
+			raise
+
+		if 'email':
+			emails.append({'email': email})
+		else:
+			emails.append({'email':None})
+
+	return emails
+	
+#=========================================================================================
+# Check for user's email address in the dssdb.gouser table.  Add to records dictionary if found.
 
 def check_email(data):
 	emails = []
