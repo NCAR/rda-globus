@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
-#
-##################################################################################
-#
-#     Title : retrieve_globus_metrics.py
-#    Author : Thomas Cram, tcram@ucar.edu
-#      Date : 02/04/2015
-#   Purpose : Python script to retrieve Globus data transfer metrics for RDA users.
-#
-#      Note : If running on the geyser nodes, load the required environment modules with 
-#             the following commands:
-#             module use /glade/u/apps/contrib/modulefiles/
-#             module load globus-sdk
-#
-# Work File : $DSSHOME/bin/retrieve_globus_metrics.py*
-# Test File : $DSSHOME/bin/retrieve_globus_metrics_test.py*
-#  SVN File : $HeadURL: https://subversion.ucar.edu/svndss/tcram/python/retrieve_globus_metrics.py $
-#
-##################################################################################
+
+"""
+     Title : retrieve_globus_metrics.py
+    Author : Thomas Cram, tcram@ucar.edu
+      Date : 02/04/2015
+   Purpose : Python script to retrieve Globus data transfer metrics for RDA users.
+
+ Work File : $DSSHOME/bin/retrieve_globus_metrics.py*
+ Test File : $DSSHOME/bin/retrieve_globus_metrics_test.py*
+ Github    : https://github.com/NCAR/rda-globus/blob/main/src/python/retrieve_globus_metrics.py
+"""
 
 import sys
 import socket, re
@@ -31,7 +24,7 @@ if (path2 not in sys.path):
 from MyGlobus import MyGlobus, MyEndpoints
 from PyDBI import myget, mymget, myadd, myupdt
 from MyLOG import *
-from MyDBI import build_customized_email, add_yearly_allusage
+from MyDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
 
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
@@ -46,7 +39,7 @@ from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
 # Task list keys to retain
-task_keys = ['status','bytes_transferred','task_id', \
+task_keys = ['status','bytes_transferred','task_id','owner_string',\
 	     'owner_id', 'type','request_time','completion_time','files',\
 	     'files_skipped','bytes_transferred',\
 	     'source_endpoint_id', 'source_endpoint_display_name', \
@@ -155,8 +148,18 @@ def add_tasks(go_table, data):
 	count_add = 0
 	count_updt = 0
 	task_keys.append('email')
+
+	# task key 'owner_string' = field 'username' in gotask table.  Change task_keys accordingly.
+	task_keys.append('username')
+	task_keys.remove('owner_string')
+
 	for i in range(len(records)):
-		condition = " WHERE task_id='{0}'".format(records[i]['task_id'])
+		rec = records[i]
+
+		# change record key 'owner_string' to 'username'
+		rec['username'] = rec.pop('owner_string')
+
+		condition = " WHERE task_id='{0}'".format(rec['task_id'])
 		myrec = myget(go_table, task_keys, condition)
 		if (len(myrec) > 0):
 			try:
@@ -164,17 +167,17 @@ def add_tasks(go_table, data):
 				myrec['completion_time'] = myrec['completion_time'].replace(tzinfo=pytz.utc).isoformat()
 			except KeyError:
 				pass
-			if not (records[i] == myrec):
-				records[i]['request_time'] = records[i]['request_time'][:19]
-				records[i]['completion_time'] = records[i]['completion_time'][:19]
-				myupdt(go_table, records[i], condition)
+			if not (rec == myrec):
+				rec['request_time'] = rec['request_time'][:19]
+				rec['completion_time'] = rec['completion_time'][:19]
+				myupdt(go_table, rec, condition)
 				count_updt+=1
 			else:
-				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(records[i]['task_id']))
+				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(rec['task_id']))
 		else:
-			records[i]['request_time'] = records[i]['request_time'][:19]
-			records[i]['completion_time'] = records[i]['completion_time'][:19]
-			myadd(go_table, records[i])
+			rec['request_time'] = rec['request_time'][:19]
+			rec['completion_time'] = rec['completion_time'][:19]
+			myadd(go_table, rec)
 			count_add+=1
 
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
@@ -233,20 +236,21 @@ def get_successful_transfers(task_id):
 	return transfers
 
 #=========================================================================================
-# Handle errors returned by API resource
-
-# Example:
-# Verify that task id exists.  Response will be as follows if not:
-# r.status_code = 404
-# r.headers['x-transfer-api-error'] = 'TaskNotFound'
-# data['code'] = 'TaskNotFound'
-# data['message'] = 'Task ID <task_id> not found'
-# data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
-
-# Also, for failed tasks, the task ID will exist, but response will have zero content:
-# len(data['DATA']) = 0
-
 def handle_error(r, data):
+	""" Handle errors returned by API resource
+
+	Example:
+	   Verify that task id exists.  Response will be as follows if not:
+	   r.status_code = 404
+	   r.headers['x-transfer-api-error'] = 'TaskNotFound'
+	   data['code'] = 'TaskNotFound'
+	   data['message'] = 'Task ID <task_id> not found'
+	   data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
+
+	   Also, for failed tasks, the task ID will exist, but response will have zero content:
+	   len(data['DATA']) = 0
+	"""
+
 	msg = "Error {0}: {1}".format(str(r.status_code), data['message'])
 	msg += " Resource: {0}".format(data['resource'])
 	my_logger.error(msg)
@@ -497,16 +501,22 @@ def update_allusage(task_id):
 	completion_time = myrec['completion_time'].strftime("%H:%M:%S")
 	completion_year = myrec['completion_time'].strftime("%Y")
 	
-	# Get user email, org_type, and country
-	condition = " WHERE email='{0}' AND end_date IS NULL".format(email)
-	myrec = myget('ruser',['org_type','country'], condition)
-	if (len(myrec) > 0):
-		org_type = myrec['org_type']
-		country = myrec['country']
-	else:
-		my_logger.warning("[update_allusage] User email {0} not found in table ruser for task ID {1}.".format(email, task_id))
+	# Get user org_type and country
+	wuid = check_wuser_wuid(email)
+	if not wuid:
+		my_logger.warning("wuid not found for email {}".format(email))
 		org_type = None
 		country = None
+	else:
+		condition = " WHERE wuid={}".format(wuid)
+		myrec = myget('wuser',['org_type','country'], condition)
+		if (len(myrec) > 0):
+			org_type = myrec['org_type']
+			country = myrec['country']
+		else:
+			my_logger.warning("wuser not found for email {}, task_id {}.".format(email, task_id))
+			org_type = None
+			country = None
 	
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
@@ -532,19 +542,39 @@ def update_allusage(task_id):
 		return
 
 	for i in range(len(all_recs)):
-		try:
-			count += add_yearly_allusage(completion_year, all_recs[i], docheck=2)
-		except:
-			msg = "[update_allusage] Error adding/updating allusage record.  Check logs."
-			my_logger.error(msg)
+		# check if record already exists in allusage table (dsid, date, time, and size will match)
+		table = "allusage_{}".format(completion_year)
+		fields = ['email']
+		dsid = all_recs[i]['dsid']
+		date = all_recs[i]['date']
+		time = all_recs[i]['time']
+		size = all_recs[i]['size']
+		email = all_recs[i]['email']
+		cond = " WHERE dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}' AND source='{5}'".format(dsid, date, time, size, method, source)
+		myrec = myget(table, fields, cond)
+
+		if (len(myrec) > 0):
+			if not email or (email == myrec['email']):
+				# Globus user email is undefined, or email matches email in allusage record.  Skip.
+				continue
+			else:
+				# update email with allusage record
+				myupdt(table, {'email': email}, cond)
+		else:
+			# Add new record to allusage table
 			try:
-				if (MYLOG['DSCHECK']['cindex']):
-					MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
-					subject = "Warning/Error log from {}".format(get_command())
-					cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
-					build_customized_email('dscheck', 'einfo', cond, subject)
-			except TypeError:
-				pass
+				count += add_yearly_allusage(completion_year, all_recs[i], docheck=4)
+			except:
+				msg = "[update_allusage] Error adding/updating allusage record.  Check logs."
+				my_logger.error(msg)
+				try:
+					if (MYLOG['DSCHECK']['cindex']):
+						MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+						subject = "Warning/Error log from {}".format(get_command())
+						cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+						build_customized_email('dscheck', 'einfo', cond, subject)
+				except TypeError:
+					pass
 
 	if (count == 0):
 		msg = "[update_allusage] Warning: no metrics added/updated in allusage."
@@ -713,6 +743,7 @@ def map_endpoint_names(data):
 
 def get_globus_email(data):
 	emails = []
+	rda_oidc = '@oidc.rda.ucar.edu'
 
 	for i in range(len(data)):
 		try:
@@ -720,7 +751,13 @@ def get_globus_email(data):
 			ac = AuthClient(authorizer=ac_authorizer)
 			owner_id = data[i]['owner_id']
 			result = ac.get_identities(ids=owner_id)
-			email = result.data['identities'][0]['email']
+			# check for RDA identity
+			username = result.data['identities'][0]['username']
+			if username.find(rda_oidc) > 0:
+				email = username.rstrip(rda_oidc)
+				my_logger.info("NCAR RDA identity found.  User email updated to {}".format(email))
+			else:
+				email = result.data['identities'][0]['email']
 		except GlobusAPIError as e:
 			my_logger.error(("[get_user_id] Globus API Error\n"
 		    	             "HTTP status: {}\n"
