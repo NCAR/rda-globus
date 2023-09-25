@@ -733,6 +733,7 @@ def map_endpoint_names(data):
 
 def get_globus_email(data):
 	emails = []
+	rda_oidc = '@oidc.rda.ucar.edu'
 
 	for i in range(len(data)):
 		try:
@@ -740,7 +741,13 @@ def get_globus_email(data):
 			ac = AuthClient(authorizer=ac_authorizer)
 			owner_id = data[i]['owner_id']
 			result = ac.get_identities(ids=owner_id)
-			email = result.data['identities'][0]['email']
+			# check for RDA identity
+			username = result.data['identities'][0]['username']
+			if username.find(rda_oidc) > 0:
+				email = username.rstrip(rda_oidc)
+				my_logger.info("NCAR RDA identity found.  User email updated to {}".format(email))
+			else:
+				email = result.data['identities'][0]['email']
 		except GlobusAPIError as e:
 			my_logger.error(("[get_user_id] Globus API Error\n"
 		    	             "HTTP status: {}\n"
