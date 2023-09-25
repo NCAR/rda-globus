@@ -544,13 +544,13 @@ def update_allusage(task_id):
 	for i in range(len(all_recs)):
 		# check if record already exists in allusage table (dsid, date, time, and size will match)
 		table = "allusage_{}".format(completion_year)
-		fields = ['email']
+		fields = ['aidx', 'email']
 		dsid = all_recs[i]['dsid']
 		date = all_recs[i]['date']
 		time = all_recs[i]['time']
 		size = all_recs[i]['size']
 		email = all_recs[i]['email']
-		cond = " WHERE dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}' AND source='{5}'".format(dsid, date, time, size, method, source)
+		cond = " WHERE dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}'".format(dsid, date, time, size, method)
 		myrec = myget(table, fields, cond)
 
 		if (len(myrec) > 0):
@@ -559,6 +559,7 @@ def update_allusage(task_id):
 				continue
 			else:
 				# update email with allusage record
+				cond = " WHERE aidx={}".format(myrec['aidx'])
 				myupdt(table, {'email': email}, cond)
 		else:
 			# Add new record to allusage table
