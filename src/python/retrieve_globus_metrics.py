@@ -542,7 +542,7 @@ def update_allusage(task_id):
 		cond = " WHERE dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}' AND source='{5}'".format(dsid, date, time, size, method, source)
 		myrec = myget(table, fields, cond)
 
-		if len(myrec > 0):
+		if (len(myrec) > 0):
 			if not email or (email == myrec['email']):
 				# Globus user email is undefined, or email matches email in allusage record.  Skip.
 				continue
