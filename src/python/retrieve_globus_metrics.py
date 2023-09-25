@@ -39,7 +39,7 @@ from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
 # Task list keys to retain
-task_keys = ['status','bytes_transferred','task_id','username',\
+task_keys = ['status','bytes_transferred','task_id','owner_string',\
 	     'owner_id', 'type','request_time','completion_time','files',\
 	     'files_skipped','bytes_transferred',\
 	     'source_endpoint','source_host_endpoint','source_host_path',\
@@ -147,8 +147,18 @@ def add_tasks(go_table, data):
 	count_add = 0
 	count_updt = 0
 	task_keys.append('email')
+
+	# task key 'owner_string' = field 'username' in gotask table.  Change task_keys accordingly.
+	task_keys.append('username')
+	task_keys.remove('owner_string')
+
 	for i in range(len(records)):
-		condition = " WHERE task_id='{0}'".format(records[i]['task_id'])
+		rec = records[i]
+
+		# change record key 'owner_string' to 'username'
+		rec['username'] = rec.pop('owner_string')
+
+		condition = " WHERE task_id='{0}'".format(rec['task_id'])
 		myrec = myget(go_table, task_keys, condition)
 		if (len(myrec) > 0):
 			try:
@@ -156,17 +166,17 @@ def add_tasks(go_table, data):
 				myrec['completion_time'] = myrec['completion_time'].replace(tzinfo=pytz.utc).isoformat()
 			except KeyError:
 				pass
-			if not (records[i] == myrec):
-				records[i]['request_time'] = records[i]['request_time'][:19]
-				records[i]['completion_time'] = records[i]['completion_time'][:19]
-				myupdt(go_table, records[i], condition)
+			if not (rec == myrec):
+				rec['request_time'] = rec['request_time'][:19]
+				rec['completion_time'] = rec['completion_time'][:19]
+				myupdt(go_table, rec, condition)
 				count_updt+=1
 			else:
-				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(records[i]['task_id']))
+				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(rec['task_id']))
 		else:
-			records[i]['request_time'] = records[i]['request_time'][:19]
-			records[i]['completion_time'] = records[i]['completion_time'][:19]
-			myadd(go_table, records[i])
+			rec['request_time'] = rec['request_time'][:19]
+			rec['completion_time'] = rec['completion_time'][:19]
+			myadd(go_table, rec)
 			count_add+=1
 
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
