@@ -560,7 +560,7 @@ def update_allusage(task_id):
 			else:
 				# update email with allusage record
 				cond = " WHERE aidx={}".format(myrec['aidx'])
-				myupdt(table, {'email': email}, cond)
+				myupdt(table, all_recs[i], cond)
 		else:
 			# Add new record to allusage table
 			try:
