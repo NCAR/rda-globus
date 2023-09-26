@@ -755,7 +755,7 @@ def get_globus_email(data):
 			# check for RDA identity
 			username = result.data['identities'][0]['username']
 			if username.find(rda_oidc) > 0:
-				email = username.rstrip(rda_oidc)
+				email = username.replace(rda_oidc,'')
 				my_logger.info("NCAR RDA identity found.  User email updated to {}".format(email))
 			else:
 				email = result.data['identities'][0]['email']
