@@ -13,6 +13,7 @@
 
 import sys
 import socket, re
+import traceback
 
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
@@ -565,8 +566,8 @@ def update_allusage(task_id):
 			# Add new record to allusage table
 			try:
 				count += add_yearly_allusage(completion_year, all_recs[i], docheck=4)
-			except:
-				msg = "[update_allusage] Error adding/updating allusage record.  Check logs."
+			except Exception as e:
+				msg = "[update_allusage] Error adding/updating allusage record.\n{}".format(traceback.format_exc(e))
 				my_logger.error(msg)
 				try:
 					if (MYLOG['DSCHECK']['cindex']):
