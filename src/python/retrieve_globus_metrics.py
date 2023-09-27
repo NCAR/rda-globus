@@ -488,13 +488,14 @@ def update_allusage(task_id):
 	count = 0
 	
 	condition = " WHERE task_id='{0}'".format(task_id)
-	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)'], condition)
+	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)', 'bytes_transferred'], condition)
 	if (len(myrec) > 0):
 		email = myrec['email']
 		completion_time = myrec['completion_time']
 		quarter = myrec['QUARTER(completion_time)']
+		bytes_transferred = myrec['bytes_transferred']
 	else:
-		my_logger.warning("[update_allusage] Task ID {0} not found.".format(task_id))
+		my_logger.warning("[update_allusage] Task ID {0} not found in dssdb.gotask.".format(task_id))
 		return
 	
 	# Format date and time.
@@ -519,28 +520,33 @@ def update_allusage(task_id):
 			org_type = None
 			country = None
 	
-	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
-	# necessary.
+	task_record = {
+		'email': email,
+		'org_type': org_type,
+		'country': country,
+		'date': completion_date,
+		'time': completion_time,
+		'quarter': quarter,
+		'method': method,
+		'source': source,
+		'midx': 0,
+		'ip': None
+	}
+
+	# Get dsid and calculate size from dssdb.gofile.  Handle multiple records, if necessary.
 	condition = " WHERE task_id='{0}' GROUP BY dsid".format(task_id)
 	myrecs = mymget('gofile',['dsid','SUM(size)'], condition)
+
 	if (len(myrecs) > 0):
 		for i in range(len(myrecs)):
-			record = {'email': email,
-			          'org_type': org_type,
-			          'country': country,
-			          'dsid': myrecs[i]['dsid'],
-			          'date': completion_date,
-			          'time': completion_time,
-			          'quarter': quarter,
-			          'size': int(myrecs[i]['SUM(size)']),
-			          'method': method,
-			          'source': source,
-			          'midx': 0,
-			          'ip': None}
-			all_recs.append(record)
+			dsid = myrecs[i]['dsid']
+			size = int(myrecs[i]['SUM(size)'])
+			usage_record = {'dsid': dsid, 'size': size}
+			all_recs.append(usage_record.update(task_record))
 	else:
-		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile.".format(task_id))
-		return
+		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
+		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
+		all_recs.append(usage_record.update(task_record))
 
 	for i in range(len(all_recs)):
 		# check if record already exists in allusage table (dsid, date, time, and size will match)
