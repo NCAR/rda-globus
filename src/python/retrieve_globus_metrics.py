@@ -485,7 +485,8 @@ def update_allusage(task_id):
 	method = 'GLOB'
 	source = 'G'
 	all_recs = []
-	count = 0
+	count_add = 0
+	count_updt = 0
 	
 	condition = " WHERE task_id='{0}'".format(task_id)
 	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)', 'bytes_transferred'], condition)
@@ -571,10 +572,11 @@ def update_allusage(task_id):
 				# update email with allusage record
 				cond = " WHERE aidx={}".format(myrec['aidx'])
 				myupdt(table, all_recs[i], cond)
+				count_updt += 1
 		else:
 			# Add new record to allusage table
 			try:
-				count += add_yearly_allusage(completion_year, all_recs[i], docheck=4)
+				count_add += add_yearly_allusage(completion_year, all_recs[i], docheck=4)
 			except Exception as e:
 				msg = "[update_allusage] Error adding/updating allusage record.\n{}".format(traceback.format_exc(e))
 				my_logger.error(msg)
@@ -587,9 +589,9 @@ def update_allusage(task_id):
 				except TypeError:
 					pass
 
-	if (count == 0):
-		msg = "[update_allusage] Warning: no metrics added/updated in allusage."
-		my_logger.warning(msg)
+	msg = "[update_allusage] {}/{} metrics added/updated in allusage for task_id {}.".format(count_add, count_updt, task_id)
+	my_logger.info(msg)
+	if (count_add == 0):
 		try:
 			if (MYLOG['DSCHECK']['cindex']):
 				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
