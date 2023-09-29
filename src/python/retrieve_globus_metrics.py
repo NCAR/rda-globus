@@ -492,8 +492,9 @@ def update_allusage(task_id):
 	if (len(myrec) > 0):
 		email = myrec['email']
 		completion_time = myrec['completion_time']
-		quarter = myrec['QUARTER(completion_time)']
+		completion_time = myrec['completion_time']
 		bytes_transferred = myrec['bytes_transferred']
+		quarter = myrec['QUARTER(completion_time)']
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in dssdb.gotask.".format(task_id))
 		return
@@ -542,11 +543,13 @@ def update_allusage(task_id):
 			dsid = myrecs[i]['dsid']
 			size = int(myrecs[i]['SUM(size)'])
 			usage_record = {'dsid': dsid, 'size': size}
-			all_recs.append(usage_record.update(task_record))
+			usage_record.update(task_record)
+			all_recs.append(usage_record)
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
 		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
-		all_recs.append(usage_record.update(task_record))
+		usage_record.update(task_record)
+		all_recs.append(usage_record)
 
 	for i in range(len(all_recs)):
 		# check if record already exists in allusage table (dsid, date, time, and size will match)
