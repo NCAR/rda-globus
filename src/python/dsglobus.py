@@ -1361,18 +1361,6 @@ def parse_input():
 	  - Cancel a transfer task.  Required arguments: --cancel-task, --task-id:
 
 	        dsglobus --cancel-task --task-id <TASK_ID>
-
-	--------------------------------------------------------------------------------------
-	Examples to manage data shares with RDA users:
-
-	  - Grant share permission to a user for dsrqst index 1234:
-	        dsglobus -ap -ri 1234
-	
-	  - Delete permission from a user and delete the access share rule for dsrqst index 1234:
-	        dsglobus -rp -ri 1234
-	
-	  - Share all files from RDA dataset ds131.2 with a user:
-	        dsglobus -ap -ds 131.2 -em tcram@ucar.edu
 	  
 	======================================================================================
 	Filtering:
@@ -1408,15 +1396,15 @@ def parse_input():
 	    given is relative to the host path on the specified endpoint.  
 	    
 	    For example, the host path on the 'NCAR RDA GLADE' endpoint is 
-	    /glade/collections/rda/, therefore any file operation to/from this endpoint must 
+	    /glade/campaign/collections/rda/, therefore any file operation to/from this endpoint must 
 	    be specified relative to this host path.  To retrieve a listing of files stored
-	    under /glade/collections/rda/data/ds540.0/, specify the relative path of 
+	    under /glade/campaign/collections/rda/data/ds540.0/, specify the relative path of 
 	    /data/ds540.0/:
 	    
 	        dsglobus --list-files --endpoint 'rda-glade' --path /data/ds540.0/
 	    
 	    Host paths on RDA shared endpoints: 
-	        NCAR RDA GLADE: /glade/collections/rda/
+	        NCAR RDA GLADE: /glade/campaign/collections/rda/
 	        NCAR RDA Quasar: /gpfs/gpfs0/archive/rda/
 	        NCAR RDA Quasar DRDATA: /gpfs/gpfs0/archive/rda_dr/
 
