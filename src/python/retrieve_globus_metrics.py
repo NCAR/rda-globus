@@ -22,7 +22,7 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus, MyEndpoints
+from MyGlobus import MyGlobus, MyEndpoints, LOGPATH
 from PyDBI import myget, mymget, myadd, myupdt
 from MyLOG import *
 from MyDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
@@ -820,13 +820,8 @@ def print_doc(data, keys):
 				continue
 
 #=========================================================================================
-# Configure log file
-
 def configure_log(**kwargs):
-	""" Set up log file """
-	logdir = os.environ.get('LOGDIR', '/glade/campaign/collections/rda/work/tcram')
-	LOGPATH = os.path.join(logdir, 'globus')
-	LOGFILE = 'retrieve_globus_metrics.log'
+	""" Set up logging configuration """
 
 	if 'level' in kwargs:
 		loglevel = kwargs['level']
