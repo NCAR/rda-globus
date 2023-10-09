@@ -16,7 +16,7 @@
 #
 ##################################################################################
 
-import sys
+import os, sys
 
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
@@ -29,7 +29,7 @@ import logging
 import logging.handlers
 import re
 
-from MyGlobus import headers, MyGlobus
+from MyGlobus import headers, MyGlobus, LOGPATH
 from PyDBI import myget, mymget, myadd, myupdt
 from globus_sdk import (TransferClient, TransferAPIError, AccessTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
@@ -155,11 +155,8 @@ def purge_dataset_acls(acl_list, endpoint_id):
 	return
 
 #=========================================================================================
-# Configure log file
-
 def configure_log(**kwargs):
-	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus'
+	""" Set up logging configuration """
 	LOGFILE = 'purge_globus_acls.log'
 
 	if 'level' in kwargs:

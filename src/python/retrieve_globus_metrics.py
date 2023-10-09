@@ -11,7 +11,7 @@
  Github    : https://github.com/NCAR/rda-globus/blob/main/src/python/retrieve_globus_metrics.py
 """
 
-import sys
+import os, sys
 import socket, re
 import traceback
 
@@ -22,7 +22,7 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from MyGlobus import MyGlobus, MyEndpoints
+from MyGlobus import MyGlobus, MyEndpoints, LOGPATH
 from PyDBI import myget, mymget, myadd, myupdt
 from MyLOG import *
 from MyDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
@@ -820,13 +820,11 @@ def print_doc(data, keys):
 				continue
 
 #=========================================================================================
-# Configure log file
-
 def configure_log(**kwargs):
-	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus/'
-	LOGFILE = 'retrieve_globus_metrics.log'
+	""" Set up logging configuration """
 
+	LOGFILE = 'retrieve_globus_metrics.log'
+	
 	if 'level' in kwargs:
 		loglevel = kwargs['level']
 	else:

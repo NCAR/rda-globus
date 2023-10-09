@@ -14,7 +14,7 @@
 #
 ##################################################################################
 
-import sys
+import os, sys
 
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
@@ -36,6 +36,11 @@ GLOBUS_APP_URL = 'https://app.globus.org/'
 GLOBUS_SHARE_URL = 'https://app.globus.org/file-manager'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
 RDA_DATA_PATH = '/glade/campaign/collections/rda'
+
+""" Set up logging directory """
+workdir = os.path.join(RDA_DATA_PATH, 'work/tcram')
+logdir = os.environ.get('LOGDIR', workdir)
+LOGPATH = os.path.join(logdir, 'globus')
 
 """ HTTPS domains """
 GLOBUS_DATA_DOMAIN = 'https://data.rda.ucar.edu'

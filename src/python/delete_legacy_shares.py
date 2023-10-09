@@ -13,7 +13,7 @@
 #
 ##################################################################################
 
-import sys
+import os, sys
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
 if (path1 not in sys.path):
@@ -22,7 +22,7 @@ if (path2 not in sys.path):
 	sys.path.append(path2)
 
 from MyGlobus import (MyGlobus, DSS_DATA_PATH, RDA_DATASET_ENDPOINT_LEGACY,
-                      RDA_DSRQST_ENDPOINT_LEGACY)
+                      RDA_DSRQST_ENDPOINT_LEGACY, LOGPATH)
 from PyDBI import myget, myupdt, mymget
 
 import logging
@@ -187,11 +187,8 @@ def parse_opts(argv):
             'rem': rem}
 
 #=========================================================================================
-# Configure log file
-
 def configure_log(**kwargs):
-	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus/'
+	""" Set up logging configuration """
 	LOGFILE = 'delete_legacy_shares.log'
 
 	if 'level' in kwargs:
