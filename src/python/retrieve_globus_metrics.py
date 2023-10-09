@@ -823,6 +823,8 @@ def print_doc(data, keys):
 def configure_log(**kwargs):
 	""" Set up logging configuration """
 
+	LOGFILE = 'retrieve_globus_metrics.log'
+	
 	if 'level' in kwargs:
 		loglevel = kwargs['level']
 	else:
