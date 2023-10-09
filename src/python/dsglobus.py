@@ -1624,7 +1624,8 @@ def parse_input():
 #=========================================================================================
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus'
+	logdir = os.environ.get('LOGDIR', '/glade/campaign/collections/rda/work/tcram/logs')
+	LOGPATH = os.path.join(logdir, 'globus')
 
 	# write to different log file if user = apache
 	if (pwd.getpwuid(os.getuid())[0] == 'apache'):
