@@ -13,7 +13,7 @@
 #
 ##################################################################################
 
-import sys
+import os, sys
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
 if (path1 not in sys.path):
@@ -191,7 +191,8 @@ def parse_opts(argv):
 
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus/'
+	logdir = os.environ.get('LOGDIR', '/glade/campaign/collections/rda/work/tcram')
+	LOGPATH = os.path.join(logdir, 'globus')
 	LOGFILE = 'delete_legacy_shares.log'
 
 	if 'level' in kwargs:
