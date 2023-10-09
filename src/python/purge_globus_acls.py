@@ -16,7 +16,7 @@
 #
 ##################################################################################
 
-import sys
+import os, sys
 
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
@@ -159,7 +159,8 @@ def purge_dataset_acls(acl_list, endpoint_id):
 
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus'
+	logdir = os.environ.get('LOGDIR', '/glade/campaign/collections/rda/work/tcram')
+	LOGPATH = os.path.join(logdir, 'globus')
 	LOGFILE = 'purge_globus_acls.log'
 
 	if 'level' in kwargs:
