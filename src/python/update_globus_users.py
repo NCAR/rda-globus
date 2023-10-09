@@ -13,7 +13,7 @@
 #
 ##################################################################################
 
-import sys
+import os, sys
 path1 = "/glade/u/home/rdadata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
 if (path1 not in sys.path):
@@ -202,7 +202,8 @@ def print_doc(data, keys):
 
 def configure_log(**kwargs):
 	""" Set up log file """
-	LOGPATH = '/glade/scratch/tcram/logs/globus/'
+	logdir = os.environ.get('LOGDIR', '/glade/campaign/collections/rda/work/tcram')
+	LOGPATH = os.path.join(logdir, 'globus')
 	LOGFILE = 'update_globus_users.log'
 
 	if 'level' in kwargs:
