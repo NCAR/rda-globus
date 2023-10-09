@@ -11,7 +11,7 @@
  Github    : https://github.com/NCAR/rda-globus/blob/main/src/python/retrieve_globus_metrics.py
 """
 
-import sys
+import os, sys
 import socket, re
 import traceback
 
