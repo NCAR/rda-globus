@@ -100,7 +100,7 @@ def get_tasks(filters):
 		tasks = []
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
 		tc = TransferClient(authorizer=tc_authorizer)
-		for task in tc.endpoint_manager_task_list(num_results=None, **filters):
+		for task in tc.paginated.endpoint_manager_task_list(**filters).items():
 			tasks.append(task)
 	except GlobusAPIError as e:
 		msg = ("[get_tasks] Globus API Error\n"
@@ -216,7 +216,7 @@ def get_successful_transfers(task_id):
 		transfers = []
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
 		tc = TransferClient(authorizer=tc_authorizer)
-		for transfer in tc.endpoint_manager_task_successful_transfers(task_id, num_results=None):
+		for transfer in tc.paginated.endpoint_manager_task_successful_transfers(task_id).items():
 			transfers.append(transfer)
 	except GlobusAPIError as e:
 		msg = ("[get_successful_transfers] Globus API Error\n"
@@ -717,9 +717,9 @@ def create_recs(data, keys):
 	records = []
 	go_dict = {}
 	for i in range(len(data)):
-		for key in data[i].data:
+		for key in data[i]:
 			if key in keys:
-				go_dict[key] = data[i].data[key]
+				go_dict[key] = data[i][key]
 			else:
 				continue
 		records.append(go_dict)
