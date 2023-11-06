@@ -46,11 +46,8 @@ task_keys = ['status','bytes_transferred','task_id','owner_string',\
 	     'source_endpoint_id', 'source_endpoint_display_name', \
 	     'destination_endpoint_id']
 
-task_keys_str = ",".join(task_keys)
-
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
-transfer_keys_str = ",".join(transfer_keys)
 
 # Endpoint UUIDs
 endpoint_id_data_request = MyEndpoints['rda#data_request']
@@ -156,6 +153,7 @@ def add_tasks(go_table, data):
 	# task key 'owner_string' = field 'username' in gotask table.  Change task_keys accordingly.
 	task_keys.append('username')
 	task_keys.remove('owner_string')
+	task_keys_str = ", ".join(task_keys)
 
 	for i in range(len(records)):
 		rec = records[i]
@@ -164,7 +162,7 @@ def add_tasks(go_table, data):
 		rec['username'] = rec.pop('owner_string')
 
 		condition = "task_id='{0}'".format(rec['task_id'])
-		myrec = pgget(go_table, task_keys, condition)
+		myrec = pgget(go_table, task_keys_str, condition)
 		if (len(myrec) > 0):
 			try:
 				myrec['request_time'] = myrec['request_time'].replace(tzinfo=pytz.utc).isoformat()
@@ -174,14 +172,14 @@ def add_tasks(go_table, data):
 			if not (rec == myrec):
 				rec['request_time'] = rec['request_time'][:19]
 				rec['completion_time'] = rec['completion_time'][:19]
-				myupdt(go_table, rec, condition)
+				pgupdt(go_table, rec, condition)
 				count_updt+=1
 			else:
 				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(rec['task_id']))
 		else:
 			rec['request_time'] = rec['request_time'][:19]
 			rec['completion_time'] = rec['completion_time'][:19]
-			myadd(go_table, rec)
+			pgadd(go_table, rec)
 			count_add+=1
 
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
@@ -317,8 +315,8 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			
 			field = 'wfile'
 			table = 'wfile'			
-			condition = " WHERE dsid='{0}' AND {1}='{2}'".format(dsid, field, tfile)
-			myrec = myget(table, ['data_size'], condition)
+			condition = "dsid='{0}' AND {1}='{2}'".format(dsid, field, tfile)
+			myrec = pgget(table, 'data_size', condition)
 			
 			if (len(myrec) > 0):
 				transfer_recs.append({
@@ -352,10 +350,10 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				my_logger.info(msg)
 				return transfer_recs
 
-			condition = " WHERE rindex='{0}'".format(rindex)
-			myrec = myget('dsrqst', ['dsid'], condition)
+			condition = "rindex='{0}'".format(rindex)
+			myrec = pgget('dsrqst', 'dsid', condition)
 			if (len(myrec) == 0):
-				myrec = myget('dspurge', ['dsid'], condition)
+				myrec = pgget('dspurge', 'dsid', condition)
 			if (len(myrec) > 0):
 				dsid = myrec['dsid']
 			else:
@@ -412,6 +410,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	# Check if record already exists. Update if necessary.
 	keys = transfer_keys
 	keys.extend(['task_id','file_name','rindex','dsid','size','count'])
+	keys_str = ",".join(keys)
 	
 	dsrqst_count = 0
 	
@@ -422,16 +421,16 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			continue
 		else:
 			if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
-				condition = " WHERE task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
-				myrec = myget(go_table, keys, condition)
+				condition = "task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
+				myrec = pgget(go_table, keys_str, condition)
 				if (len(myrec) > 0):
 					if not (records[i] == myrec):
-						myupdt(go_table, records[i], condition)
+						pgupdt(go_table, records[i], condition)
 						count_updt += 1
 					else:
 						count_none += 1
 				else:
-					myadd(go_table, records[i])
+					pgadd(go_table, records[i])
 					count_add += 1
 			elif (endpoint == endpoint_id_data_request):
 				dsrqst_count += 1
@@ -454,16 +453,16 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		                   'size': bytes,
 		                   'count': dsrqst_count
 		                   })
-		condition = " WHERE task_id='{0}' AND rindex={1}".format(task_id, dsrqst_rec[0]['rindex'])
-		myrec = myget(go_table, keys, condition)
+		condition = "task_id='{0}' AND rindex={1}".format(task_id, dsrqst_rec[0]['rindex'])
+		myrec = pgget(go_table, keys_str, condition)
 		if (len(myrec) > 0):
 			if not (dsrqst_rec == myrec):
-				myupdt(go_table, dsrqst_rec[0], condition)
+				pgupdt(go_table, dsrqst_rec[0], condition)
 				count_updt += 1
 			else:
 				count_none += 1
 		else:
-			myadd(go_table, dsrqst_rec[0])
+			pgadd(go_table, dsrqst_rec[0])
 			count_add += 1
 	
 	msg = "[add_successful_transfers] {0} transfers added and {1} transfers updated for task id {2}".format(count_add, count_updt, task_id)
@@ -490,8 +489,8 @@ def update_allusage(task_id):
 	all_recs = []
 	count = 0
 	
-	condition = " WHERE task_id='{0}'".format(task_id)
-	myrec = myget('gotask', ['email','completion_time', 'QUARTER(completion_time)'], condition)
+	condition = "task_id='{0}'".format(task_id)
+	myrec = pgget('gotask', 'email,completion_time,QUARTER(completion_time)', condition)
 	if (len(myrec) > 0):
 		email = myrec['email']
 		completion_time = myrec['completion_time']
@@ -512,8 +511,8 @@ def update_allusage(task_id):
 		org_type = None
 		country = None
 	else:
-		condition = " WHERE wuid={}".format(wuid)
-		myrec = myget('wuser',['org_type','country'], condition)
+		condition = "wuid={}".format(wuid)
+		myrec = pgget('wuser', 'org_type, country', condition)
 		if (len(myrec) > 0):
 			org_type = myrec['org_type']
 			country = myrec['country']
@@ -524,8 +523,8 @@ def update_allusage(task_id):
 	
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
-	condition = " WHERE task_id='{0}' GROUP BY dsid".format(task_id)
-	myrecs = mymget('gofile',['dsid','SUM(size)'], condition)
+	condition = "task_id='{0}' GROUP BY dsid".format(task_id)
+	myrecs = pgmget('gofile','dsid, SUM(size)', condition)
 	if (len(myrecs) > 0):
 		for i in range(len(myrecs)):
 			record = {'email': email,
@@ -549,13 +548,14 @@ def update_allusage(task_id):
 		# check if record already exists in allusage table (dsid, date, time, and size will match)
 		table = "allusage_{}".format(completion_year)
 		fields = ['aidx', 'email']
+		fields_str = ",".join(fields)
 		dsid = all_recs[i]['dsid']
 		date = all_recs[i]['date']
 		time = all_recs[i]['time']
 		size = all_recs[i]['size']
 		email = all_recs[i]['email']
-		cond = " WHERE dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}'".format(dsid, date, time, size, method)
-		myrec = myget(table, fields, cond)
+		cond = "dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}'".format(dsid, date, time, size, method)
+		myrec = pgget(table, fields_str, cond)
 
 		if (len(myrec) > 0):
 			if not email or (email == myrec['email']):
@@ -563,8 +563,8 @@ def update_allusage(task_id):
 				continue
 			else:
 				# update email with allusage record
-				cond = " WHERE aidx={}".format(myrec['aidx'])
-				myupdt(table, all_recs[i], cond)
+				cond = "aidx={}".format(myrec['aidx'])
+				pgupdt(table, all_recs[i], cond)
 		else:
 			# Add new record to allusage table
 			try:
