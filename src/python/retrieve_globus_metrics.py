@@ -23,9 +23,9 @@ if (path2 not in sys.path):
 	sys.path.append(path2)
 
 from MyGlobus import MyGlobus, MyEndpoints, LOGPATH
-from PyDBI import myget, mymget, myadd, myupdt
-from MyLOG import *
-from MyDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
+from PgDBI import pgget, pgmget, pgadd, pgupdt
+from PgLOG import *
+from PgDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
 
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
@@ -46,8 +46,11 @@ task_keys = ['status','bytes_transferred','task_id','owner_string',\
 	     'source_endpoint_id', 'source_endpoint_display_name', \
 	     'destination_endpoint_id']
 
+task_keys_str = ",".join(task_keys)
+
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
+transfer_keys_str = ",".join(transfer_keys)
 
 # Endpoint UUIDs
 endpoint_id_data_request = MyEndpoints['rda#data_request']
@@ -160,8 +163,8 @@ def add_tasks(go_table, data):
 		# change record key 'owner_string' to 'username'
 		rec['username'] = rec.pop('owner_string')
 
-		condition = " WHERE task_id='{0}'".format(rec['task_id'])
-		myrec = myget(go_table, task_keys, condition)
+		condition = "task_id='{0}'".format(rec['task_id'])
+		myrec = pgget(go_table, task_keys, condition)
 		if (len(myrec) > 0):
 			try:
 				myrec['request_time'] = myrec['request_time'].replace(tzinfo=pytz.utc).isoformat()
