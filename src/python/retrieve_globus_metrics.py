@@ -717,9 +717,9 @@ def create_recs(data, keys):
 	records = []
 	go_dict = {}
 	for i in range(len(data)):
-		for key in data[i].data:
+		for key in data[i]:
 			if key in keys:
-				go_dict[key] = data[i].data[key]
+				go_dict[key] = data[i][key]
 			else:
 				continue
 		records.append(go_dict)
