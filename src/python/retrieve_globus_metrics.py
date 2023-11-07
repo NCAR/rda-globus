@@ -490,11 +490,11 @@ def update_allusage(task_id):
 	count = 0
 	
 	condition = "task_id='{0}'".format(task_id)
-	myrec = pgget('gotask', 'email,completion_time,QUARTER(completion_time)', condition)
+	myrec = pgget('gotask', 'email,completion_time, EXTRACT(QUARTER FROM completion_time) AS quarter', condition)
 	if (len(myrec) > 0):
 		email = myrec['email']
 		completion_time = myrec['completion_time']
-		quarter = myrec['QUARTER(completion_time)']
+		quarter = int(myrec['quarter'])
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found.".format(task_id))
 		return
