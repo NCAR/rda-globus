@@ -11,7 +11,7 @@
  Github    : https://github.com/NCAR/rda-globus/blob/main/src/python/retrieve_globus_metrics.py
 """
 
-import os, sys
+import sys
 import socket, re
 import traceback
 
@@ -31,13 +31,10 @@ from globus_utils import load_app_client
 from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
-from datetime import datetime, tzinfo
+from datetime import datetime
 import pytz
 import logging
 import logging.handlers
-
-from email.mime.text import MIMEText
-from subprocess import Popen, PIPE
 
 # Task list keys to retain
 task_keys = ['status','bytes_transferred','task_id','owner_string',\
@@ -57,14 +54,14 @@ endpoint_id_stratus = MyEndpoints['rda#stratus']
 #=========================================================================================
 def main(filters):
 
-# Get Globus transfer tasks
+	# Get Globus transfer tasks
 	my_logger.debug(__name__+': Getting tasks')
 	transfer_tasks = get_tasks(filters)
 	if doprint: print_doc(transfer_tasks, task_keys)
 	my_logger.debug(__name__+': Adding/updating tasks in RDA DB')
 	add_tasks('gotask', transfer_tasks)
 
-# Get list of successful transfers for each Globus task id.
+	# Get list of successful transfers for each Globus task id.
 	if not task_only:
 		my_logger.debug(__name__+': Getting and adding Globus transfers')
 		endpoint_id = filters['filter_endpoint']
@@ -93,9 +90,8 @@ def main(filters):
 	my_logger.debug(__name__+': END')
 
 #=========================================================================================
-
 def get_tasks(filters):
-	""" Get list of successful transfer tasks """
+	""" Get list of successful transfer tasks from the Globus transfer client """
 	try:
 		tasks = []
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
@@ -121,11 +117,10 @@ def get_tasks(filters):
 	return tasks
 	
 #=========================================================================================
-# Insert/update Globus transfer tasks
-
 def add_tasks(go_table, data):
+	""" Insert/update Globus transfer tasks in RDADB """
 	
-# Prepare database records
+	# Prepare database records
 	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
 		records = map_endpoint_names(records)
@@ -209,9 +204,8 @@ def add_tasks(go_table, data):
 	return
 
 #=========================================================================================
-# Get list of files transferred successfully
-
 def get_successful_transfers(task_id):
+	""" Get list of files transferred successfully from the Globus transfer client """
 
 	try:
 		transfers = []
@@ -264,16 +258,15 @@ def handle_error(r, data):
 		return
 	
 #=========================================================================================
-# Parse file names in data_transfers dictionary
-
 def prepare_transfer_recs(data, task_id, bytes, endpoint):
+	""" Parse file names in data_transfers dictionary """
+
 	try:
 		from urllib.parse import unquote
 	except:
 		from urllib import unquote
 	
 	transfer_recs = []
-	size = 0
 	
 	for i in range(len(data)):
 		destination_path = data[i]['destination_path']
@@ -377,16 +370,15 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 # Insert/update list of files transferred successfully
 
 def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
+	""" Insert/update list of files transferred successfully """
+
 	my_logger.info("[add_successful_transfers] Adding successful transfers for task_id: {0}".format(task_id))
 	
 	count_add = 0
 	count_updt = 0
 	count_none = 0
 
-# Prepare database records
-
-# *** Need to delete records from data['DATA'][i]['source_path'] which are not in RDADB wfile here ***
-
+	# Prepare database records
 	if (len(data) >= 1):
 		records = prepare_transfer_recs(data, task_id, bytes, endpoint)
 		if (len(records) == 0):
@@ -480,9 +472,9 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		pass
 
 #=========================================================================================
-# Insert/update usage in the table allusage
-
 def update_allusage(task_id):
+	""" Insert/update usage in dssdb.allusage_<yyyy> """
+
 	from time import strftime
 	method = 'GLOB'
 	source = 'G'
@@ -524,8 +516,12 @@ def update_allusage(task_id):
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
 	condition = "task_id='{0}' GROUP BY dsid".format(task_id)
-	myrecs = pgmget('gofile','dsid, SUM(size)', condition)
-	if (len(myrecs) > 0):
+	myrecs = pgmget('gofile','dsid, SUM(size) as sum', condition)
+
+	if myrecs:
+		# convert myrecs from a dictionary of lists into a list of dictionaries
+		myrecs = [dict(zip(myrecs, vals)) for vals in zip(*myrecs.values())]
+
 		for i in range(len(myrecs)):
 			record = {'email': email,
 			          'org_type': org_type,
@@ -534,7 +530,7 @@ def update_allusage(task_id):
 			          'date': completion_date,
 			          'time': completion_time,
 			          'quarter': quarter,
-			          'size': int(myrecs[i]['SUM(size)']),
+			          'size': int(myrecs[i]['sum']),
 			          'method': method,
 			          'source': source,
 			          'midx': 0,
@@ -594,9 +590,9 @@ def update_allusage(task_id):
 			pass
 		
 #=========================================================================================
-# Define filters to apply in API requests
-
 def set_filters(args):
+	""" Set filters to pass to Globus transfer client """
+
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
@@ -620,9 +616,9 @@ def set_filters(args):
 	return filters
 
 #=========================================================================================
-# Parse the command line arguments
-
 def parse_opts():
+	""" Parse command line arguments """
+
 	import argparse
 	import textwrap
 	
@@ -702,9 +698,9 @@ def parse_opts():
             'end': end_date}
 
 #=========================================================================================
-# Convert date string into ISO 8601 format (YYYY-MM-DDTHH:MM:SS)
-
 def format_date(date_str, fmt):
+	""" Convert date string into ISO 8601 format (YYYY-MM-DDTHH:MM:ss) """
+
 	from time import strptime
 	
 	date = strptime(date_str, fmt)
@@ -713,10 +709,10 @@ def format_date(date_str, fmt):
 	return isodate
 
 #=========================================================================================
-# Create a list of dictionaries (records) from the 'DATA' task document output, to be 
-# inserted into the database.
-
 def create_recs(data, keys):
+	""" Create a list of dictionaries (records) from the Globus task document output,
+	    to be inserted into RDADB """
+
 	records = []
 	go_dict = {}
 	for i in range(len(data)):
@@ -744,9 +740,9 @@ def map_endpoint_names(data):
 	return data
 
 #=========================================================================================
-# Get user's email address associated with their Globus account
-
 def get_globus_email(data):
+	""" Get user's email address associated with their Globus account """
+
 	emails = []
 	rda_oidc = '@oidc.rda.ucar.edu'
 
@@ -785,9 +781,10 @@ def get_globus_email(data):
 	return emails
 	
 #=========================================================================================
-# Check for user's email address in the dssdb.gouser table.  Add to records dictionary if found.
-
 def check_email(data):
+	""" Check for user's email address in the dssdb.gouser table.  Add to records 
+	    dictionary if found. """
+
 	emails = []
 	for i in range(len(data)):
 		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['owner_id'])
@@ -799,9 +796,9 @@ def check_email(data):
 	return emails
 	
 #=========================================================================================
-# Update the records list of task dictionaries
-
 def update_records(list1,list2):
+	""" Update the records list of task dictionaries """
+
 	if (len(list1) != len(list2)):
 		my_logger.warning("[update_records] Mismatch between len list1 ({0}) and len list2 ({1})".format(len(list1),len(list2)))
 		return
@@ -811,9 +808,8 @@ def update_records(list1,list2):
 	return list1
 	
 #=========================================================================================
-# Print output from the 'DATA' task document
-
 def print_doc(data, keys):
+	""" Print output from the 'DATA' task document """
 	for i in range(len(data)):
 		print()
 		for key in data[i]:
