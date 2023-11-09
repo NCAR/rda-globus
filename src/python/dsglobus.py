@@ -15,7 +15,6 @@
 ##################################################################################
 
 import os, sys, pwd
-import subprocess
 
 try:
 	assert sys.version_info >= (3,0)
@@ -38,19 +37,17 @@ import select
 import textwrap
 import six
 from datetime import datetime
-from time import strftime
 from phpserialize import unserialize
 try:
     from urllib.parse import urlencode
 except:
     from urllib import urlencode
 
-from MyLOG import show_usage
-from PyDBI import myget, myupdt, myadd, mymget
+from PgDBI import myget, myupdt, myadd, mymget
 from MyGlobus import MyGlobus, MyEndpoints, LOGPATH
 
-from globus_sdk import (TransferClient, TransferAPIError,
-                        TransferData, DeleteData, RefreshTokenAuthorizer, AuthClient, 
+from globus_sdk import (TransferClient, TransferData, DeleteData, 
+						RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
 from globus_utils import load_app_client, load_rda_native_client
 
@@ -246,15 +243,14 @@ def add_endpoint_acl_rule(data):
 		try:
 			endpoint_id = MyGlobus['data_request_ep']
 			ridx = data['ridx']
-			cond = " WHERE rindex='{0}'".format(ridx)
-			myrqst = myget('dsrqst', ['*'], cond)
+			cond = "rindex='{0}'".format(ridx)
+			myrqst = myget('dsrqst', '*', cond)
 			if (len(myrqst) == 0):
 				msg = "[add_endpoint_acl_rule] Request index not on file"
 				my_logger.warning(msg)
 				if 'print' in data and data['print']:
 					sys.exit("Error: {0}".format(msg))
 				return {'Error': msg}
-			rqstid = myrqst['rqstid']
 			email = myrqst['email']
 			dsid = myrqst['dsid']
 			if myrqst['globus_rid']:
@@ -279,8 +275,8 @@ def add_endpoint_acl_rule(data):
 			else:
 				endpoint_id = MyGlobus['datashare_ep']
 				legacy_name = MyGlobus['datashare_legacy']
-			cond = " WHERE email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(email, dsid, legacy_name)
-			myshare = myget('goshare', ['*'], cond)
+			cond = "email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(email, dsid, legacy_name)
+			myshare = myget('goshare', '*', cond)
 			if (len(myshare) > 0 and myshare['globus_rid']):
 				msg = "[add_endpoint_acl_rule] Globus ACL rule has already been created for user {0} and dataset {1}. ACL rule {2}".format(email, dsid, myshare['globus_rid'])
 				my_logger.info(msg)
@@ -293,9 +289,7 @@ def add_endpoint_acl_rule(data):
 		except KeyError as err:
 			return handle_error(err, name="[add_endpoint_acl_rule]", print_stdout=print_stdout)
 
-	rda_identity = "{0}@rda.ucar.edu".format(email)
 	rda_oidc_identity = "{0}@oidc.rda.ucar.edu".format(email)
-	# identity_id = get_user_id(rda_identity)
 
 	# Update 2023-01-24.  Use NCAR RDA OIDC identity with new OIDC IdP service.
 	identity_id = get_user_id(rda_oidc_identity)
@@ -372,11 +366,11 @@ def delete_endpoint_acl_rule(data):
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 		else:
-			rqst_cond = " WHERE rindex='{0}'".format(ridx)
+			rqst_cond = "rindex='{0}'".format(ridx)
 
 			""" Try the dsrqst record first, then try dspurge """
-			myrqst = myget('dsrqst', ['*'], rqst_cond)
-			mypurge = myget('dspurge', ['*'], rqst_cond)
+			myrqst = myget('dsrqst', '*', rqst_cond)
+			mypurge = myget('dspurge', '*', rqst_cond)
 			rqst_rid = None
 			purge_rid = None
 			
@@ -408,8 +402,8 @@ def delete_endpoint_acl_rule(data):
 				else:
 					myupdt('dspurge', record, rqst_cond)
 				
-				share_cond = " WHERE rindex='{0}' AND status='ACTIVE'".format(ridx)
-				myshare = myget('goshare', ['*'], share_cond)
+				share_cond = "rindex='{0}' AND status='ACTIVE'".format(ridx)
+				myshare = myget('goshare', '*', share_cond)
 				if (len(myshare) > 0):
 					share_record = {'delete_date': datetime.now().strftime("%Y-%m-%d"),
 				                    'status': 'DELETED'}
@@ -443,8 +437,8 @@ def delete_endpoint_acl_rule(data):
 		except KeyError as err:
 			return handle_error(err, name="[delete_endpoint_acl_rule]", print_stdout=print_stdout)
 		else:
-			cond = " WHERE email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
-			myshares = mymget('goshare', ['*'], cond)
+			cond = "email='{0}' AND dsid='{1}' AND status='ACTIVE'".format(email, dsid)
+			myshares = mymget('goshare', '*', cond)
 			if (len(myshares) == 0):
 				msg = "[delete_endpoint_acl_rule] Globus share record not found for e-mail = {0} and dsid = {1}.".format(email, dsid)
 				my_logger.warning(msg)
@@ -495,7 +489,7 @@ def submit_dsrqst_transfer(data):
 
 	""" Get session ID from dsrqst record """
 	ridx = data['ridx']
-	cond = " WHERE rindex={0}".format(ridx)
+	cond = "rindex={0}".format(ridx)
 	myrqst = myget('dsrqst', ['tarcount', 'tarflag', 'session_id'], cond)
 	if (len(myrqst) == 0):
 		msg = "[submit_dsrqst_transfer] Request index not found in DB"
@@ -503,12 +497,9 @@ def submit_dsrqst_transfer(data):
 		sys.exit(1)
 
 	session = get_session(myrqst['session_id'])
-	email = session['email']
-	dsid = session['dsid']
 	type = 'dsrqst'
 	
 	""" Define source endpoint ID and paths """
-	host_endpoint = MyGlobus['host_endpoint_id']
 	source_endpoint_id = MyGlobus['data_request_ep']
 	source_endpoint_legacy_name = MyGlobus['data_request_legacy']
 	destination_endpoint_id = session['endpoint_id']
@@ -592,8 +583,8 @@ def construct_share_path(type, data):
 	if (type == 'dsrqst'):
 		try:
 			ridx = data['ridx']
-			cond = " WHERE rindex='{0}'".format(ridx)
-			myrqst = myget('dsrqst', ['rqstid','location'], cond)
+			cond = "rindex='{0}'".format(ridx)
+			myrqst = myget('dsrqst', 'rqstid, location', cond)
 			if (len(myrqst) > 0):
 				if myrqst['location']:
 					base_path = MyGlobus['data_request_ep_base']
@@ -637,8 +628,8 @@ def construct_share_url(type, data):
 	if (type == 'dsrqst'):
 		try:
 			ridx = data['ridx']
-			cond = ' WHERE rindex={0}'.format(ridx)
-			myrqst = myget('dsrqst', ['*'], cond)
+			cond = 'rindex={0}'.format(ridx)
+			myrqst = myget('dsrqst', '*', cond)
 			if (len(myrqst) > 0):
 				origin_id = MyGlobus['data_request_ep']
 				origin_path = construct_share_path(type, {'ridx': ridx})
@@ -714,13 +705,13 @@ def query_acl_rule(type, data):
 	
 	if (type == 'dsrqst'):
 		""" dsrqst shares """
-		cond = " WHERE rindex='{0}'".format(data['ridx'])
-		myrule = myget('dsrqst', ['*'], cond)
+		cond = "rindex='{0}'".format(data['ridx'])
+		myrule = myget('dsrqst', '*', cond)
 		
 	elif (type == 'dataset'):
 		""" standard dataset shares """
-		cond = " WHERE email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(data['email'], data['dsid'], data['source_endpoint'])
-		myrule = myget('goshare', ['*'], cond)
+		cond = "email='{0}' AND dsid='{1}' AND source_endpoint='{2}' AND status='ACTIVE'".format(data['email'], data['dsid'], data['source_endpoint'])
+		myrule = myget('goshare', '*', cond)
 
 	try:
 		rule_id = myrule['globus_rid']
@@ -748,8 +739,8 @@ def update_share_record(type, data):
 		globus_url = data['globus_url']
 		dsid = data['dsid']
 		email = data['email']
-		cond = " WHERE email='{0}' AND end_date IS NULL".format(email)
-		myuser = myget('ruser', ['id'], cond)
+		cond = "email='{0}' AND end_date IS NULL".format(email)
+		myuser = myget('ruser', 'id', cond)
 		if 'id' not in myuser:
 			msg = "[update_share_record] email {0} not in RDADB table ruser".format(email)
 			my_logger.warning(msg)
@@ -769,7 +760,7 @@ def update_share_record(type, data):
 	if (type == 'dsrqst'):
 		try:
 			ridx = data['ridx']
-			cond = " WHERE rindex='{0}'".format(ridx)
+			cond = "rindex='{0}'".format(ridx)
 			rqst_record = {'globus_rid': data['globus_rid'],
 			               'globus_url': data['globus_url']
 			              }
@@ -805,8 +796,9 @@ def update_share_record(type, data):
 def get_session(sid):
 	""" Retrieve session data from RDADB """
 	keys = ['id','access','data']
-	condition = " WHERE {0} = '{1}'".format("id", sid)
-	myrec = myget('sessions', keys, condition)
+	keys_str = ",".join(keys)
+	condition = "{0} = '{1}'".format("id", sid)
+	myrec = myget('sessions', keys_str, condition)
 	
 	if (len(myrec) == 0):
 		msg = "[get_session] Session ID not found in DB"
@@ -820,8 +812,8 @@ def get_dataset_location(dsid):
 	""" Get the RDA dataset location (Glade, stratus, or other) """
 	
 	try:
-		cond = " WHERE dsid='{}'".format(dsid)
-		myrec = myget('dataset', ['locflag'], cond)
+		cond = "dsid='{}'".format(dsid)
+		myrec = myget('dataset', 'locflag', cond)
 	except:
 		msg = "[get_dataset_location] Error getting location flag for dataset {}.".format(dsid)
 		my_logger.error(msg)
