@@ -858,8 +858,8 @@ def configure_log(**kwargs):
 		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MYLOG['DSCHECK']['cindex']))
 
 
-	""" Handler to send log messages to email address (rda-data only) """
-	if (socket.gethostname() == 'rda-data.ucar.edu'):
+	""" Handler to send log messages to email address (rda-work only) """
+	if (socket.gethostname() == 'rda-work.ucar.edu'):
 		fromaddr = 'tcram@ucar.edu'
 		toaddr = 'tcram@ucar.edu'
 		subject = '[retrieve_globus_metrics] Warning/error/critical message'
