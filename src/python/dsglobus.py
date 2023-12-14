@@ -893,26 +893,6 @@ def parse_input():
 		msg = "Option --list-files requires both --endpoint and --directory."
 		my_logger.error(msg)
 		parser.error(msg)
-	if args.add_permission and (args.REQUESTINDEX and args.DATASETID):
-		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
-		my_logger.error(msg)
-		parser.error(msg)
-	if args.remove_permission and (args.REQUESTINDEX and args.DATASETID):
-		msg = "Please specify only the dsrqst index (-ri) or dataset ID (-ds), not both."
-		my_logger.error(msg)
-		parser.error(msg)
-	if args.submit_transfer and args.REQUESTINDEX is None:
-		msg = "Option --submit-transfer requires dsrqst index (--request-index)."
-		my_logger.error(msg)
-		parser.error(msg)
-	if args.DATASETID and args.EMAIL is None:
-		msg = "Option dataset ID (--dataset) requires email (--email)."
-		my_logger.error(msg)
-		parser.error(msg)
-	if args.EMAIL and args.DATASETID is None:
-		msg = "Option email (--email) requires dataset ID (--dataset)."
-		my_logger.error(msg)
-		parser.error(msg)
 	if args.mkdir and (args.ENDPOINT is None or args.PATH is None):
 		msg = "Option mkdir (--mkdir) requires both --endpoint and --path."
 		my_logger.error(msg)
