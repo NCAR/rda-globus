@@ -542,7 +542,7 @@ def update_allusage(task_id):
 			size = int(myrecs[i]['sum'])
 			usage_record = {'dsid': dsid, 'size': size}
 			usage_record.update(task_record)
-			all_recs.append(record)
+			all_recs.append(usage_record)
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
 		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
