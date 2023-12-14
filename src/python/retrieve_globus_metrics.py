@@ -515,6 +515,19 @@ def update_allusage(task_id):
 			org_type = None
 			country = None
 	
+	task_record = {
+		'email': email,
+		'org_type': org_type,
+		'country': country,
+		'date': completion_date,
+		'time': completion_time,
+		'quarter': quarter,
+		'method': method,
+		'source': source,
+		'midx': 0,
+		'ip': None
+	}
+
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
 	condition = "task_id='{0}' GROUP BY dsid".format(task_id)
@@ -525,18 +538,10 @@ def update_allusage(task_id):
 		myrecs = [dict(zip(myrecs, vals)) for vals in zip(*myrecs.values())]
 
 		for i in range(len(myrecs)):
-			record = {'email': email,
-			          'org_type': org_type,
-			          'country': country,
-			          'dsid': myrecs[i]['dsid'],
-			          'date': completion_date,
-			          'time': completion_time,
-			          'quarter': quarter,
-			          'size': int(myrecs[i]['sum']),
-			          'method': method,
-			          'source': source,
-			          'midx': 0,
-			          'ip': None}
+			dsid = myrecs[i]['dsid']
+			size = int(myrecs[i]['sum'])
+			usage_record = {'dsid': dsid, 'size': size}
+			usage_record.update(task_record)
 			all_recs.append(record)
 	else:
 		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
