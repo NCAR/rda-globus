@@ -76,10 +76,10 @@ def main(filters):
 				msg = "[main] Warning: No successful transfers found."
 				my_logger.warning(msg)
 				try:
-					if (MYLOG['DSCHECK']['cindex']):
-						MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+					if (PGLOG['DSCHECK']['cindex']):
+						PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 						subject = "Warning/Error log from {}".format(get_command())
-						cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+						cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 						build_customized_email('dscheck', 'einfo', cond, subject)
 				except TypeError:
 					pass
@@ -130,10 +130,10 @@ def add_tasks(go_table, data):
 		msg = "[add_tasks] There are no transfer tasks in the return document."
 		my_logger.warning(msg)
 		try:
-			if (MYLOG['DSCHECK']['cindex']):
-				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			if (PGLOG['DSCHECK']['cindex']):
+				PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 				subject = "Warning/Error log from {}".format(get_command())
-				cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 				build_customized_email('dscheck', 'einfo', cond, subject)
 		except TypeError:
 			pass
@@ -181,10 +181,10 @@ def add_tasks(go_table, data):
 	my_logger.info(msg)
 	
 	try:
-		if (MYLOG['DSCHECK']['cindex']):
-			MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+		if (PGLOG['DSCHECK']['cindex']):
+			PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 			subject = "Info log from {}".format(get_command())
-			build_customized_email('dscheck', 'einfo', "cindex = {}".format(MYLOG['DSCHECK']['cindex']), subject)
+			build_customized_email('dscheck', 'einfo', "cindex = {}".format(PGLOG['DSCHECK']['cindex']), subject)
 	except TypeError:
 		pass
 	
@@ -193,10 +193,10 @@ def add_tasks(go_table, data):
 		my_logger.warning(msg)
 		
 		try:
-			if (MYLOG['DSCHECK']['cindex']):
-				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			if (PGLOG['DSCHECK']['cindex']):
+				PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 				subject = "Warning/Error log from {}".format(get_command())
-				cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 				build_customized_email('dscheck', 'einfo', cond, subject)
 		except TypeError:
 			pass
@@ -386,10 +386,10 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			my_logger.warning(msg)
 			
 			try:
-				if (MYLOG['DSCHECK']['cindex']):
-					MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+				if (PGLOG['DSCHECK']['cindex']):
+					PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 					subject = "Warning/Error log from {}".format(get_command())
-					cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+					cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 					build_customized_email('dscheck', 'einfo', cond, subject)
 			except TypeError:
 				pass
@@ -463,10 +463,10 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	my_logger.info(msg)
 	
 	try:
-		if (MYLOG['DSCHECK']['cindex']):
-			MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+		if (PGLOG['DSCHECK']['cindex']):
+			PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 			subject = "Info log from {}".format(get_command())
-			cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 			build_customized_email('dscheck', 'einfo', cond, subject)
 	except TypeError:
 		pass
@@ -572,10 +572,10 @@ def update_allusage(task_id):
 				msg = "[update_allusage] Error adding/updating allusage record.\n{}".format(traceback.format_exc(e))
 				my_logger.error(msg)
 				try:
-					if (MYLOG['DSCHECK']['cindex']):
-						MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+					if (PGLOG['DSCHECK']['cindex']):
+						PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 						subject = "Warning/Error log from {}".format(get_command())
-						cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+						cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 						build_customized_email('dscheck', 'einfo', cond, subject)
 				except TypeError:
 					pass
@@ -584,10 +584,10 @@ def update_allusage(task_id):
 	my_logger.info(msg)
 	if (count_add == 0):
 		try:
-			if (MYLOG['DSCHECK']['cindex']):
-				MYLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			if (PGLOG['DSCHECK']['cindex']):
+				PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
 				subject = "Warning/Error log from {}".format(get_command())
-				cond = "cindex = {}".format(MYLOG['DSCHECK']['cindex'])
+				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 				build_customized_email('dscheck', 'einfo', cond, subject)
 		except TypeError:
 			pass
@@ -614,7 +614,7 @@ def set_filters(args):
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
 		my_logger.info(msg)
-		MYLOG['EMLMSG'] += "{0}\n".format(msg)
+		PGLOG['EMLMSG'] += "{0}\n".format(msg)
 
 	return filters
 
@@ -852,11 +852,10 @@ def configure_log(**kwargs):
 	
 	""" Check for dscheck record """
 	condition = " WHERE command LIKE '%retrieve_globus_metrics%'"
-	ckrec = myget('dscheck', ['cindex','command'], condition)
+	ckrec = pgget('dscheck', 'cindex,command', condition)
 	if (len(ckrec) > 0):
-		MYLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(MYLOG['DSCHECK']['cindex']))
-
+		PGLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(PGLOG['DSCHECK']['cindex']))
 
 	""" Handler to send log messages to email address (rda-work only) """
 	if (socket.gethostname() == 'rda-work.ucar.edu'):
