@@ -44,7 +44,7 @@ task_keys = ['status','bytes_transferred','task_id','owner_string',\
 	     'destination_endpoint_id']
 
 # Keys for individual Globus task IDs
-transfer_keys = ['destination_path','source_path', 'DATA_TYPE']
+transfer_keys = ['destination_path','source_path', 'data_type']
 
 # Endpoint UUIDs
 endpoint_id_data_request = MyEndpoints['rda#data_request']
@@ -315,7 +315,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				transfer_recs.append({
 				             'destination_path':destination_path,
 				             'source_path':source_path,
-				             'DATA_TYPE':data_type,
+				             'data_type':data_type,
 				             'task_id':task_id,
 			                 'file_name': unquote(pathsplit[-1]),
 			                 'rindex':None,
@@ -356,7 +356,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			transfer_recs.append({
 				         'destination_path':destination_path,
 				         'source_path':source_path,
-				         'DATA_TYPE':data_type,
+				         'data_type':data_type,
 			             'task_id':task_id,
 			             'file_name':pathsplit[-1],
 			             'rindex':rindex,
@@ -436,7 +436,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		file_name = pathsplit.pop()
 		source_path = "/".join(pathsplit)
 		dsrqst_rec.append({'task_id': task_id,
-		                   'DATA_TYPE': records[0]['DATA_TYPE'],
+		                   'data_type': records[0]['DATA_TYPE'],
 		                   'destination_path': records[0]['destination_path'],
 		                   'source_path': source_path,
 		                   'file_name': records[0]['file_name'],
