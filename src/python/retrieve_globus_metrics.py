@@ -76,14 +76,7 @@ def main(filters):
 				else:
 					msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
 					my_logger.warning(msg)
-					try:
-						if (PGLOG['DSCHECK']['cindex']):
-							PGLOG['EMLMSG'] += "{0}\n".format(msg)
-							subject = "Warning/Error log from {}".format(get_command())
-							cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-							build_customized_email('dscheck', 'einfo', cond, subject)
-					except TypeError:
-						pass
+					email_logmsg(msg)
 				# Update usage from rda#datashare and rda#stratus endpoints into table allusage
 				if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
 					update_allusage(task_id)
@@ -108,15 +101,22 @@ def get_tasks(filters):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
-		
+		email_logmsg(msg)
 		raise e
-	except NetworkError:
-		my_logger.error(("[get_tasks] Network Failure. "
-                   "Possibly a firewall or connectivity issue"))
-		raise
-	except GlobusError:
-		logging.exception("[get_tasks] Totally unexpected GlobusError!")
-		raise
+	except NetworkError as e:
+		msg = ("[get_tasks] Network Error\n"
+			   "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		email_logmsg(msg)
+		raise e
+	except GlobusError as e:
+		msg = ("[get_tasks] Globus Error\n"
+		       "Error message: {}").format(e.message)
+		my_logger.exception(msg)
+		email_logmsg(msg)
+		raise e
 
 	return tasks
 	
@@ -131,17 +131,9 @@ def add_tasks(go_table, data):
 		emails = get_globus_email(data)
 		records = update_records(records, emails)
 	else:
-		msg = "[add_tasks] There are no transfer tasks in the return document."
+		msg = "[add_tasks] There are no transfer tasks in 'data'."
 		my_logger.warning(msg)
-		try:
-			if (PGLOG['DSCHECK']['cindex']):
-				PGLOG['EMLMSG'] += "{0}\n".format(msg)
-				subject = "Warning/Error log from {}".format(get_command())
-				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-				build_customized_email('dscheck', 'einfo', cond, subject)
-		except TypeError:
-			pass
-		
+		email_logmsg(msg)
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
@@ -183,28 +175,13 @@ def add_tasks(go_table, data):
 
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
 	my_logger.info(msg)
-	
-	try:
-		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "{0}\n".format(msg)
-			subject = "Info log from {}".format(get_command())
-			build_customized_email('dscheck', 'einfo', "cindex = {}".format(PGLOG['DSCHECK']['cindex']), subject)
-	except TypeError:
-		pass
-	
+	email_logmsg(msg)
+		
 	if (count_add == 0):
 		msg = "[add_tasks] No new Globus transfer tasks found."
 		my_logger.warning(msg)
+		email_logmsg(msg)
 		
-		try:
-			if (PGLOG['DSCHECK']['cindex']):
-				PGLOG['EMLMSG'] += "{0}\n".format(msg)
-				subject = "Warning/Error log from {}".format(get_command())
-				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-				build_customized_email('dscheck', 'einfo', cond, subject)
-		except TypeError:
-			pass
-
 	return
 
 #=========================================================================================
@@ -223,14 +200,22 @@ def get_successful_transfers(task_id):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
+		email_logmsg(msg)
 		raise e
-	except NetworkError:
-		my_logger.error(("[get_successful_transfers] Network Failure. "
-                   "Possibly a firewall or connectivity issue"))
-		raise
-	except GlobusError:
-		logging.exception("[get_successful_transfers] Totally unexpected GlobusError!")
-		raise
+	except NetworkError as e:
+		msg = ("[get_successful_transfers] Network Error\n"
+			   "HTTP status: {}\n"
+		       "Error code: {}\n"
+		       "Error message: {}").format(e.http_status, e.code, e.message)
+		my_logger.error(msg)
+		email_logmsg(msg)
+		raise e
+	except GlobusError as e:
+		msg = ("[get_successful_transfers] Globus Error\n"
+		       "Error message: {}").format(e.message)
+		my_logger.exception(msg)
+		email_logmsg(msg)
+		raise e
 
 	# return all successful transfers
 	return transfers
@@ -386,18 +371,9 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	if (len(data) >= 1):
 		records = prepare_transfer_recs(data, task_id, bytes, endpoint)
 		if (len(records) == 0):
-			msg = "[add_successful_transfers] transfer_recs is empty"
+			msg = "[add_successful_transfers] Task ID {}: transfer_recs is empty".format(task_id)
 			my_logger.warning(msg)
-			
-			try:
-				if (PGLOG['DSCHECK']['cindex']):
-					PGLOG['EMLMSG'] += "{0}\n".format(msg)
-					subject = "Warning/Error log from {}".format(get_command())
-					cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-					build_customized_email('dscheck', 'einfo', cond, subject)
-			except TypeError:
-				pass
-				
+			email_logmsg(msg)				
 			return
 	else:
 		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
@@ -463,23 +439,13 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	
 	msg_add_updt = "[add_successful_transfers] Task ID {0}: {1} transfers added and {2} transfers updated".format(task_id, count_add, count_updt)
 	my_logger.info(msg_add_updt)
+	email_logmsg(msg_add_updt)
 	
 	if (count_none > 0):
 		msg_none = "[add_successful_transfers] Task ID {0}: {1} transfers already up to date".format(task_id, count_none)
 		my_logger.info(msg_none)
-		msg_none += "\n"
-	else:
-		msg_none = ""
+		email_logmsg(msg_none)
 	
-	try:
-		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "{0}\n{1}".format(msg_add_updt, msg_none)
-			subject = "Info log from {}".format(get_command())
-			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-			build_customized_email('dscheck', 'einfo', cond, subject)
-	except TypeError:
-		pass
-
 #=========================================================================================
 def update_allusage(task_id):
 	""" Insert/update usage in dssdb.allusage_<yyyy> """
@@ -587,25 +553,11 @@ def update_allusage(task_id):
 			except Exception as e:
 				msg = "[update_allusage] Error adding/updating allusage record.\n{}".format(traceback.format_exc(e))
 				my_logger.error(msg)
-				try:
-					if (PGLOG['DSCHECK']['cindex']):
-						PGLOG['EMLMSG'] += "{0}\n".format(msg)
-						subject = "Warning/Error log from {}".format(get_command())
-						cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-						build_customized_email('dscheck', 'einfo', cond, subject)
-				except TypeError:
-					pass
+				email_logmsg(msg)
 
 	msg = "[update_allusage] Task ID {0}: {1}/{2} metrics added/updated in allusage table.".format(task_id, count_add, count_updt)
 	my_logger.info(msg)
-	try:
-		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "{0}\n".format(msg)
-			subject = "Warning/Error log from {}".format(get_command())
-			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-			build_customized_email('dscheck', 'einfo', cond, subject)
-	except TypeError:
-		pass
+	email_logmsg(msg)
 		
 #=========================================================================================
 def set_filters(args):
@@ -629,7 +581,7 @@ def set_filters(args):
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
 		my_logger.info(msg)
-		PGLOG['EMLMSG'] += "{0}\n\n".format(msg)
+		email_logmsg("{}\n\n".format(msg))
 
 	return filters
 
@@ -715,15 +667,7 @@ def parse_opts():
 	msg_opts += "START      : {}\n".format(start_date)
 	msg_opts += "END        : {}\n".format(end_date)
 	msg_opts += "TASK ONLY  : {}\n".format(task_only)
-
-	try:
-		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "{0}\n\n".format(msg_opts)
-			subject = "Info log from {}".format(get_command())
-			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-			build_customized_email('dscheck', 'einfo', cond, subject)
-	except TypeError:
-		pass
+	email_logmsg(msg_opts)
 
 	return {'endpoint': endpoint, \
 	        'endpointID': endpointID, \
@@ -794,18 +738,27 @@ def get_globus_email(data):
 			else:
 				email = result.data['identities'][0]['email']
 		except GlobusAPIError as e:
-			my_logger.error(("[get_user_id] Globus API Error\n"
-		    	             "HTTP status: {}\n"
-		        	         "Error code: {}\n"
-		            	     "Error message: {}").format(e.http_status, e.code, e.message))
+			msg = ("[get_globus_email] Globus API Error\n"
+		       	   "HTTP status: {}\n"
+		           "Error code: {}\n"
+		           "Error message: {}").format(e.http_status, e.code, e.message)
+			my_logger.error(msg)
+			email_logmsg(msg)
 			raise e
-		except NetworkError:
-			my_logger.error(("[get_user_id] Network Failure. "
-            	       "Possibly a firewall or connectivity issue"))
-			raise
-		except GlobusError:
-			logging.exception("[get_user_id] Totally unexpected GlobusError!")
-			raise
+		except NetworkError as e:
+			msg = ("[get_globus_email] Network Error\n"
+			       "HTTP status: {}\n"
+		           "Error code: {}\n"
+		           "Error message: {}").format(e.http_status, e.code, e.message)
+			my_logger.error(msg)
+			email_logmsg(msg)
+			raise e
+		except GlobusError as e:
+			msg = ("[get_globus_email] Globus Error\n"
+		           "Error message: {}").format(e.message)
+			my_logger.exception(msg)
+			email_logmsg(msg)
+			raise e
 
 		if 'email':
 			emails.append({'email': email})
@@ -851,6 +804,19 @@ def print_doc(data, keys):
 				print (key, '\t', data[i][key])
 			else:
 				continue
+
+#=========================================================================================
+def email_logmsg(msg):
+	""" Send log message in email """
+
+	try:
+		if (PGLOG['DSCHECK']['cindex']):
+			PGLOG['EMLMSG'] += "{0}\n".format(msg)
+			subject = "Warning/Error log from {}".format(get_command())
+			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
+	except TypeError:
+		pass		
 
 #=========================================================================================
 def configure_log(**kwargs):
