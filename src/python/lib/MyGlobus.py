@@ -23,7 +23,7 @@ if (path1 not in sys.path):
 if (path2 not in sys.path):
 	sys.path.append(path2)
 
-from rda_globus_app_config import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
+from rda_globus_local_settings import (TRANSFER_REFRESH_TOKEN, AUTH_REFRESH_TOKEN,
                                    CLIENT_ID, CLIENT_SECRET, PRIVATE_KEY,
                                    TRANSFER_RT_QUASAR, AUTH_RT_QUASAR, 
                                    RDA_QUASAR_CLIENT_ID)
