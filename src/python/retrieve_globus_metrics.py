@@ -724,7 +724,7 @@ def set_filters(args):
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
 		my_logger.info(msg)
-		email_logmsg("{}\n\n".format(msg))
+		email_logmsg("{}".format(msg))
 
 	return filters
 
