@@ -59,33 +59,37 @@ def main(filters):
 	transfer_tasks = get_tasks(filters)
 	if doprint: print_doc(transfer_tasks, task_keys)
 	my_logger.debug(__name__+': Adding/updating tasks in RDA DB')
-	add_tasks('gotask', transfer_tasks)
+	if len(transfer_tasks) > 0:
+		add_tasks('gotask', transfer_tasks)
 
-	# Get list of successful transfers for each Globus task id.
-	if not task_only:
-		my_logger.debug(__name__+': Getting and adding Globus transfers')
-		endpoint_id = filters['filter_endpoint']
-		for i in range(len(transfer_tasks)):
-			task_id = transfer_tasks[i]['task_id']
-			bytes = transfer_tasks[i]['bytes_transferred']
-			my_logger.debug(__name__+': task_id: '+task_id)
-			data_transfers = get_successful_transfers(task_id)
-			if (len(data_transfers) > 0):
-				add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
-			else:
-				msg = "[main] Warning: No successful transfers found."
-				my_logger.warning(msg)
-				try:
-					if (PGLOG['DSCHECK']['cindex']):
-						PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
-						subject = "Warning/Error log from {}".format(get_command())
-						cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-						build_customized_email('dscheck', 'einfo', cond, subject)
-				except TypeError:
-					pass
-			# Update usage from rda#datashare and rda#stratus endpoints into table allusage
-			if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
-				update_allusage(task_id)
+		# Get list of successful transfers for each Globus task id.
+		if not task_only:
+			my_logger.debug(__name__+': Getting and adding Globus transfers')
+			endpoint_id = filters['filter_endpoint']
+			for i in range(len(transfer_tasks)):
+				task_id = transfer_tasks[i]['task_id']
+				bytes = transfer_tasks[i]['bytes_transferred']
+				my_logger.debug(__name__+': task_id: '+task_id)
+				data_transfers = get_successful_transfers(task_id)
+				if (len(data_transfers) > 0):
+					add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
+				else:
+					msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
+					my_logger.warning(msg)
+					try:
+						if (PGLOG['DSCHECK']['cindex']):
+							PGLOG['EMLMSG'] += "{0}\n".format(msg)
+							subject = "Warning/Error log from {}".format(get_command())
+							cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
+							build_customized_email('dscheck', 'einfo', cond, subject)
+					except TypeError:
+						pass
+				# Update usage from rda#datashare and rda#stratus endpoints into table allusage
+				if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+					update_allusage(task_id)
+	else:
+		msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
+		my_logger.info(msg)
 
 	my_logger.debug(__name__+': END')
 
@@ -131,7 +135,7 @@ def add_tasks(go_table, data):
 		my_logger.warning(msg)
 		try:
 			if (PGLOG['DSCHECK']['cindex']):
-				PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
+				PGLOG['EMLMSG'] += "{0}\n".format(msg)
 				subject = "Warning/Error log from {}".format(get_command())
 				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 				build_customized_email('dscheck', 'einfo', cond, subject)
@@ -182,7 +186,7 @@ def add_tasks(go_table, data):
 	
 	try:
 		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			PGLOG['EMLMSG'] += "{0}\n".format(msg)
 			subject = "Info log from {}".format(get_command())
 			build_customized_email('dscheck', 'einfo', "cindex = {}".format(PGLOG['DSCHECK']['cindex']), subject)
 	except TypeError:
@@ -194,7 +198,7 @@ def add_tasks(go_table, data):
 		
 		try:
 			if (PGLOG['DSCHECK']['cindex']):
-				PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
+				PGLOG['EMLMSG'] += "{0}\n".format(msg)
 				subject = "Warning/Error log from {}".format(get_command())
 				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 				build_customized_email('dscheck', 'einfo', cond, subject)
@@ -387,7 +391,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			
 			try:
 				if (PGLOG['DSCHECK']['cindex']):
-					PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
+					PGLOG['EMLMSG'] += "{0}\n".format(msg)
 					subject = "Warning/Error log from {}".format(get_command())
 					cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 					build_customized_email('dscheck', 'einfo', cond, subject)
@@ -457,14 +461,19 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			pgadd(go_table, dsrqst_rec[0])
 			count_add += 1
 	
-	msg = "[add_successful_transfers] {0} transfers added and {1} transfers updated for task id {2}".format(count_add, count_updt, task_id)
-	my_logger.info(msg)
-	msg = "[add_successful_transfers] {0} transfers already up to date for task id {1}".format(count_none, task_id)
-	my_logger.info(msg)
+	msg_add_updt = "[add_successful_transfers] Task ID {0}: {1} transfers added and {2} transfers updated".format(task_id, count_add, count_updt)
+	my_logger.info(msg_add_updt)
+	
+	if (count_none > 0):
+		msg_none = "[add_successful_transfers] Task ID {0}: {1} transfers already up to date".format(task_id, count_none)
+		my_logger.info(msg_none)
+		msg_none += "\n"
+	else:
+		msg_none = ""
 	
 	try:
 		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
+			PGLOG['EMLMSG'] += "{0}\n{1}".format(msg_add_updt, msg_none)
 			subject = "Info log from {}".format(get_command())
 			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 			build_customized_email('dscheck', 'einfo', cond, subject)
@@ -501,7 +510,7 @@ def update_allusage(task_id):
 	# Get user org_type and country
 	wuid = check_wuser_wuid(email)
 	if not wuid:
-		my_logger.warning("wuid not found for email {}".format(email))
+		my_logger.info("wuid not found for email {}".format(email))
 		org_type = None
 		country = None
 	else:
@@ -511,7 +520,7 @@ def update_allusage(task_id):
 			org_type = myrec['org_type']
 			country = myrec['country']
 		else:
-			my_logger.warning("wuser not found for email {}, task_id {}.".format(email, task_id))
+			my_logger.info("wuser not found for email {}, task_id {}.".format(email, task_id))
 			org_type = None
 			country = None
 	
@@ -544,7 +553,7 @@ def update_allusage(task_id):
 			usage_record.update(task_record)
 			all_recs.append(usage_record)
 	else:
-		my_logger.warning("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
+		my_logger.info("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
 		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
 		usage_record.update(task_record)
 		all_recs.append(usage_record)
@@ -570,6 +579,7 @@ def update_allusage(task_id):
 				# update email with allusage record
 				cond = "aidx={}".format(myrec['aidx'])
 				pgupdt(table, all_recs[i], cond)
+				count_updt += 1
 		else:
 			# Add new record to allusage table
 			try:
@@ -579,24 +589,23 @@ def update_allusage(task_id):
 				my_logger.error(msg)
 				try:
 					if (PGLOG['DSCHECK']['cindex']):
-						PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
+						PGLOG['EMLMSG'] += "{0}\n".format(msg)
 						subject = "Warning/Error log from {}".format(get_command())
 						cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 						build_customized_email('dscheck', 'einfo', cond, subject)
 				except TypeError:
 					pass
 
-	msg = "[update_allusage] {}/{} metrics added/updated in allusage for task_id {}.".format(count_add, count_updt, task_id)
+	msg = "[update_allusage] Task ID {0}: {1}/{2} metrics added/updated in allusage table.".format(task_id, count_add, count_updt)
 	my_logger.info(msg)
-	if (count_add == 0):
-		try:
-			if (PGLOG['DSCHECK']['cindex']):
-				PGLOG['EMLMSG'] += "\n{0}\n".format(msg)
-				subject = "Warning/Error log from {}".format(get_command())
-				cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-				build_customized_email('dscheck', 'einfo', cond, subject)
-		except TypeError:
-			pass
+	try:
+		if (PGLOG['DSCHECK']['cindex']):
+			PGLOG['EMLMSG'] += "{0}\n".format(msg)
+			subject = "Warning/Error log from {}".format(get_command())
+			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
+	except TypeError:
+		pass
 		
 #=========================================================================================
 def set_filters(args):
@@ -620,7 +629,7 @@ def set_filters(args):
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
 		my_logger.info(msg)
-		PGLOG['EMLMSG'] += "{0}\n".format(msg)
+		PGLOG['EMLMSG'] += "{0}\n\n".format(msg)
 
 	return filters
 
@@ -699,6 +708,22 @@ def parse_opts():
 	print ('END        :', end_date)
 	print ('PRINT      :', doprint)
 	print ('TASK ONLY  :', task_only)
+
+	msg_opts = "ENDPOINT   : {}\n".format(endpoint)
+	msg_opts += "ENDPOINT ID: {}\n".format(endpointID)
+	msg_opts += "USER       : {}\n".format(user)
+	msg_opts += "START      : {}\n".format(start_date)
+	msg_opts += "END        : {}\n".format(end_date)
+	msg_opts += "TASK ONLY  : {}\n".format(task_only)
+
+	try:
+		if (PGLOG['DSCHECK']['cindex']):
+			PGLOG['EMLMSG'] += "{0}\n\n".format(msg_opts)
+			subject = "Info log from {}".format(get_command())
+			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
+			build_customized_email('dscheck', 'einfo', cond, subject)
+	except TypeError:
+		pass
 
 	return {'endpoint': endpoint, \
 	        'endpointID': endpointID, \
