@@ -558,123 +558,7 @@ def update_allusage(task_id):
 	msg = "[update_allusage] Task ID {0}: {1}/{2} metrics added/updated in allusage table.".format(task_id, count_add, count_updt)
 	my_logger.info(msg)
 	email_logmsg(msg)
-		
-#=========================================================================================
-def set_filters(args):
-	""" Set filters to pass to Globus transfer client """
-
-	my_logger.debug('[set_filters] Defining Globus API filters')
-	filters = {}
-	filters['filter_status'] = 'SUCCEEDED'
-	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']		
-	if (args['user'] != ''): filters['filter_username'] = args['user']
-	if (args['start'] != ''):
-		if (args['end'] != ''):
-			filters['filter_completion_time'] = "{0},{1}".format(args['start'], args['end'])
-		else:
-			filters['filter_completion_time'] = "{0}".format(args['start'])
-	else:
-		if (args['end'] !=''):
-			filters['filter_completion_time'] = ",{0}".format(args['end'])
-
-	my_logger.info('FILTERS   :')
-	for key in filters:
-		msg = '{0}: {1}'.format(key,filters[key])
-		my_logger.info(msg)
-		email_logmsg("{}\n\n".format(msg))
-
-	return filters
-
-#=========================================================================================
-def parse_opts():
-	""" Parse command line arguments """
-
-	import argparse
-	import textwrap
 	
-	from datetime import timedelta
-	global doprint, task_only
-
-	""" Parse command line arguments """
-	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
-	epilog = textwrap.dedent('''\
-	Example:
-	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
-	              retrieve_globus_metrics.py -n datashare -s 2017-01-01 -e 2017-01-31	
-	''')
-
-	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. datashare')
-	parser.add_argument('-u', action="store", dest="USERNAME", help='GlobusID username')
-	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
-	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
-	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
-	parser.add_argument('-to', action="store_true", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
-	
-	if len(sys.argv)==1:
-		parser.print_help()
-		sys.exit(1)
-
-	args = parser.parse_args(sys.argv[1:])
-	my_logger.info("{0}: {1}".format(sys.argv[0], args))
-	opts = vars(args)
-
-	date_fmt = "%Y-%m-%d"
-
-	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
-	# Globus database.
-	endpoint = 'rda#data_request'
-	endpointID = MyEndpoints[endpoint]
-	user = ''
-	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
-	end_date = datetime.utcnow().isoformat()
-	doprint = bool(False)
-	task_only = bool(False)
-
-	if opts['ENDPOINT']:
-		if(re.search(r'datashare', opts['ENDPOINT'])):
-			endpoint = 'rda#datashare'
-		if(re.search(r'stratus', opts['ENDPOINT'])):
-			endpoint = 'rda#stratus'
-		endpointID = MyEndpoints[endpoint]
-		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
-		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
-	if opts['USERNAME']:
-		user = opts['USERNAME']
-		my_logger.info('USER      : {0}'.format(user))
-	if opts['STARTDATE']:
-		start_date = format_date(opts['STARTDATE'], date_fmt)
-		my_logger.info('START     : {0}'.format(start_date))
-	if opts['ENDDATE']:
-		end_date = format_date(opts['ENDDATE'], date_fmt)
-		my_logger.info('END       : {0}'.format(end_date))
-	if opts['PRINTINFO']:
-		doprint = bool(True)
-	if opts['TASKONLY']:
-		task_only = bool(True)
-			
-	print ('ENDPOINT   :', endpoint)
-	print ('ENDPOINT ID:', endpointID)
-	print ('USER       :', user)
-	print ('START      :', start_date)
-	print ('END        :', end_date)
-	print ('PRINT      :', doprint)
-	print ('TASK ONLY  :', task_only)
-
-	msg_opts = "ENDPOINT   : {}\n".format(endpoint)
-	msg_opts += "ENDPOINT ID: {}\n".format(endpointID)
-	msg_opts += "USER       : {}\n".format(user)
-	msg_opts += "START      : {}\n".format(start_date)
-	msg_opts += "END        : {}\n".format(end_date)
-	msg_opts += "TASK ONLY  : {}\n".format(task_only)
-	email_logmsg(msg_opts)
-
-	return {'endpoint': endpoint, \
-	        'endpointID': endpointID, \
-            'user': user, \
-            'start': start_date, \
-            'end': end_date}
-
 #=========================================================================================
 def format_date(date_str, fmt):
 	""" Convert date string into ISO 8601 format (YYYY-MM-DDTHH:MM:ss) """
@@ -812,11 +696,140 @@ def email_logmsg(msg):
 	try:
 		if (PGLOG['DSCHECK']['cindex']):
 			PGLOG['EMLMSG'] += "{0}\n".format(msg)
-			subject = "Warning/Error log from {}".format(get_command())
+			subject = "Log from {}".format(get_command())
 			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
 			build_customized_email('dscheck', 'einfo', cond, subject)
 	except TypeError:
 		pass		
+
+#=========================================================================================
+def set_filters(args):
+	""" Set filters to pass to Globus transfer client """
+
+	my_logger.debug('[set_filters] Defining Globus API filters')
+	filters = {}
+	filters['filter_status'] = 'SUCCEEDED'
+	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']		
+	if (args['user'] != ''): filters['filter_username'] = args['user']
+	if (args['start'] != ''):
+		if (args['end'] != ''):
+			filters['filter_completion_time'] = "{0},{1}".format(args['start'], args['end'])
+		else:
+			filters['filter_completion_time'] = "{0}".format(args['start'])
+	else:
+		if (args['end'] !=''):
+			filters['filter_completion_time'] = ",{0}".format(args['end'])
+
+	my_logger.info('FILTERS   :')
+	for key in filters:
+		msg = '{0}: {1}'.format(key,filters[key])
+		my_logger.info(msg)
+		email_logmsg("{}\n\n".format(msg))
+
+	return filters
+
+#=========================================================================================
+def parse_opts():
+	""" Parse command line arguments """
+
+	import argparse
+	import textwrap
+	
+	from datetime import timedelta
+	global doprint, task_only
+
+	""" Parse command line arguments """
+	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
+	epilog = textwrap.dedent('''\
+	Example:
+	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
+	              retrieve_globus_metrics.py -n datashare -s 2017-01-01 -e 2017-01-31	
+	''')
+
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
+	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. datashare')
+	parser.add_argument('-u', action="store", dest="USERNAME", help='GlobusID username')
+	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
+	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
+	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
+	parser.add_argument('-to', action="store_true", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
+	
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+
+	args = parser.parse_args(sys.argv[1:])
+	my_logger.info("{0}: {1}".format(sys.argv[0], args))
+	opts = vars(args)
+
+	date_fmt = "%Y-%m-%d"
+
+	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
+	# Globus database.
+	user = ''
+	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
+	end_date = datetime.utcnow().isoformat()
+	doprint = bool(False)
+	task_only = bool(False)
+
+	if opts['ENDPOINT']:
+		if(re.search(r'datashare', opts['ENDPOINT'])):
+			endpoint = 'rda#datashare'
+		if(re.search(r'stratus', opts['ENDPOINT'])):
+			endpoint = 'rda#stratus'
+		if(re.search(r'data_request', opts['ENDPOINT'])):
+			endpoint = 'rda#data_request'
+		endpointID = MyEndpoints[endpoint]
+		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
+		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
+	if opts['USERNAME']:
+		user = opts['USERNAME']
+		my_logger.info('USER      : {0}'.format(user))
+	if opts['STARTDATE']:
+		start_date = format_date(opts['STARTDATE'], date_fmt)
+		my_logger.info('START     : {0}'.format(start_date))
+	if opts['ENDDATE']:
+		end_date = format_date(opts['ENDDATE'], date_fmt)
+		my_logger.info('END       : {0}'.format(end_date))
+	if opts['PRINTINFO']:
+		doprint = bool(True)
+	if opts['TASKONLY']:
+		task_only = bool(True)
+			
+	print ('ENDPOINT   :', endpoint)
+	print ('ENDPOINT ID:', endpointID)
+	print ('USER       :', user)
+	print ('START      :', start_date)
+	print ('END        :', end_date)
+	print ('PRINT      :', doprint)
+	print ('TASK ONLY  :', task_only)
+
+	configure_email_log(opts['ENDPOINT'])
+
+	msg_opts = "ENDPOINT   : {}\n".format(endpoint)
+	msg_opts += "ENDPOINT ID: {}\n".format(endpointID)
+	msg_opts += "USER       : {}\n".format(user)
+	msg_opts += "START      : {}\n".format(start_date)
+	msg_opts += "END        : {}\n".format(end_date)
+	msg_opts += "TASK ONLY  : {}\n".format(task_only)
+	email_logmsg(msg_opts)
+
+	return {'endpoint': endpoint, \
+	        'endpointID': endpointID, \
+            'user': user, \
+            'start': start_date, \
+            'end': end_date}
+
+#=========================================================================================
+def configure_email_log(endpoint):
+	""" Set up email logging if dscheck record exists (PBS jobs only) """
+
+	# Check for dscheck record
+	condition = "command LIKE '%retrieve_globus_metrics%' and argv LIKE '%{}%'".format(endpoint)
+	ckrec = pgget('dscheck', 'cindex,command', condition)
+	if (len(ckrec) > 0):
+		PGLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found for endpoint {0} with dscheck index {1}".format(endpoint, PGLOG['DSCHECK']['cindex']))
 
 #=========================================================================================
 def configure_log(**kwargs):
@@ -847,13 +860,6 @@ def configure_log(**kwargs):
 	rfh.setFormatter(formatter)
 	my_logger.addHandler(rfh)
 	
-	""" Check for dscheck record """
-	condition = "command LIKE '%retrieve_globus_metrics%'"
-	ckrec = pgget('dscheck', 'cindex,command', condition)
-	if (len(ckrec) > 0):
-		PGLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(PGLOG['DSCHECK']['cindex']))
-
 	""" Handler to send log messages to email address (rda-work only) """
 	if (socket.gethostname() == 'rda-work.ucar.edu'):
 		fromaddr = 'tcram@ucar.edu'
