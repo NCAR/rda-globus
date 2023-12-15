@@ -55,21 +55,18 @@ endpoint_id_stratus = MyEndpoints['rda#stratus']
 def main(filters):
 
 	# Get Globus transfer tasks
-	my_logger.debug(__name__+': Getting tasks')
 	transfer_tasks = get_tasks(filters)
 	if doprint: print_doc(transfer_tasks, task_keys)
-	my_logger.debug(__name__+': Adding/updating tasks in RDA DB')
+
 	if len(transfer_tasks) > 0:
 		add_tasks('gotask', transfer_tasks)
 
-		# Get list of successful transfers for each Globus task id.
+		# Get list of successful files transferred  for each Globus task id.
 		if not task_only:
-			my_logger.debug(__name__+': Getting and adding Globus transfers')
 			endpoint_id = filters['filter_endpoint']
 			for i in range(len(transfer_tasks)):
 				task_id = transfer_tasks[i]['task_id']
 				bytes = transfer_tasks[i]['bytes_transferred']
-				my_logger.debug(__name__+': task_id: '+task_id)
 				data_transfers = get_successful_transfers(task_id)
 				if (len(data_transfers) > 0):
 					add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
@@ -83,8 +80,7 @@ def main(filters):
 	else:
 		msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
 		my_logger.info(msg)
-
-	my_logger.debug(__name__+': END')
+		email_logmsg(msg)
 
 #=========================================================================================
 def get_tasks(filters):
@@ -709,7 +705,7 @@ def set_filters(args):
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
-	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']		
+	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']
 	if (args['user'] != ''): filters['filter_username'] = args['user']
 	if (args['start'] != ''):
 		if (args['end'] != ''):
@@ -723,8 +719,7 @@ def set_filters(args):
 	my_logger.info('FILTERS   :')
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
-		my_logger.info(msg)
-		email_logmsg("{}".format(msg))
+		my_logger.debug(msg)
 
 	return filters
 
@@ -806,12 +801,12 @@ def parse_opts():
 
 	configure_email_log(opts['ENDPOINT'])
 
-	msg_opts = "ENDPOINT   : {}\n".format(endpoint)
+	msg_opts = "ENDPOINT: {}\n".format(endpoint)
 	msg_opts += "ENDPOINT ID: {}\n".format(endpointID)
-	msg_opts += "USER       : {}\n".format(user)
-	msg_opts += "START      : {}\n".format(start_date)
-	msg_opts += "END        : {}\n".format(end_date)
-	msg_opts += "TASK ONLY  : {}\n".format(task_only)
+	msg_opts += "USER: {}\n".format(user)
+	msg_opts += "START: {}\n".format(start_date)
+	msg_opts += "END: {}\n".format(end_date)
+	msg_opts += "TASK ONLY: {}\n".format(task_only)
 	email_logmsg(msg_opts)
 
 	return {'endpoint': endpoint, \
