@@ -68,9 +68,18 @@ def main(opts):
 		filters = set_filters(filter_args)
 
 		# Print opts to logger
+		msg = "ENDPOINT: {}\n".format(opts['endpoints'][i])
+		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[opts['endpoints'][i]])
+		if opts['user']:
+			msg += "USER: {}\n".format(opts['user'])
+		msg += "START: {}\n".format(opts['start_date'])
+		msg += "END: {}\n".format(opts['end_date'])
+		msg += "TASK ONLY: {}\n".format(opts['task_only'])
+		my_logger.info(msg)
 
 		# Print opts to email log (PBS)
-	
+		email_logmsg(msg)
+
 		my_logger.info("Getting Globus metrics for endpoint {}".format(filters['filter_endpoint']))
 	
 		# Get Globus transfer tasks
@@ -775,15 +784,6 @@ def parse_opts():
 	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	opts = vars(args)
 
-	date_fmt = "%Y-%m-%d"
-
-	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
-	# Globus database.
-	user = ''
-	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
-	end_date = datetime.utcnow().isoformat()
-	task_only = bool(False)
-
 	endpoints = []
 	if opts['endpoint_name']:
 		if(re.search(r'datashare', opts['endpoint_name'])):
@@ -792,47 +792,40 @@ def parse_opts():
 			endpoint = 'rda#stratus'
 		if(re.search(r'data_request', opts['endpoint_name'])):
 			endpoint = 'rda#data_request'
-		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
 		endpoints.append(endpoint)
 	else:
 		endpoints.append(all_endpoints)
 
 	opts.update({'endpoints': endpoints})
 	
-	if opts['user']:
-		user = opts['user']
-		my_logger.info('USER      : {0}'.format(user))
+	# Default start and end dates.  Start date = 30 days ago, to cover full 30-day history in 
+	# Globus database.
+	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
+	end_date = datetime.utcnow().isoformat()
+	date_fmt = "%Y-%m-%d"
+
 	if opts['start_date']:
-		start_date = format_date(opts['start_date'], date_fmt)
-		my_logger.info('START     : {0}'.format(start_date))
+		opts['start_date'] = format_date(opts['start_date'], date_fmt)
+	else:
+		opts['start_date'] = start_date
+
 	if opts['end_date']:
-		end_date = format_date(opts['end_date'], date_fmt)
-		my_logger.info('END       : {0}'.format(end_date))
-	if opts['task_only']:
-		task_only = bool(True)
-
-	configure_email_log(opts['ENDPOINT'])
-
-	msg_opts = "ENDPOINT: {}\n".format(endpoint)
-	msg_opts += "ENDPOINT ID: {}\n".format(endpointID)
-	msg_opts += "USER: {}\n".format(user)
-	msg_opts += "START: {}\n".format(start_date)
-	msg_opts += "END: {}\n".format(end_date)
-	msg_opts += "TASK ONLY: {}\n".format(task_only)
-	email_logmsg(msg_opts)
+		opts['end_date'] = format_date(opts['end_date'], date_fmt)
+	else:
+		opts['end_date'] = end_date
 
 	return opts
 
 #=========================================================================================
-def configure_email_log(endpoint=None):
+def configure_email_log():
 	""" Set up email logging if dscheck record exists (PBS jobs only) """
 
 	# Check for dscheck record
-	condition = "command LIKE '%retrieve_globus_metrics%' and argv LIKE '%{}%'".format(endpoint)
+	condition = "command LIKE '%retrieve_globus_metrics%'"
 	ckrec = pgget('dscheck', 'cindex,command', condition)
 	if (len(ckrec) > 0):
 		PGLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found for endpoint {0} with dscheck index {1}".format(endpoint, PGLOG['DSCHECK']['cindex']))
+		my_logger.info("[configure_log] dscheck record found with dscheck index {1}".format(PGLOG['DSCHECK']['cindex']))
 
 #=========================================================================================
 def configure_log(**kwargs):
@@ -879,6 +872,7 @@ def configure_log(**kwargs):
 """ Set up logging """
 my_logger = logging.getLogger(__name__)
 configure_log(level='info')
+configure_email_log()
 
 if __name__ == "__main__":
 	opts = parse_opts()
