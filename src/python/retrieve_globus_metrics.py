@@ -46,14 +46,26 @@ task_keys = ['status','bytes_transferred','task_id','owner_string',\
 # Keys for individual Globus task IDs
 transfer_keys = ['destination_path','source_path', 'data_type']
 
+# All valid endpoints
+all_endpoints = ['rda#datashare', 'rda#stratus', 'rda#data_request']
+
 # Endpoint UUIDs
 endpoint_id_data_request = MyEndpoints['rda#data_request']
 endpoint_id_datashare = MyEndpoints['rda#datashare']
 endpoint_id_stratus = MyEndpoints['rda#stratus']
 
 #=========================================================================================
-def main(filters):
+def main(opts):
 
+	for i in range(len(opts['endpoints'])):
+		filters = set_filters(opts)
+		get_metrics(filters)
+	
+#=========================================================================================
+def get_metrics(filters):
+
+	my_logger.info("Getting Globus metrics for endpoint {}".format(filters['filter_endpoint']))
+	
 	# Get Globus transfer tasks
 	transfer_tasks = get_tasks(filters)
 	if doprint: print_doc(transfer_tasks, task_keys)
@@ -705,18 +717,18 @@ def set_filters(args):
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
-	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']
+	if (args['endpoint']): filters['filter_endpoint'] = MyEndpoints["args['endpoint']"]
 	if (args['user'] != ''): filters['filter_username'] = args['user']
-	if (args['start'] != ''):
-		if (args['end'] != ''):
-			filters['filter_completion_time'] = "{0},{1}".format(args['start'], args['end'])
+	if (args['start_date'] != ''):
+		if (args['end_date'] != ''):
+			filters['filter_completion_time'] = "{0},{1}".format(args['start_date'], args['end_date'])
 		else:
-			filters['filter_completion_time'] = "{0}".format(args['start'])
+			filters['filter_completion_time'] = "{0}".format(args['start_date'])
 	else:
-		if (args['end'] !=''):
-			filters['filter_completion_time'] = ",{0}".format(args['end'])
+		if (args['end_date'] !=''):
+			filters['filter_completion_time'] = ",{0}".format(args['end_date'])
 
-	my_logger.info('FILTERS   :')
+	my_logger.debug('FILTERS   :')
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
 		my_logger.debug(msg)
@@ -742,12 +754,12 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. datashare')
-	parser.add_argument('-u', action="store", dest="USERNAME", help='GlobusID username')
-	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
-	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
-	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
-	parser.add_argument('-to', action="store_true", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
+	parser.add_argument('-e', '--endpoint', action="store", required=False, choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name ('datashare', 'stratus', or 'data_request')")
+	parser.add_argument('-u', '--user', action="store", help='GlobusID username')
+	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
+	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
+	parser.add_argument('-p', '--print-task', action="store", help='Print task transfer details.  Default is False.')
+	parser.add_argument('-t', '--task-only', action="store_true", help='Collect task-level metrics only.  Does not collect file-level metrics.')
 	
 	if len(sys.argv)==1:
 		parser.print_help()
@@ -767,37 +779,34 @@ def parse_opts():
 	doprint = bool(False)
 	task_only = bool(False)
 
-	if opts['ENDPOINT']:
-		if(re.search(r'datashare', opts['ENDPOINT'])):
+	endpoints = []
+	if opts['endpoint']:
+		if(re.search(r'datashare', opts['endpoint'])):
 			endpoint = 'rda#datashare'
-		if(re.search(r'stratus', opts['ENDPOINT'])):
+		if(re.search(r'stratus', opts['endpoint'])):
 			endpoint = 'rda#stratus'
-		if(re.search(r'data_request', opts['ENDPOINT'])):
+		if(re.search(r'data_request', opts['endpoint'])):
 			endpoint = 'rda#data_request'
-		endpointID = MyEndpoints[endpoint]
 		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
-		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
-	if opts['USERNAME']:
-		user = opts['USERNAME']
+		endpoints.append(endpoint)
+	else:
+		endpoints.append(all_endpoints)
+
+	opts.update({'endpoints': endpoints})
+	
+	if opts['user']:
+		user = opts['user']
 		my_logger.info('USER      : {0}'.format(user))
-	if opts['STARTDATE']:
-		start_date = format_date(opts['STARTDATE'], date_fmt)
+	if opts['start_date']:
+		start_date = format_date(opts['start_date'], date_fmt)
 		my_logger.info('START     : {0}'.format(start_date))
-	if opts['ENDDATE']:
-		end_date = format_date(opts['ENDDATE'], date_fmt)
+	if opts['end_date']:
+		end_date = format_date(opts['end_date'], date_fmt)
 		my_logger.info('END       : {0}'.format(end_date))
-	if opts['PRINTINFO']:
+	if opts['print_task']:
 		doprint = bool(True)
-	if opts['TASKONLY']:
+	if opts['task_only']:
 		task_only = bool(True)
-			
-	print ('ENDPOINT   :', endpoint)
-	print ('ENDPOINT ID:', endpointID)
-	print ('USER       :', user)
-	print ('START      :', start_date)
-	print ('END        :', end_date)
-	print ('PRINT      :', doprint)
-	print ('TASK ONLY  :', task_only)
 
 	configure_email_log(opts['ENDPOINT'])
 
@@ -809,14 +818,10 @@ def parse_opts():
 	msg_opts += "TASK ONLY: {}\n".format(task_only)
 	email_logmsg(msg_opts)
 
-	return {'endpoint': endpoint, \
-	        'endpointID': endpointID, \
-            'user': user, \
-            'start': start_date, \
-            'end': end_date}
+	return opts
 
 #=========================================================================================
-def configure_email_log(endpoint):
+def configure_email_log(endpoint=None):
 	""" Set up email logging if dscheck record exists (PBS jobs only) """
 
 	# Check for dscheck record
@@ -873,7 +878,5 @@ my_logger = logging.getLogger(__name__)
 configure_log(level='info')
 
 if __name__ == "__main__":
-	args = parse_opts()
-	filters = set_filters(args)
-	main(filters)
-	
+	opts = parse_opts()
+	main(opts)	
