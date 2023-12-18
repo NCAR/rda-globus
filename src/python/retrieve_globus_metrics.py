@@ -58,6 +58,7 @@ endpoint_id_stratus = MyEndpoints['rda#stratus']
 def main(opts):
 
 	for i in range(len(opts['endpoints'])):
+		opts.update({'endpoint_name': opts['endpoints'][i]})
 		filters = set_filters(opts)
 		get_metrics(filters)
 	
@@ -93,6 +94,8 @@ def get_metrics(filters):
 		msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
 		my_logger.info(msg)
 		email_logmsg(msg)
+	
+	return
 
 #=========================================================================================
 def get_tasks(filters):
@@ -717,7 +720,7 @@ def set_filters(args):
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
-	if (args['endpoint']): filters['filter_endpoint'] = MyEndpoints["args['endpoint']"]
+	if (args['endpoint_name']): filters['filter_endpoint'] = MyEndpoints["args['endpoint_name']"]
 	if (args['user'] != ''): filters['filter_username'] = args['user']
 	if (args['start_date'] != ''):
 		if (args['end_date'] != ''):
@@ -754,7 +757,7 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-e', '--endpoint', action="store", required=False, choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name ('datashare', 'stratus', or 'data_request')")
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name ('datashare', 'stratus', or 'data_request')")
 	parser.add_argument('-u', '--user', action="store", help='GlobusID username')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
@@ -780,12 +783,12 @@ def parse_opts():
 	task_only = bool(False)
 
 	endpoints = []
-	if opts['endpoint']:
-		if(re.search(r'datashare', opts['endpoint'])):
+	if opts['endpoint_name']:
+		if(re.search(r'datashare', opts['endpoint_name'])):
 			endpoint = 'rda#datashare'
-		if(re.search(r'stratus', opts['endpoint'])):
+		if(re.search(r'stratus', opts['endpoint_name'])):
 			endpoint = 'rda#stratus'
-		if(re.search(r'data_request', opts['endpoint'])):
+		if(re.search(r'data_request', opts['endpoint_name'])):
 			endpoint = 'rda#data_request'
 		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
 		endpoints.append(endpoint)
