@@ -57,43 +57,48 @@ endpoint_id_stratus = MyEndpoints['rda#stratus']
 #=========================================================================================
 def main(opts):
 
+	# Loop through endpoints and get metrics for each
 	for i in range(len(opts['endpoints'])):
-		opts.update({'endpoint_name': opts['endpoints'][i]})
-		filters = set_filters(opts)
-		get_metrics(filters)
+		# set filters for Globus API
+		filter_args = {'endpoint_name': opts['endpoints'][i],
+			       'user': opts['user'],
+			       'start_date': opts['start_date'],
+			       'end_date': opts['end_date']
+			      }
+		filters = set_filters(filter_args)
+
+		# Print opts to logger
+
+		# Print opts to email log (PBS)
 	
-#=========================================================================================
-def get_metrics(filters):
-
-	my_logger.info("Getting Globus metrics for endpoint {}".format(filters['filter_endpoint']))
+		my_logger.info("Getting Globus metrics for endpoint {}".format(filters['filter_endpoint']))
 	
-	# Get Globus transfer tasks
-	transfer_tasks = get_tasks(filters)
-	if doprint: print_doc(transfer_tasks, task_keys)
+		# Get Globus transfer tasks
+		transfer_tasks = get_tasks(filters)
 
-	if len(transfer_tasks) > 0:
-		add_tasks('gotask', transfer_tasks)
+		if len(transfer_tasks) > 0:
+			add_tasks('gotask', transfer_tasks)
 
-		# Get list of successful files transferred  for each Globus task id.
-		if not task_only:
-			endpoint_id = filters['filter_endpoint']
-			for i in range(len(transfer_tasks)):
-				task_id = transfer_tasks[i]['task_id']
-				bytes = transfer_tasks[i]['bytes_transferred']
-				data_transfers = get_successful_transfers(task_id)
-				if (len(data_transfers) > 0):
-					add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
-				else:
-					msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
-					my_logger.warning(msg)
-					email_logmsg(msg)
-				# Update usage from rda#datashare and rda#stratus endpoints into table allusage
-				if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
-					update_allusage(task_id)
-	else:
-		msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
-		my_logger.info(msg)
-		email_logmsg(msg)
+			# Get list of successful files transferred  for each Globus task id.
+			if not opts['task_only']:
+				endpoint_id = filters['filter_endpoint']
+				for i in range(len(transfer_tasks)):
+					task_id = transfer_tasks[i]['task_id']
+					bytes = transfer_tasks[i]['bytes_transferred']
+					data_transfers = get_successful_transfers(task_id)
+					if (len(data_transfers) > 0):
+						add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
+					else:
+						msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
+						my_logger.warning(msg)
+						email_logmsg(msg)
+					# Update usage from rda#datashare and rda#stratus endpoints into table allusage
+					if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+						update_allusage(task_id)
+		else:
+			msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
+			my_logger.info(msg)
+			email_logmsg(msg)
 	
 	return
 
@@ -714,7 +719,7 @@ def email_logmsg(msg):
 		pass		
 
 #=========================================================================================
-def set_filters(args):
+def set_filters(filter_args):
 	""" Set filters to pass to Globus transfer client """
 
 	my_logger.debug('[set_filters] Defining Globus API filters')
@@ -746,7 +751,6 @@ def parse_opts():
 	import textwrap
 	
 	from datetime import timedelta
-	global doprint, task_only
 
 	""" Parse command line arguments """
 	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
@@ -761,7 +765,6 @@ def parse_opts():
 	parser.add_argument('-u', '--user', action="store", help='GlobusID username')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
-	parser.add_argument('-p', '--print-task', action="store", help='Print task transfer details.  Default is False.')
 	parser.add_argument('-t', '--task-only', action="store_true", help='Collect task-level metrics only.  Does not collect file-level metrics.')
 	
 	if len(sys.argv)==1:
@@ -779,7 +782,6 @@ def parse_opts():
 	user = ''
 	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
 	end_date = datetime.utcnow().isoformat()
-	doprint = bool(False)
 	task_only = bool(False)
 
 	endpoints = []
@@ -806,8 +808,6 @@ def parse_opts():
 	if opts['end_date']:
 		end_date = format_date(opts['end_date'], date_fmt)
 		my_logger.info('END       : {0}'.format(end_date))
-	if opts['print_task']:
-		doprint = bool(True)
 	if opts['task_only']:
 		task_only = bool(True)
 
