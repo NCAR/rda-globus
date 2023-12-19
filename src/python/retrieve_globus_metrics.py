@@ -778,11 +778,10 @@ def parse_opts():
 	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	opts = vars(args)
 
-	if len(opts['endpoint_name']) > 3:
-		parser.error('A maximum of 3 endpoint names is allowed.')
-	
 	endpoints = []
 	if opts['endpoint_name']:
+		if len(opts['endpoint_name']) > 3:
+			parser.error('A maximum of 3 endpoint names is allowed.')
 		if(re.search(r'datashare', opts['endpoint_name'])):
 			endpoint = 'rda#datashare'
 		if(re.search(r'stratus', opts['endpoint_name'])):
