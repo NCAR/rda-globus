@@ -58,20 +58,20 @@ endpoint_id_stratus = MyEndpoints['rda#stratus']
 def main(opts):
 
 	# Loop through endpoints and get metrics for each
-	for i in range(len(opts['endpoints'])):
+	for ep in opts['endpoints']:
 		# set filters for Globus API
-		filter_args = {'endpoint_name': opts['endpoints'][i],
-			       'user': opts['user'],
+		filter_args = {'endpoint_name': ep,
+			       'owner_id': opts['owner_id'],
 			       'start_date': opts['start_date'],
 			       'end_date': opts['end_date']
 			      }
 		filters = set_filters(filter_args)
 
 		# Print opts to logger
-		msg = "ENDPOINT: {}\n".format(opts['endpoints'][i])
-		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[opts['endpoints'][i]])
-		if opts['user']:
-			msg += "USER: {}\n".format(opts['user'])
+		msg = "ENDPOINT: {}\n".format(ep)
+		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[ep])
+		if opts['owner_id']:
+			msg += "GLOBUS OWNER ID: {}\n".format(opts['owner_id'])
 		msg += "START: {}\n".format(opts['start_date'])
 		msg += "END: {}\n".format(opts['end_date'])
 		msg += "TASK ONLY: {}\n".format(opts['task_only'])
@@ -80,7 +80,7 @@ def main(opts):
 		# Print opts to email log (PBS)
 		email_logmsg(msg)
 
-		my_logger.info("Getting Globus metrics for endpoint {}".format(filters['filter_endpoint']))
+		my_logger.info("Getting Globus metrics for endpoint {} ({})".format(ep, filters['filter_endpoint']))
 	
 		# Get Globus transfer tasks
 		transfer_tasks = get_tasks(filters)
