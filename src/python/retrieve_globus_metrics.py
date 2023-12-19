@@ -782,13 +782,15 @@ def parse_opts():
 	if opts['endpoint_name']:
 		if len(opts['endpoint_name']) > 3:
 			parser.error('A maximum of 3 endpoint names is allowed.')
-		if(re.search(r'datashare', opts['endpoint_name'])):
-			endpoint = 'rda#datashare'
-		if(re.search(r'stratus', opts['endpoint_name'])):
-			endpoint = 'rda#stratus'
-		if(re.search(r'data_request', opts['endpoint_name'])):
-			endpoint = 'rda#data_request'
-		endpoints.append(endpoint)
+		
+		for ep in opts['endpoint_name']:
+			if(re.search(r'datashare', ep)):
+				endpoint = 'rda#datashare'
+			if(re.search(r'stratus', ep)):
+				endpoint = 'rda#stratus'
+			if(re.search(r'data_request', ep)):
+				endpoint = 'rda#data_request'
+			endpoints.append(endpoint)
 	else:
 		[endpoints.append(ep) for ep in all_endpoints]
 
