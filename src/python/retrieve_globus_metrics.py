@@ -36,16 +36,6 @@ import pytz
 import logging
 import logging.handlers
 
-# Task list keys to retain
-task_keys = ['status','bytes_transferred','task_id','owner_string',\
-	     'owner_id', 'type','request_time','completion_time','files',\
-	     'files_skipped','bytes_transferred',\
-	     'source_endpoint_id', 'source_endpoint_display_name', \
-	     'destination_endpoint_id']
-
-# Keys for individual Globus task IDs
-transfer_keys = ['destination_path','source_path', 'data_type']
-
 # All valid endpoints
 all_endpoints = ['rda#datashare', 'rda#stratus', 'rda#data_request']
 
@@ -150,6 +140,13 @@ def get_tasks(filters):
 def add_tasks(go_table, data):
 	""" Insert/update Globus transfer tasks in RDADB """
 	
+	# Task list keys to retain from Globus API response
+	task_keys = ['status','bytes_transferred','task_id','owner_string',\
+	             'owner_id', 'type','request_time','completion_time','files',\
+	             'files_skipped','bytes_transferred',\
+	             'source_endpoint_id', 'source_endpoint_display_name', \
+	             'destination_endpoint_id']
+
 	# Prepare database records
 	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
@@ -379,7 +376,9 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
 		return
 	
-	# Check if record already exists. Update if necessary.
+	# Keys to retain from Globus API response
+	transfer_keys = ['destination_path','source_path', 'data_type']
+
 	keys = transfer_keys
 	keys.extend(['task_id','file_name','rindex','dsid','size','count'])
 	keys_str = ",".join(keys)
