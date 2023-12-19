@@ -757,12 +757,10 @@ def parse_opts():
 	""" Parse command line arguments """
 
 	import argparse
-	import textwrap
-	
+	import textwrap	
 	from datetime import timedelta
 
-	""" Parse command line arguments """
-	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
+	desc = "Get Globus task transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
 	epilog = textwrap.dedent('''\
 	Example:
 	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
@@ -770,20 +768,19 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', '--endpoint-name', action="store", required=False, choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name ('datashare', 'stratus', or 'data_request')")
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name. Valid names are 'datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
 	parser.add_argument('-u', '--user', action="store", help='GlobusID username')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
 	parser.add_argument('-t', '--task-only', action="store_true", help='Collect task-level metrics only.  Does not collect file-level metrics.')
 	
-	if len(sys.argv)==1:
-		parser.print_help()
-		sys.exit(1)
-
 	args = parser.parse_args(sys.argv[1:])
 	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	opts = vars(args)
 
+	if len(opts['endpoint_name']) > 3:
+		parser.error('A maximum of 3 endpoint names is allowed.')
+	
 	endpoints = []
 	if opts['endpoint_name']:
 		if(re.search(r'datashare', opts['endpoint_name'])):
@@ -794,7 +791,7 @@ def parse_opts():
 			endpoint = 'rda#data_request'
 		endpoints.append(endpoint)
 	else:
-		endpoints.append(all_endpoints)
+		[endpoints.append(ep) for ep in all_endpoints]
 
 	opts.update({'endpoints': endpoints})
 	
