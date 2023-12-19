@@ -36,15 +36,10 @@ import pytz
 import logging
 import logging.handlers
 
-# Task list keys to retain
-task_keys = ['status','bytes_transferred','task_id','owner_string',\
-	     'owner_id', 'type','request_time','completion_time','files',\
-	     'files_skipped','bytes_transferred',\
-	     'source_endpoint_id', 'source_endpoint_display_name', \
-	     'destination_endpoint_id']
+my_logger = logging.getLogger(__name__)
 
-# Keys for individual Globus task IDs
-transfer_keys = ['destination_path','source_path', 'data_type']
+# All valid endpoints
+all_endpoints = ['rda#datashare', 'rda#stratus', 'rda#data_request']
 
 # Endpoint UUIDs
 endpoint_id_data_request = MyEndpoints['rda#data_request']
@@ -52,35 +47,61 @@ endpoint_id_datashare = MyEndpoints['rda#datashare']
 endpoint_id_stratus = MyEndpoints['rda#stratus']
 
 #=========================================================================================
-def main(filters):
+def main(opts):
 
-	# Get Globus transfer tasks
-	transfer_tasks = get_tasks(filters)
-	if doprint: print_doc(transfer_tasks, task_keys)
+	# Loop through endpoints and get metrics for each
+	for ep in opts['endpoints']:
+		# set filters for Globus API
+		filter_args = {'endpoint_name': ep,
+			       'owner_id': opts['owner_id'],
+			       'start_date': opts['start_date'],
+			       'end_date': opts['end_date']
+			      }
+		filters = set_filters(filter_args)
 
-	if len(transfer_tasks) > 0:
-		add_tasks('gotask', transfer_tasks)
+		# Print opts to logger
+		msg = "ENDPOINT: {}\n".format(ep)
+		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[ep])
+		if opts['owner_id']:
+			msg += "GLOBUS OWNER ID: {}\n".format(opts['owner_id'])
+		msg += "START: {}\n".format(opts['start_date'])
+		msg += "END: {}\n".format(opts['end_date'])
+		msg += "TASK ONLY: {}\n".format(opts['task_only'])
+		my_logger.info("\n{}".format(msg))
 
-		# Get list of successful files transferred  for each Globus task id.
-		if not task_only:
-			endpoint_id = filters['filter_endpoint']
-			for i in range(len(transfer_tasks)):
-				task_id = transfer_tasks[i]['task_id']
-				bytes = transfer_tasks[i]['bytes_transferred']
-				data_transfers = get_successful_transfers(task_id)
-				if (len(data_transfers) > 0):
-					add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
-				else:
-					msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
-					my_logger.warning(msg)
-					email_logmsg(msg)
-				# Update usage from rda#datashare and rda#stratus endpoints into table allusage
-				if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
-					update_allusage(task_id)
-	else:
-		msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
-		my_logger.info(msg)
+		# Print opts to email log (PBS)
 		email_logmsg(msg)
+
+		my_logger.info("Getting Globus metrics for endpoint {} ({})".format(ep, filters['filter_endpoint']))
+	
+		# Get Globus transfer tasks
+		transfer_tasks = get_tasks(filters)
+
+		if len(transfer_tasks) > 0:
+			add_tasks('gotask', transfer_tasks)
+
+			# Get list of successful files transferred  for each Globus task id.
+			if not opts['task_only']:
+				endpoint_id = filters['filter_endpoint']
+				for i in range(len(transfer_tasks)):
+					task_id = transfer_tasks[i]['task_id']
+					bytes = transfer_tasks[i]['bytes_transferred']
+					data_transfers = get_successful_transfers(task_id)
+					if (len(data_transfers) > 0):
+						add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
+					else:
+						msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
+						my_logger.warning(msg)
+						email_logmsg(msg)
+					# Update usage from rda#datashare and rda#stratus endpoints into table allusage
+					if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+						update_allusage(task_id)
+		else:
+			msg = "No transfer tasks found for endpoint {} ({}) and date range {}".format(ep, filters['filter_endpoint'], filters['filter_completion_time'])
+			my_logger.info(msg)
+			email_logmsg(msg)
+	
+	return
 
 #=========================================================================================
 def get_tasks(filters):
@@ -120,6 +141,13 @@ def get_tasks(filters):
 def add_tasks(go_table, data):
 	""" Insert/update Globus transfer tasks in RDADB """
 	
+	# Task list keys to retain from Globus API response
+	task_keys = ['status','bytes_transferred','task_id','owner_string',\
+	             'owner_id', 'type','request_time','completion_time','files',\
+	             'files_skipped','bytes_transferred',\
+	             'source_endpoint_id', 'source_endpoint_display_name', \
+	             'destination_endpoint_id']
+
 	# Prepare database records
 	if (len(data) >= 1):
 		records = create_recs(data, task_keys)
@@ -216,32 +244,6 @@ def get_successful_transfers(task_id):
 	# return all successful transfers
 	return transfers
 
-#=========================================================================================
-def handle_error(r, data):
-	""" Handle errors returned by API resource
-
-	Example:
-	   Verify that task id exists.  Response will be as follows if not:
-	   r.status_code = 404
-	   r.headers['x-transfer-api-error'] = 'TaskNotFound'
-	   data['code'] = 'TaskNotFound'
-	   data['message'] = 'Task ID <task_id> not found'
-	   data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
-
-	   Also, for failed tasks, the task ID will exist, but response will have zero content:
-	   len(data['DATA']) = 0
-	"""
-
-	msg = "Error {0}: {1}".format(str(r.status_code), data['message'])
-	msg += " Resource: {0}".format(data['resource'])
-	my_logger.error(msg)
-	error_code = r.headers['x-transfer-api-error']
-	
-	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
-		sys.exit()
-	else:
-		return
-	
 #=========================================================================================
 def prepare_transfer_recs(data, task_id, bytes, endpoint):
 	""" Parse file names in data_transfers dictionary """
@@ -375,7 +377,9 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
 		return
 	
-	# Check if record already exists. Update if necessary.
+	# Keys to retain from Globus API response
+	transfer_keys = ['destination_path','source_path', 'data_type']
+
 	keys = transfer_keys
 	keys.extend(['task_id','file_name','rindex','dsid','size','count'])
 	keys_str = ",".join(keys)
@@ -412,7 +416,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		file_name = pathsplit.pop()
 		source_path = "/".join(pathsplit)
 		dsrqst_rec.append({'task_id': task_id,
-		                   'data_type': records[0]['DATA_TYPE'],
+		                   'data_type': records[0]['data_type'],
 		                   'destination_path': records[0]['destination_path'],
 		                   'source_path': source_path,
 		                   'file_name': records[0]['file_name'],
@@ -686,6 +690,32 @@ def print_doc(data, keys):
 				continue
 
 #=========================================================================================
+def handle_error(r, data):
+	""" Handle errors returned by API resource
+
+	Example:
+	   Verify that task id exists.  Response will be as follows if not:
+	   r.status_code = 404
+	   r.headers['x-transfer-api-error'] = 'TaskNotFound'
+	   data['code'] = 'TaskNotFound'
+	   data['message'] = 'Task ID <task_id> not found'
+	   data['resource'] = '/endpoint_manager/task/<task_id>/successful_transfers'
+
+	   Also, for failed tasks, the task ID will exist, but response will have zero content:
+	   len(data['DATA']) = 0
+	"""
+
+	msg = "Error {0}: {1}".format(str(r.status_code), data['message'])
+	msg += " Resource: {0}".format(data['resource'])
+	my_logger.error(msg)
+	error_code = r.headers['x-transfer-api-error']
+	
+	if (error_code == 'EndpointNotFound' or error_code == 'ServiceUnavailable'):
+		sys.exit()
+	else:
+		return
+	
+#=========================================================================================
 def email_logmsg(msg):
 	""" Send log message in email """
 
@@ -699,24 +729,24 @@ def email_logmsg(msg):
 		pass		
 
 #=========================================================================================
-def set_filters(args):
+def set_filters(filter_args):
 	""" Set filters to pass to Globus transfer client """
 
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
-	if (args['endpointID']): filters['filter_endpoint'] = args['endpointID']
-	if (args['user'] != ''): filters['filter_username'] = args['user']
-	if (args['start'] != ''):
-		if (args['end'] != ''):
-			filters['filter_completion_time'] = "{0},{1}".format(args['start'], args['end'])
+	if (filter_args['endpoint_name']): filters['filter_endpoint'] = MyEndpoints[filter_args['endpoint_name']]
+	if (filter_args['owner_id'] != ''): filters['filter_owner_id'] = filter_args['owner_id']
+	if (filter_args['start_date'] != ''):
+		if (filter_args['end_date'] != ''):
+			filters['filter_completion_time'] = "{0},{1}".format(filter_args['start_date'], filter_args['end_date'])
 		else:
-			filters['filter_completion_time'] = "{0}".format(args['start'])
+			filters['filter_completion_time'] = "{0}".format(filter_args['start_date'])
 	else:
-		if (args['end'] !=''):
-			filters['filter_completion_time'] = ",{0}".format(args['end'])
+		if (filter_args['end_date'] !=''):
+			filters['filter_completion_time'] = ",{0}".format(filter_args['end_date'])
 
-	my_logger.info('FILTERS   :')
+	my_logger.debug('FILTERS   :')
 	for key in filters:
 		msg = '{0}: {1}'.format(key,filters[key])
 		my_logger.debug(msg)
@@ -724,17 +754,25 @@ def set_filters(args):
 	return filters
 
 #=========================================================================================
+def configure_email_log():
+	""" Set up email logging if dscheck record exists (PBS jobs only) """
+
+	# Check for dscheck record
+	condition = "command LIKE '%retrieve_globus_metrics%'"
+	ckrec = pgget('dscheck', 'cindex,command', condition)
+	if (len(ckrec) > 0):
+		PGLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found with dscheck index {1}".format(PGLOG['DSCHECK']['cindex']))
+
+#=========================================================================================
 def parse_opts():
 	""" Parse command line arguments """
 
 	import argparse
-	import textwrap
-	
+	import textwrap	
 	from datetime import timedelta
-	global doprint, task_only
 
-	""" Parse command line arguments """
-	desc = "Request transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
+	desc = "Get Globus task transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
 	epilog = textwrap.dedent('''\
 	Example:
 	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
@@ -742,89 +780,51 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', action="store", dest="ENDPOINT", required=True, help='RDA shared endpoint (canonical name), e.g. datashare')
-	parser.add_argument('-u', action="store", dest="USERNAME", help='GlobusID username')
-	parser.add_argument('-s', action="store", dest="STARTDATE", help='Begin date for search.  Default is 30 days prior.')
-	parser.add_argument('-e', action="store", dest="ENDDATE", help='End date for search.  Default is current date.')
-	parser.add_argument('-p', action="store", dest="PRINTINFO", help='Print task transfer details.  Default is False.')
-	parser.add_argument('-to', action="store_true", dest="TASKONLY", help='Collect task-level metrics only.  Does not collect file-level metrics.')
-	
-	if len(sys.argv)==1:
-		parser.print_help()
-		sys.exit(1)
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name. Valid names are 'datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
+	parser.add_argument('-o', '--owner-id', action="store", help='A Globus Auth identity id.')
+	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
+	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
+	parser.add_argument('-t', '--task-only', action="store_true", help='Collect task-level metrics only.  Does not collect file-level metrics.')
+	parser.add_argument('-l', '--loglevel', default="info", choices=['debug', 'info', 'warning', 'error', 'critical'], help='Set the logging level.  Default = info.')
 
 	args = parser.parse_args(sys.argv[1:])
-	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	opts = vars(args)
 
-	date_fmt = "%Y-%m-%d"
+	endpoints = []
+	if opts['endpoint_name']:
+		if len(opts['endpoint_name']) > 3:
+			parser.error('A maximum of 3 endpoint names is allowed.')
+		
+		for ep in opts['endpoint_name']:
+			if(re.search(r'datashare', ep)):
+				endpoint = 'rda#datashare'
+			if(re.search(r'stratus', ep)):
+				endpoint = 'rda#stratus'
+			if(re.search(r'data_request', ep)):
+				endpoint = 'rda#data_request'
+			endpoints.append(endpoint)
+	else:
+		[endpoints.append(ep) for ep in all_endpoints]
 
-	# Default arguments.  Start date = 30 days ago, to cover full 30-day history in 
+	opts.update({'endpoints': endpoints})
+	
+	# Default start and end dates.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
-	user = ''
 	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
 	end_date = datetime.utcnow().isoformat()
-	doprint = bool(False)
-	task_only = bool(False)
+	date_fmt = "%Y-%m-%d"
 
-	if opts['ENDPOINT']:
-		if(re.search(r'datashare', opts['ENDPOINT'])):
-			endpoint = 'rda#datashare'
-		if(re.search(r'stratus', opts['ENDPOINT'])):
-			endpoint = 'rda#stratus'
-		if(re.search(r'data_request', opts['ENDPOINT'])):
-			endpoint = 'rda#data_request'
-		endpointID = MyEndpoints[endpoint]
-		my_logger.info('ENDPOINT  : {0}'.format(endpoint))
-		my_logger.info('ENDPOINT ID: {0}'.format(endpointID))
-	if opts['USERNAME']:
-		user = opts['USERNAME']
-		my_logger.info('USER      : {0}'.format(user))
-	if opts['STARTDATE']:
-		start_date = format_date(opts['STARTDATE'], date_fmt)
-		my_logger.info('START     : {0}'.format(start_date))
-	if opts['ENDDATE']:
-		end_date = format_date(opts['ENDDATE'], date_fmt)
-		my_logger.info('END       : {0}'.format(end_date))
-	if opts['PRINTINFO']:
-		doprint = bool(True)
-	if opts['TASKONLY']:
-		task_only = bool(True)
-			
-	print ('ENDPOINT   :', endpoint)
-	print ('ENDPOINT ID:', endpointID)
-	print ('USER       :', user)
-	print ('START      :', start_date)
-	print ('END        :', end_date)
-	print ('PRINT      :', doprint)
-	print ('TASK ONLY  :', task_only)
+	if opts['start_date']:
+		opts['start_date'] = format_date(opts['start_date'], date_fmt)
+	else:
+		opts['start_date'] = start_date
 
-	configure_email_log(opts['ENDPOINT'])
+	if opts['end_date']:
+		opts['end_date'] = format_date(opts['end_date'], date_fmt)
+	else:
+		opts['end_date'] = end_date
 
-	msg_opts = "ENDPOINT: {}\n".format(endpoint)
-	msg_opts += "ENDPOINT ID: {}\n".format(endpointID)
-	msg_opts += "USER: {}\n".format(user)
-	msg_opts += "START: {}\n".format(start_date)
-	msg_opts += "END: {}\n".format(end_date)
-	msg_opts += "TASK ONLY: {}\n".format(task_only)
-	email_logmsg(msg_opts)
-
-	return {'endpoint': endpoint, \
-	        'endpointID': endpointID, \
-            'user': user, \
-            'start': start_date, \
-            'end': end_date}
-
-#=========================================================================================
-def configure_email_log(endpoint):
-	""" Set up email logging if dscheck record exists (PBS jobs only) """
-
-	# Check for dscheck record
-	condition = "command LIKE '%retrieve_globus_metrics%' and argv LIKE '%{}%'".format(endpoint)
-	ckrec = pgget('dscheck', 'cindex,command', condition)
-	if (len(ckrec) > 0):
-		PGLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found for endpoint {0} with dscheck index {1}".format(endpoint, PGLOG['DSCHECK']['cindex']))
+	return opts
 
 #=========================================================================================
 def configure_log(**kwargs):
@@ -832,19 +832,12 @@ def configure_log(**kwargs):
 
 	LOGFILE = 'retrieve_globus_metrics.log'
 	
-	if 'level' in kwargs:
-		loglevel = kwargs['level']
+	if 'loglevel' in kwargs:
+		loglevel = kwargs['loglevel']
 	else:
 		loglevel = 'info'
 
-	LEVELS = { 'debug':logging.DEBUG,
-               'info':logging.INFO,
-               'warning':logging.WARNING,
-               'error':logging.ERROR,
-               'critical':logging.CRITICAL,
-             }
-
-	level = LEVELS.get(loglevel, logging.INFO)
+	level = getattr(logging, loglevel.upper())
 	my_logger.setLevel(level)
 
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -854,6 +847,12 @@ def configure_log(**kwargs):
 	rfh.setLevel(level)
 	rfh.setFormatter(formatter)
 	my_logger.addHandler(rfh)
+
+	""" stdout handler """
+	stdout_handler = logging.StreamHandler(sys.stdout)
+	stdout_handler.setLevel(level)
+	stdout_handler.setFormatter(formatter)
+	my_logger.addHandler(stdout_handler)
 	
 	""" Handler to send log messages to email address (rda-work only) """
 	if (socket.gethostname() == 'rda-work.ucar.edu'):
@@ -868,12 +867,8 @@ def configure_log(**kwargs):
 	return
 
 #=========================================================================================
-""" Set up logging """
-my_logger = logging.getLogger(__name__)
-configure_log(level='info')
-
 if __name__ == "__main__":
-	args = parse_opts()
-	filters = set_filters(args)
-	main(filters)
-	
+	opts = parse_opts()
+	configure_log(loglevel=opts['loglevel'])
+	configure_email_log()
+	main(opts)	
