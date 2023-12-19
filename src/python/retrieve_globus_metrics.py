@@ -68,7 +68,7 @@ def main(opts):
 		filters = set_filters(filter_args)
 
 		# Print opts to logger
-		msg = "ENDPOINT: {}\n".format(ep)
+		msg = "\nENDPOINT: {}\n".format(ep)
 		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[ep])
 		if opts['owner_id']:
 			msg += "GLOBUS OWNER ID: {}\n".format(opts['owner_id'])
@@ -105,7 +105,7 @@ def main(opts):
 					if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
 						update_allusage(task_id)
 		else:
-			msg = "No transfer tasks found for endpoint {} and date range {}".format(filters['filter_endpoint'], filters['filter_completion_time'])
+			msg = "No transfer tasks found for endpoint {} ({}) and date range {}".format(ep, filters['filter_endpoint'], filters['filter_completion_time'])
 			my_logger.info(msg)
 			email_logmsg(msg)
 	
