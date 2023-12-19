@@ -68,14 +68,15 @@ def main(opts):
 		filters = set_filters(filter_args)
 
 		# Print opts to logger
-		msg = "\nENDPOINT: {}\n".format(ep)
+		msg = "ENDPOINT: {}\n".format(ep)
 		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[ep])
 		if opts['owner_id']:
 			msg += "GLOBUS OWNER ID: {}\n".format(opts['owner_id'])
 		msg += "START: {}\n".format(opts['start_date'])
 		msg += "END: {}\n".format(opts['end_date'])
 		msg += "TASK ONLY: {}\n".format(opts['task_only'])
-		my_logger.info(msg)
+		my_logger.info("\n{}".format(msg))
+		print(msg)
 
 		# Print opts to email log (PBS)
 		email_logmsg(msg)
