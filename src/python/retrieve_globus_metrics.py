@@ -734,16 +734,16 @@ def set_filters(filter_args):
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
-	if (args['endpoint_name']): filters['filter_endpoint'] = MyEndpoints["args['endpoint_name']"]
-	if (args['user'] != ''): filters['filter_username'] = args['user']
-	if (args['start_date'] != ''):
-		if (args['end_date'] != ''):
-			filters['filter_completion_time'] = "{0},{1}".format(args['start_date'], args['end_date'])
+	if (filter_args['endpoint_name']): filters['filter_endpoint'] = MyEndpoints[filter_args['endpoint_name']]
+	if (filter_args['owner_id'] != ''): filters['filter_owner_id'] = filter_args['owner_id']
+	if (filter_args['start_date'] != ''):
+		if (filter_args['end_date'] != ''):
+			filters['filter_completion_time'] = "{0},{1}".format(filter_args['start_date'], filter_args['end_date'])
 		else:
-			filters['filter_completion_time'] = "{0}".format(args['start_date'])
+			filters['filter_completion_time'] = "{0}".format(filter_args['start_date'])
 	else:
-		if (args['end_date'] !=''):
-			filters['filter_completion_time'] = ",{0}".format(args['end_date'])
+		if (filter_args['end_date'] !=''):
+			filters['filter_completion_time'] = ",{0}".format(filter_args['end_date'])
 
 	my_logger.debug('FILTERS   :')
 	for key in filters:
@@ -769,7 +769,7 @@ def parse_opts():
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
 	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name. Valid names are 'datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
-	parser.add_argument('-u', '--user', action="store", help='GlobusID username')
+	parser.add_argument('-o', '--owner-id', action="store", help='A Globus Auth identity id.')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
 	parser.add_argument('-t', '--task-only', action="store_true", help='Collect task-level metrics only.  Does not collect file-level metrics.')
