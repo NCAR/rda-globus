@@ -36,6 +36,8 @@ import pytz
 import logging
 import logging.handlers
 
+my_logger = logging.getLogger(__name__)
+
 # All valid endpoints
 all_endpoints = ['rda#datashare', 'rda#stratus', 'rda#data_request']
 
@@ -66,7 +68,6 @@ def main(opts):
 		msg += "END: {}\n".format(opts['end_date'])
 		msg += "TASK ONLY: {}\n".format(opts['task_only'])
 		my_logger.info("\n{}".format(msg))
-		print(msg)
 
 		# Print opts to email log (PBS)
 		email_logmsg(msg)
@@ -753,6 +754,17 @@ def set_filters(filter_args):
 	return filters
 
 #=========================================================================================
+def configure_email_log():
+	""" Set up email logging if dscheck record exists (PBS jobs only) """
+
+	# Check for dscheck record
+	condition = "command LIKE '%retrieve_globus_metrics%'"
+	ckrec = pgget('dscheck', 'cindex,command', condition)
+	if (len(ckrec) > 0):
+		PGLOG['DSCHECK'] = ckrec
+		my_logger.info("[configure_log] dscheck record found with dscheck index {1}".format(PGLOG['DSCHECK']['cindex']))
+
+#=========================================================================================
 def parse_opts():
 	""" Parse command line arguments """
 
@@ -773,9 +785,9 @@ def parse_opts():
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
 	parser.add_argument('-t', '--task-only', action="store_true", help='Collect task-level metrics only.  Does not collect file-level metrics.')
-	
+	parser.add_argument('-l', '--loglevel', default="info", choices=['debug', 'info', 'warning', 'error', 'critical'], help='Set the logging level.  Default = info.')
+
 	args = parser.parse_args(sys.argv[1:])
-	my_logger.info("{0}: {1}".format(sys.argv[0], args))
 	opts = vars(args)
 
 	endpoints = []
@@ -815,35 +827,17 @@ def parse_opts():
 	return opts
 
 #=========================================================================================
-def configure_email_log():
-	""" Set up email logging if dscheck record exists (PBS jobs only) """
-
-	# Check for dscheck record
-	condition = "command LIKE '%retrieve_globus_metrics%'"
-	ckrec = pgget('dscheck', 'cindex,command', condition)
-	if (len(ckrec) > 0):
-		PGLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {1}".format(PGLOG['DSCHECK']['cindex']))
-
-#=========================================================================================
 def configure_log(**kwargs):
 	""" Set up logging configuration """
 
 	LOGFILE = 'retrieve_globus_metrics.log'
 	
-	if 'level' in kwargs:
-		loglevel = kwargs['level']
+	if 'loglevel' in kwargs:
+		loglevel = kwargs['loglevel']
 	else:
 		loglevel = 'info'
 
-	LEVELS = { 'debug':logging.DEBUG,
-               'info':logging.INFO,
-               'warning':logging.WARNING,
-               'error':logging.ERROR,
-               'critical':logging.CRITICAL,
-             }
-
-	level = LEVELS.get(loglevel, logging.INFO)
+	level = getattr(logging, loglevel.upper())
 	my_logger.setLevel(level)
 
 	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -853,6 +847,12 @@ def configure_log(**kwargs):
 	rfh.setLevel(level)
 	rfh.setFormatter(formatter)
 	my_logger.addHandler(rfh)
+
+	""" stdout handler """
+	stdout_handler = logging.StreamHandler(sys.stdout)
+	stdout_handler.setLevel(level)
+	stdout_handler.setFormatter(formatter)
+	my_logger.addHandler(stdout_handler)
 	
 	""" Handler to send log messages to email address (rda-work only) """
 	if (socket.gethostname() == 'rda-work.ucar.edu'):
@@ -867,11 +867,8 @@ def configure_log(**kwargs):
 	return
 
 #=========================================================================================
-""" Set up logging """
-my_logger = logging.getLogger(__name__)
-configure_log(level='info')
-configure_email_log()
-
 if __name__ == "__main__":
 	opts = parse_opts()
+	configure_log(loglevel=opts['loglevel'])
+	configure_email_log()
 	main(opts)	
