@@ -762,7 +762,7 @@ def configure_email_log():
 	ckrec = pgget('dscheck', 'cindex,command', condition)
 	if (len(ckrec) > 0):
 		PGLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {1}".format(PGLOG['DSCHECK']['cindex']))
+		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(PGLOG['DSCHECK']['cindex']))
 
 #=========================================================================================
 def parse_opts():
