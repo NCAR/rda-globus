@@ -46,6 +46,7 @@ LOGPATH = os.path.join(logdir, 'globus')
 GLOBUS_DATA_DOMAIN = 'https://data.rda.ucar.edu'
 GLOBUS_STRATUS_DOMAIN = 'https://stratus.rda.ucar.edu'
 GLOBUS_REQUEST_DOMAIN = 'https://request.rda.ucar.edu'
+CGD_HTTPS_DOMAIN = 'https://g-4b805e.7a577b.6fbd.data.globus.org'
 
 """ Endpoint IDs """
 RDA_DATASET_ENDPOINT = 'b6b5d5e8-eb14-4f6b-8928-c02429d67998'
@@ -57,6 +58,7 @@ RDA_QUASAR_ENDPOINT = 'e50caa88-feae-11ea-81a2-0e2f230cc907'
 RDA_QUASAR_DR_ENDPOINT = '4c42c32c-feaf-11ea-81a2-0e2f230cc907'
 
 RDA_STRATUS_ENDPOINT = 'be4aa6a8-9e35-11eb-8a8e-d70d98a40c8d'
+GLOBUS_CGD_ENDPOINT_ID = '9ea24f70-a6d0-4818-b593-bd9a522b6490'
 
 """ Legacy endpoints no longer used """
 RDA_DATASET_ENDPOINT_LEGACY = '2869611a-36aa-11e8-b95e-0ac6873fc732'
@@ -113,7 +115,9 @@ MyEndpoints = {
     'rda-quasar': RDA_QUASAR_ENDPOINT,
     'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT,
     'rda-stratus': RDA_STRATUS_ENDPOINT,
+    'rda-cgd': GLOBUS_CGD_ENDPOINT_ID,
     'rda#datashare': RDA_DATASET_ENDPOINT,
     'rda#data_request': RDA_DSRQST_ENDPOINT,
-    'rda#stratus': RDA_STRATUS_ENDPOINT
+    'rda#stratus': RDA_STRATUS_ENDPOINT,
+    'rda#cgd': GLOBUS_CGD_ENDPOINT_ID
 }
