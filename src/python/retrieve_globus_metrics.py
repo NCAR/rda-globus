@@ -265,23 +265,17 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			# Query file size from wfile.data_size
 		    
 			# Get dsid from source_path
-			a = re.search(r'/ds\d{3}\.\d{1}/', source_path)
+			if PGLOG['NEWDSID']:
+				a = re.search(r'/(?P<dsid>[a-z]{1}\d{6})/', source_path)
+			else:
+				a = re.search(r'/(?P<dsid>ds\d{3}\.\d{1})/', source_path)
 			if a:
-				b = re.search(r'ds\d{3}\.\d{1}', a.group())
+				dsid = a.group('dsid')
 			else:
 				msg = "[prepare_transfer_recs] Dataset ID not found"
 				my_logger.warning(msg)
 				return transfer_recs
 		    
-			try:
-				dsid = b.group()
-			except AttributeError as attr_err:
-				msg = "[prepare_transfer_recs] {}".format(attr_err)
-				my_logger.warning(msg)
-				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
-				my_logger.info(msg)
-				return transfer_recs
-
 			# Get transferred file name
 			c = re.split(a.group(), source_path)
 			if c:
@@ -313,23 +307,14 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		# rda#data_request
 		if (endpoint == endpoint_id_data_request):
 			# Get request ID from source_path
-			a = re.search(r'/[A-Z]+\d+/', source_path)
+			a = re.search(r'/[A-Z]+(?P<rindex>\d+)/', source_path)
 			if a:
-				b = re.search(r'\d+', a.group(0))
+				rindex = a.group('rindex')
 			else:
 				msg = "[prepare_transfer_recs] Request ID not found"
 				my_logger.warning(msg)
 				return transfer_recs
 			
-			try:
-				rindex = int(b.group())
-			except AttributeError as attr_err:
-				msg = "[prepare_transfer_recs] {}".format(attr_err)
-				my_logger.warning(msg)
-				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
-				my_logger.info(msg)
-				return transfer_recs
-
 			condition = "rindex='{0}'".format(rindex)
 			myrec = pgget('dsrqst', 'dsid', condition)
 			if (len(myrec) == 0):
