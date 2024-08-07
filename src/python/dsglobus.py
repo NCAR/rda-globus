@@ -164,10 +164,12 @@ def get_tokens(client_id):
 
 	if client_id == MyGlobus['rda_quasar_client_id']:
 		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_STORAGE_ADAPTER))
-		tokens = token_file_adapter.get_token_data("transfer.api.globus.org")
-		transfer_rt = tokens['refresh_token']
-		transfer_at = tokens['access_token']
-		transfer_expires_at = tokens['expires_at_seconds']
+		transfer_tokens = token_file_adapter.get_token_data("transfer.api.globus.org")
+		transfer_rt = transfer_tokens['refresh_token']
+		transfer_at = transfer_tokens['access_token']
+		transfer_expires_at = transfer_tokens['expires_at_seconds']
+		auth_tokens = token_file_adapter.get_token_data("auth.globus.org")
+		auth_rt = auth_tokens['refresh_token']
 	elif client_id == MyGlobus['client_id']:
 		transfer_rt = MyGlobus['transfer_refresh_token']
 		auth_rt = MyGlobus['auth_refresh_token']
