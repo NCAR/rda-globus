@@ -60,21 +60,8 @@ RDA_QUASAR_DR_ENDPOINT = '4c42c32c-feaf-11ea-81a2-0e2f230cc907'
 RDA_STRATUS_ENDPOINT = 'be4aa6a8-9e35-11eb-8a8e-d70d98a40c8d'
 GLOBUS_CGD_ENDPOINT_ID = '11651c26-80c2-4dac-a236-7755530731ac'
 
-""" Legacy endpoints no longer used """
-RDA_DATASET_ENDPOINT_LEGACY = '2869611a-36aa-11e8-b95e-0ac6873fc732'
-RDA_DSRQST_ENDPOINT_LEGACY = '68823254-36aa-11e8-b95e-0ac6873fc732'
-RDA_GLADE_ENDPOINT_LEGACY = 'c3dd5dac-0279-11eb-892e-0a5521ff3f4b'
-
-""" Older legacy endpoints """
-RDA_DATASET_ENDPOINT_LEGACY1 = 'db57de42-6d04-11e5-ba46-22000b92c6ec'
-RDA_DATASET_ENDPOINT_LEGACY2 = '2869611a-36aa-11e8-b95e-0ac6873fc732'
-RDA_DATASET_ENDPOINT_LEGACY3 = '1e128d3c-852d-11e8-9546-0a6d4e044368'
-RDA_DSRQST_ENDPOINT_LEGACY1 = 'd20e610e-6d04-11e5-ba46-22000b92c6ec'
-RDA_DSRQST_ENDPOINT_LEGACY2 = '68823254-36aa-11e8-b95e-0ac6873fc732'
-RDA_DSRQST_ENDPOINT_LEGACY3 = 'e61f9cde-8537-11e8-9546-0a6d4e044368'
-
-""" Authorization header for vanilla API requests.  No longer used """
-# headers = {'Authorization':'Bearer '+TRANSFER_TOKEN}
+""" Token storage adapters """
+RDA_QUASAR_TOKEN_STORAGE_ADAPTER = "/glade/u/home/rdadata/lib/python/globus_rda_quasar_tokens.json"
 
 MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
@@ -95,8 +82,6 @@ MyGlobus = {
    'globusURL': GLOBUS_APP_URL,
    'globus_share_url': GLOBUS_SHARE_URL,
    'rda_quasar_client_id': RDA_QUASAR_CLIENT_ID,
-   'transfer_rt_quasar': TRANSFER_RT_QUASAR,
-   'auth_rt_quasar': AUTH_RT_QUASAR,
    'rda_glade_endpoint': RDA_GLADE_ENDPOINT,
    'quasar_endpoint': RDA_QUASAR_ENDPOINT,
    'quasar_dr_endpoint': RDA_QUASAR_DR_ENDPOINT,
