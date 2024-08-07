@@ -72,7 +72,7 @@ def get_transfer_client(client_id):
 	transfer_expires_at = tokens['transfer_expires_at']
 
 	if client_id == MyGlobus['rda_quasar_client_id']:
-		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_FILE_ADAPTER))
+		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_STORAGE_ADAPTER))
 		tc_authorizer = RefreshTokenAuthorizer(
 			transfer_refresh_token, 
 			client,
@@ -163,7 +163,7 @@ def get_tokens(client_id):
 		sys.exit(1)
 
 	if client_id == MyGlobus['rda_quasar_client_id']:
-		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_FILE_ADAPTER))
+		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_STORAGE_ADAPTER))
 		tokens = token_file_adapter.get_token_data("transfer.api.globus.org")
 		transfer_rt = tokens['refresh_token']
 		transfer_at = tokens['access_token']
