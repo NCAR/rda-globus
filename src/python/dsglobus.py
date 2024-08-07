@@ -38,11 +38,13 @@ import textwrap
 import six
 from datetime import datetime
 
-from MyGlobus import MyGlobus, MyEndpoints, LOGPATH
+from MyGlobus import MyGlobus, MyEndpoints, LOGPATH, RDA_QUASAR_TOKEN_STORAGE_ADAPTER
 
 from globus_sdk import (TransferClient, TransferData, DeleteData, 
 						RefreshTokenAuthorizer, AuthClient, 
                         GlobusError, GlobusAPIError, NetworkError)
+from globus_sdk.tokenstorage import SimpleJSONFileAdapter
+
 from globus_utils import load_app_client, load_rda_native_client
 
 #=========================================================================================
@@ -66,8 +68,24 @@ def get_transfer_client(client_id):
 	client = load_client(client_id)
 	tokens = get_tokens(client_id)
 	transfer_refresh_token = tokens['transfer_rt']
+	transfer_access_token = tokens['transfer_at']
+	transfer_expires_at = tokens['transfer_expires_at']
 
-	tc_authorizer = RefreshTokenAuthorizer(transfer_refresh_token, client)
+	if client_id == MyGlobus['rda_quasar_client_id']:
+		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_STORAGE_ADAPTER))
+		tc_authorizer = RefreshTokenAuthorizer(
+			transfer_refresh_token, 
+			client,
+			access_token = transfer_access_token,
+			expires_at = transfer_expires_at,
+			on_refresh = token_file_adapter.on_refresh
+		)
+	else:
+		tc_authorizer = RefreshTokenAuthorizer(
+			transfer_refresh_token, 
+			client
+		)
+
 	transfer_client = TransferClient(authorizer=tc_authorizer)
 
 	return transfer_client
@@ -145,17 +163,28 @@ def get_tokens(client_id):
 		sys.exit(1)
 
 	if client_id == MyGlobus['rda_quasar_client_id']:
-		transfer_rt = MyGlobus['transfer_rt_quasar']
-		auth_rt = MyGlobus['auth_rt_quasar']
+		token_file_adapter = SimpleJSONFileAdapter(os.path.expanduser(RDA_QUASAR_TOKEN_STORAGE_ADAPTER))
+		transfer_tokens = token_file_adapter.get_token_data("transfer.api.globus.org")
+		transfer_rt = transfer_tokens['refresh_token']
+		transfer_at = transfer_tokens['access_token']
+		transfer_expires_at = transfer_tokens['expires_at_seconds']
+		auth_tokens = token_file_adapter.get_token_data("auth.globus.org")
+		auth_rt = auth_tokens['refresh_token']
 	elif client_id == MyGlobus['client_id']:
 		transfer_rt = MyGlobus['transfer_refresh_token']
 		auth_rt = MyGlobus['auth_refresh_token']
+		transfer_at = None
+		transfer_expires_at = None
 	else:
 		my_logger.error("[get_tokens] Unknown client ID")
 		sys.exit(1)
 
-	tokens = {'transfer_rt': transfer_rt,
-	          'auth_rt': auth_rt}
+	tokens = {
+		'transfer_rt': transfer_rt,
+		'transfer_at': transfer_at,
+		'transfer_expires_at': transfer_expires_at,
+		'auth_rt': auth_rt
+		}
 
 	return tokens
 
