@@ -262,13 +262,10 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		pathsplit = source_path.split("/")
 
 		if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
-			# Query file size from wfile.data_size
+			# Query file size from wfile_dnnnnnn.data_size
 		    
 			# Get dsid from source_path
-			if PGLOG['NEWDSID']:
-				a = re.search(r'/(?P<dsid>[a-z]{1}\d{6})/', source_path)
-			else:
-				a = re.search(r'/(?P<dsid>ds\d{3}\.\d{1})/', source_path)
+			a = re.search(r'/(?P<dsid>[a-z]{1}\d{6})/', source_path)
 			if a:
 				dsid = a.group('dsid')
 			else:
@@ -288,8 +285,8 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				return transfer_recs
 			
 			field = 'wfile'
-			table = 'wfile'			
-			condition = "dsid='{0}' AND {1}='{2}'".format(dsid, field, tfile)
+			table = 'wfile_{}'.format(dsid)
+			condition = "wfile='{}'".format(tfile)
 			myrec = pgget(table, 'data_size', condition)
 			
 			if (len(myrec) > 0):
