@@ -23,9 +23,9 @@ if (path2 not in sys.path):
 	sys.path.append(path2)
 
 from MyGlobus import MyGlobus, MyEndpoints, LOGPATH
-from PgDBI import pgget, pgmget, pgadd, pgupdt
-from PgLOG import *
-from PgDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
+from rda_python_common.PgDBI import pgget, pgmget, pgadd, pgupdt
+from rda_python_common.PgDBI import build_customized_email, add_yearly_allusage, check_wuser_wuid
+from rda_python_common.PgLOG import *
 
 from globus_utils import load_app_client
 from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
