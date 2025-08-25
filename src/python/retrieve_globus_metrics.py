@@ -70,7 +70,7 @@ def main(opts):
 		my_logger.info("\n{}".format(msg))
 
 		# Print opts to email log (PBS)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
 
 		my_logger.info("Getting Globus metrics for endpoint {} ({})".format(ep, filters['filter_endpoint']))
 	
@@ -92,15 +92,17 @@ def main(opts):
 					else:
 						msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
 						my_logger.warning(msg)
-						email_logmsg(msg)
+						cache_email_logmsg(msg)
 					# Update usage from rda#datashare and rda#stratus endpoints into table allusage
 					if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
 						update_allusage(task_id)
 		else:
 			msg = "No transfer tasks found for endpoint {} ({}) and date range {}".format(ep, filters['filter_endpoint'], filters['filter_completion_time'])
 			my_logger.info(msg)
-			email_logmsg(msg)
+			cache_email_logmsg(msg)
 	
+	send_log_email()
+
 	return
 
 #=========================================================================================
@@ -118,7 +120,8 @@ def get_tasks(filters):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
+		send_log_email(error=e.message)
 		raise e
 	except NetworkError as e:
 		msg = ("[get_tasks] Network Error\n"
@@ -126,13 +129,15 @@ def get_tasks(filters):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
+		send_log_email(error=e.message)
 		raise e
 	except GlobusError as e:
 		msg = ("[get_tasks] Globus Error\n"
 		       "Error message: {}").format(e.message)
 		my_logger.exception(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
+		send_log_email(error=e.message)
 		raise e
 
 	return tasks
@@ -157,7 +162,7 @@ def add_tasks(go_table, data):
 	else:
 		msg = "[add_tasks] There are no transfer tasks in 'data'."
 		my_logger.warning(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
 		sys.exit()
 	
 	# Check if record already exists for each task id. Update if necessary.
@@ -199,12 +204,12 @@ def add_tasks(go_table, data):
 
 	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
 	my_logger.info(msg)
-	email_logmsg(msg)
+	cache_email_logmsg(msg)
 		
 	if (count_add == 0):
 		msg = "[add_tasks] No new Globus transfer tasks found."
 		my_logger.warning(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
 		
 	return
 
@@ -224,7 +229,7 @@ def get_successful_transfers(task_id):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
 		raise e
 	except NetworkError as e:
 		msg = ("[get_successful_transfers] Network Error\n"
@@ -232,13 +237,15 @@ def get_successful_transfers(task_id):
 		       "Error code: {}\n"
 		       "Error message: {}").format(e.http_status, e.code, e.message)
 		my_logger.error(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
+		send_log_email(error=e.message)
 		raise e
 	except GlobusError as e:
 		msg = ("[get_successful_transfers] Globus Error\n"
 		       "Error message: {}").format(e.message)
 		my_logger.exception(msg)
-		email_logmsg(msg)
+		cache_email_logmsg(msg)
+		send_log_email(error=e.message)
 		raise e
 
 	# return all successful transfers
@@ -353,7 +360,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if (len(records) == 0):
 			msg = "[add_successful_transfers] Task ID {}: transfer_recs is empty".format(task_id)
 			my_logger.warning(msg)
-			email_logmsg(msg)				
+			cache_email_logmsg(msg)				
 			return
 	else:
 		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
@@ -421,12 +428,14 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	
 	msg_add_updt = "[add_successful_transfers] Task ID {0}: {1} transfers added and {2} transfers updated".format(task_id, count_add, count_updt)
 	my_logger.info(msg_add_updt)
-	email_logmsg(msg_add_updt)
+	cache_email_logmsg(msg_add_updt)
 	
 	if (count_none > 0):
 		msg_none = "[add_successful_transfers] Task ID {0}: {1} transfers already up to date".format(task_id, count_none)
 		my_logger.info(msg_none)
-		email_logmsg(msg_none)
+		cache_email_logmsg(msg_none)
+
+	return
 	
 #=========================================================================================
 def update_allusage(task_id):
@@ -535,12 +544,14 @@ def update_allusage(task_id):
 			except Exception as e:
 				msg = "[update_allusage] Error adding/updating allusage record.\n{}".format(traceback.format_exc(e))
 				my_logger.error(msg)
-				email_logmsg(msg)
+				cache_email_logmsg(msg)
 
 	msg = "[update_allusage] Task ID {0}: {1}/{2} metrics added/updated in allusage table.".format(task_id, count_add, count_updt)
 	my_logger.info(msg)
-	email_logmsg(msg)
-	
+	cache_email_logmsg(msg)
+
+	return
+
 #=========================================================================================
 def format_date(date_str, fmt):
 	""" Convert date string into ISO 8601 format (YYYY-MM-DDTHH:MM:ss) """
@@ -609,7 +620,8 @@ def get_globus_email(data):
 		           "Error code: {}\n"
 		           "Error message: {}").format(e.http_status, e.code, e.message)
 			my_logger.error(msg)
-			email_logmsg(msg)
+			cache_email_logmsg(msg)
+			send_log_email(error=e.message)
 			raise e
 		except NetworkError as e:
 			msg = ("[get_globus_email] Network Error\n"
@@ -617,13 +629,15 @@ def get_globus_email(data):
 		           "Error code: {}\n"
 		           "Error message: {}").format(e.http_status, e.code, e.message)
 			my_logger.error(msg)
-			email_logmsg(msg)
+			cache_email_logmsg(msg)
+			send_log_email(error=e.message)
 			raise e
 		except GlobusError as e:
 			msg = ("[get_globus_email] Globus Error\n"
 		           "Error message: {}").format(e.message)
 			my_logger.exception(msg)
-			email_logmsg(msg)
+			cache_email_logmsg(msg)
+			send_log_email(error=e.message)
 			raise e
 
 		if 'email':
@@ -697,19 +711,6 @@ def handle_error(r, data):
 	else:
 		return
 	
-#=========================================================================================
-def email_logmsg(msg):
-	""" Send log message in email """
-
-	try:
-		if (PGLOG['DSCHECK']['cindex']):
-			PGLOG['EMLMSG'] += "{0}\n".format(msg)
-			subject = "Log from {}".format(get_command())
-			cond = "cindex = {}".format(PGLOG['DSCHECK']['cindex'])
-			build_customized_email('dscheck', 'einfo', cond, subject)
-	except TypeError:
-		pass		
-
 #=========================================================================================
 def set_filters(filter_args):
 	""" Set filters to pass to Globus transfer client """
