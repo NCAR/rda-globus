@@ -747,6 +747,29 @@ def configure_email_log():
 		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(PGLOG['DSCHECK']['cindex']))
 
 #=========================================================================================
+def cache_email_logmsg(msg, error=None):
+    """ Cache log message in email """
+    set_email(msg, EMLLOG|BRKLIN)
+    if error:
+        set_email(error, ERRLOG|BRKLIN)
+    return
+
+#=========================================================================================
+def send_log_email(error = None):
+    """ Send log message in email after processing is done """
+    subject = f"Log from {get_command()}"
+    if error: subject += f" - Error: {error}"
+    try:
+        if (PGLOG['DSCHECK']['cindex']):
+            cond = f"cindex = {PGLOG['DSCHECK']['cindex']}"
+            build_customized_email('dscheck', 'einfo', cond, subject)
+        else:
+             send_email(subject)
+    except TypeError:
+        pass
+    return
+
+#=========================================================================================
 def parse_opts():
 	""" Parse command line arguments """
 
