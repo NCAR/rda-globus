@@ -39,12 +39,14 @@ import logging.handlers
 my_logger = logging.getLogger(__name__)
 
 # All valid endpoints
-all_endpoints = ['rda#datashare', 'rda#stratus', 'rda#data_request']
+all_endpoints = ['gdex-data', 'gdex-request', 'rda#datashare', 'rda#stratus', 'rda#data_request']
 
 # Endpoint UUIDs
 endpoint_id_data_request = MyEndpoints['rda#data_request']
 endpoint_id_datashare = MyEndpoints['rda#datashare']
 endpoint_id_stratus = MyEndpoints['rda#stratus']
+endpoint_id_gdex_data = MyEndpoints['gdex-data']
+endpoint_id_gdex_request = MyEndpoints['gdex-request']
 
 #=========================================================================================
 def main(opts):
@@ -94,7 +96,7 @@ def main(opts):
 						my_logger.warning(msg)
 						cache_email_logmsg(msg)
 					# Update usage from rda#datashare and rda#stratus endpoints into table allusage
-					if (endpoint_id == endpoint_id_datashare or endpoint_id == endpoint_id_stratus):
+					if (endpoint_id in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data]):
 						update_allusage(task_id)
 		else:
 			msg = "No transfer tasks found for endpoint {} ({}) and date range {}".format(ep, filters['filter_endpoint'], filters['filter_completion_time'])
@@ -268,7 +270,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		data_type = data[i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
-		if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
+		if (endpoint in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data]):
 			# Query file size from wfile_dnnnnnn.data_size
 		    
 			# Get dsid from source_path
@@ -381,7 +383,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if searchObj:
 			continue
 		else:
-			if (endpoint == endpoint_id_datashare or endpoint == endpoint_id_stratus):
+			if (endpoint in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data]):
 				condition = "task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
 				myrec = pgget(go_table, keys_str, condition)
 				if (len(myrec) > 0):
@@ -586,6 +588,10 @@ def map_endpoint_names(data):
 
 	for i in range(len(data)):
 		source_endpoint_id = data[i]['source_endpoint_id']
+		if source_endpoint_id == MyEndpoints['gdex-data']:
+			data[i]['source_endpoint'] = 'gdex-data'
+		if source_endpoint_id == MyEndpoints['gdex-request']:
+			data[i]['source_endpoint'] = 'gdex-request'
 		if source_endpoint_id == MyEndpoints['rda#datashare']:
 			data[i]['source_endpoint'] = 'rda#datashare'
 		if source_endpoint_id == MyEndpoints['rda#stratus']:
@@ -786,7 +792,7 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request'], help="RDA shared endpoint canonical name. Valid names are 'datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request', 'gdex-data', 'gdex-request'], help="RDA shared endpoint canonical name. Valid names are 'gdex-data', 'gdex-request','datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
 	parser.add_argument('-o', '--owner-id', action="store", help='A Globus Auth identity id.')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
@@ -798,9 +804,9 @@ def parse_opts():
 
 	endpoints = []
 	if opts['endpoint_name']:
-		if len(opts['endpoint_name']) > 3:
-			parser.error('A maximum of 3 endpoint names is allowed.')
-		
+		if len(opts['endpoint_name']) > 5:
+			parser.error('A maximum of 5 endpoint names is allowed.')
+
 		for ep in opts['endpoint_name']:
 			if(re.search(r'datashare', ep)):
 				endpoint = 'rda#datashare'
