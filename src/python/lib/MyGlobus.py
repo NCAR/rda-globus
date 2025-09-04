@@ -60,6 +60,10 @@ RDA_QUASAR_DR_ENDPOINT = '4c42c32c-feaf-11ea-81a2-0e2f230cc907'
 RDA_STRATUS_ENDPOINT = 'be4aa6a8-9e35-11eb-8a8e-d70d98a40c8d'
 GLOBUS_CGD_ENDPOINT_ID = '11651c26-80c2-4dac-a236-7755530731ac'
 
+GDEX_DATASET_ENDPOINT = 'c4e40965-a024-43d7-bef4-6010f3731b61'
+GDEX_DSRQST_ENDPOINT = '0104eacd-94b4-4202-9966-817247f0ca8c'
+
+
 """ Token storage adapters """
 RDA_QUASAR_TOKEN_STORAGE_ADAPTER = "/glade/u/home/rdadata/lib/python/globus_rda_quasar_tokens.json"
 
@@ -104,5 +108,7 @@ MyEndpoints = {
     'rda#datashare': RDA_DATASET_ENDPOINT,
     'rda#data_request': RDA_DSRQST_ENDPOINT,
     'rda#stratus': RDA_STRATUS_ENDPOINT,
-    'rda#cgd': GLOBUS_CGD_ENDPOINT_ID
+    'rda#cgd': GLOBUS_CGD_ENDPOINT_ID,
+	'gdex-data': GDEX_DATASET_ENDPOINT,
+    'gdex-request': GDEX_DSRQST_ENDPOINT
 }
