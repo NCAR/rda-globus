@@ -39,14 +39,14 @@ import logging.handlers
 my_logger = logging.getLogger(__name__)
 
 # All valid endpoints
-all_endpoints = ['gdex-data', 'gdex-request', 'rda#datashare', 'rda#stratus', 'rda#data_request']
+all_endpoints = ['gdex-data', 'gdex-request', 'gdex-os', 'rda#datashare', 'rda#stratus']
 
 # Endpoint UUIDs
-endpoint_id_data_request = MyEndpoints['rda#data_request']
+endpoint_id_gdex_data = MyEndpoints['gdex-data']
+endpoint_id_gdex_os = MyEndpoints['gdex-os']
+endpoint_id_data_request = MyEndpoints['gdex-request']
 endpoint_id_datashare = MyEndpoints['rda#datashare']
 endpoint_id_stratus = MyEndpoints['rda#stratus']
-endpoint_id_gdex_data = MyEndpoints['gdex-data']
-endpoint_id_gdex_request = MyEndpoints['gdex-request']
 
 #=========================================================================================
 def main(opts):
@@ -96,7 +96,7 @@ def main(opts):
 						my_logger.warning(msg)
 						cache_email_logmsg(msg)
 					# Update usage from rda#datashare and rda#stratus endpoints into table allusage
-					if (endpoint_id in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data]):
+					if (endpoint_id in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data, endpoint_id_gdex_os]):
 						update_allusage(task_id)
 		else:
 			msg = "No transfer tasks found for endpoint {} ({}) and date range {}".format(ep, filters['filter_endpoint'], filters['filter_completion_time'])
@@ -270,7 +270,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		data_type = data[i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
-		if (endpoint in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data]):
+		if (endpoint in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data, endpoint_id_gdex_os]):
 			# Query file size from wfile_dnnnnnn.data_size
 		    
 			# Get dsid from source_path
@@ -383,7 +383,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if searchObj:
 			continue
 		else:
-			if (endpoint in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data]):
+			if (endpoint in [endpoint_id_datashare, endpoint_id_stratus, endpoint_id_gdex_data, endpoint_id_gdex_os]):
 				condition = "task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
 				myrec = pgget(go_table, keys_str, condition)
 				if (len(myrec) > 0):
