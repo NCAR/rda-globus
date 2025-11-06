@@ -16,7 +16,7 @@
 
 import os, sys
 
-path1 = "/glade/u/home/rdadata/lib/python"
+path1 = "/glade/u/home/gdexdata/lib/python"
 path2 = "/glade/u/home/tcram/lib/python"
 if (path1 not in sys.path):
 	sys.path.append(path1)
@@ -35,7 +35,7 @@ GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://app.globus.org/'
 GLOBUS_SHARE_URL = 'https://app.globus.org/file-manager'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
-RDA_DATA_PATH = '/glade/campaign/collections/rda'
+RDA_DATA_PATH = '/glade/campaign/collections/gdex'
 
 """ Set up logging directory """
 workdir = os.path.join(RDA_DATA_PATH, 'work/tcram')
@@ -43,14 +43,14 @@ logdir = os.environ.get('LOGDIR', workdir)
 LOGPATH = os.path.join(logdir, 'globus')
 
 """ HTTPS domains """
-GLOBUS_DATA_DOMAIN = 'https://data.rda.ucar.edu'
-GLOBUS_STRATUS_DOMAIN = 'https://stratus.rda.ucar.edu'
-GLOBUS_REQUEST_DOMAIN = 'https://request.rda.ucar.edu'
+GLOBUS_DATA_DOMAIN = 'https://data.gdex.ucar.edu'
+GLOBUS_STRATUS_DOMAIN = 'https://osdata.gdex.ucar.edu'
+GLOBUS_REQUEST_DOMAIN = 'https://request.gdex.ucar.edu'
 CGD_HTTPS_DOMAIN = 'https://g-09c647.7a577b.6fbd.data.globus.org'
 
 """ Endpoint IDs """
 RDA_DATASET_ENDPOINT = 'b6b5d5e8-eb14-4f6b-8928-c02429d67998'
-RDA_DSRQST_ENDPOINT = 'e1e2997e-d794-4868-838e-d4b8d5590853'
+RDA_DSRQST_ENDPOINT = 'e6cd9f43-935c-42e3-8d19-764d03241719'
 NCAR_HOST_ENDPOINT = 'dd1ee92a-6d04-11e5-ba46-22000b92c6ec'
 
 RDA_GLADE_ENDPOINT = '7f0acd80-dfb2-4412-b7b5-ebc970bedf24'
@@ -61,11 +61,12 @@ RDA_STRATUS_ENDPOINT = 'be4aa6a8-9e35-11eb-8a8e-d70d98a40c8d'
 GLOBUS_CGD_ENDPOINT_ID = '11651c26-80c2-4dac-a236-7755530731ac'
 
 GDEX_DATASET_ENDPOINT = 'c4e40965-a024-43d7-bef4-6010f3731b61'
-GDEX_DSRQST_ENDPOINT = '0104eacd-94b4-4202-9966-817247f0ca8c'
+GDEX_DSRQST_ENDPOINT = 'e6cd9f43-935c-42e3-8d19-764d03241719'
+GDEX_OS_ENDPOINT = '558ad782-80dd-4656-a64a-2245f38a7c9e' # GDEX Boreas object store endpoint
 
 
 """ Token storage adapters """
-RDA_QUASAR_TOKEN_STORAGE_ADAPTER = "/glade/u/home/rdadata/lib/python/globus_rda_quasar_tokens.json"
+RDA_QUASAR_TOKEN_STORAGE_ADAPTER = "/glade/u/home/gdexdata/lib/python/globus_rda_quasar_tokens.json"
 
 MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
@@ -110,5 +111,7 @@ MyEndpoints = {
     'rda#stratus': RDA_STRATUS_ENDPOINT,
     'rda#cgd': GLOBUS_CGD_ENDPOINT_ID,
 	'gdex-data': GDEX_DATASET_ENDPOINT,
-    'gdex-request': GDEX_DSRQST_ENDPOINT
+    'gdex-request': GDEX_DSRQST_ENDPOINT,
+	'gdex-os': GDEX_OS_ENDPOINT,
+	'gdex-boreas': GDEX_OS_ENDPOINT
 }
