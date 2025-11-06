@@ -31,7 +31,7 @@ from globus_utils import load_app_client
 from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import pytz
 import logging
 import logging.handlers
@@ -782,7 +782,6 @@ def parse_opts():
 
 	import argparse
 	import textwrap	
-	from datetime import timedelta
 
 	desc = "Get Globus task transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
 	epilog = textwrap.dedent('''\
@@ -792,7 +791,7 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request', 'gdex-data', 'gdex-request'], help="RDA shared endpoint canonical name. Valid names are 'gdex-data', 'gdex-request','datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request', 'gdex-data', 'gdex-request', 'gdex-os'], help="GDEX guest collection canonical name. Valid names are 'gdex-data', 'gdex-request','datashare', 'stratus', 'data_request', and 'gdex-os'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
 	parser.add_argument('-o', '--owner-id', action="store", help='A Globus Auth identity id.')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
@@ -804,16 +803,18 @@ def parse_opts():
 
 	endpoints = []
 	if opts['endpoint_name']:
-		if len(opts['endpoint_name']) > 5:
-			parser.error('A maximum of 5 endpoint names is allowed.')
+		if len(opts['endpoint_name']) > 6:
+			parser.error('A maximum of 6 endpoint names is allowed.')
 
 		for ep in opts['endpoint_name']:
 			if(re.search(r'datashare', ep)):
 				endpoint = 'rda#datashare'
-			if(re.search(r'stratus', ep)):
+			elif(re.search(r'stratus', ep)):
 				endpoint = 'rda#stratus'
-			if(re.search(r'data_request', ep)):
-				endpoint = 'rda#data_request'
+			elif(re.search(r'data_request', ep)):
+				endpoint = 'gdex-request'
+			else:
+				endpoint = ep
 			endpoints.append(endpoint)
 	else:
 		[endpoints.append(ep) for ep in all_endpoints]
@@ -822,8 +823,8 @@ def parse_opts():
 	
 	# Default start and end dates.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
-	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
-	end_date = datetime.utcnow().isoformat()
+	start_date = (datetime.now(timezone.utc)-timedelta(days=30)).isoformat()
+	end_date = datetime.now(timezone.utc).isoformat()
 	date_fmt = "%Y-%m-%d"
 
 	if opts['start_date']:
