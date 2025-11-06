@@ -31,7 +31,7 @@ from globus_utils import load_app_client
 from globus_sdk import (TransferClient, AuthClient, RefreshTokenAuthorizer,
                         GlobusError, GlobusAPIError, NetworkError)
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import pytz
 import logging
 import logging.handlers
@@ -782,7 +782,6 @@ def parse_opts():
 
 	import argparse
 	import textwrap	
-	from datetime import timedelta
 
 	desc = "Get Globus task transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
 	epilog = textwrap.dedent('''\
@@ -824,8 +823,8 @@ def parse_opts():
 	
 	# Default start and end dates.  Start date = 30 days ago, to cover full 30-day history in 
 	# Globus database.
-	start_date = (datetime.utcnow()-timedelta(days=30)).isoformat()
-	end_date = datetime.utcnow().isoformat()
+	start_date = (datetime.now(timezone.utc)-timedelta(days=30)).isoformat()
+	end_date = datetime.now(timezone.utc).isoformat()
 	date_fmt = "%Y-%m-%d"
 
 	if opts['start_date']:
