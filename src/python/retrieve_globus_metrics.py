@@ -804,16 +804,18 @@ def parse_opts():
 
 	endpoints = []
 	if opts['endpoint_name']:
-		if len(opts['endpoint_name']) > 5:
-			parser.error('A maximum of 5 endpoint names is allowed.')
+		if len(opts['endpoint_name']) > 6:
+			parser.error('A maximum of 6 endpoint names is allowed.')
 
 		for ep in opts['endpoint_name']:
 			if(re.search(r'datashare', ep)):
 				endpoint = 'rda#datashare'
-			if(re.search(r'stratus', ep)):
+			elif(re.search(r'stratus', ep)):
 				endpoint = 'rda#stratus'
-			if(re.search(r'data_request', ep)):
-				endpoint = 'rda#data_request'
+			elif(re.search(r'data_request', ep)):
+				endpoint = 'gdex-request'
+			else:
+				endpoint = ep
 			endpoints.append(endpoint)
 	else:
 		[endpoints.append(ep) for ep in all_endpoints]
