@@ -43,9 +43,9 @@ logdir = os.environ.get('LOGDIR', workdir)
 LOGPATH = os.path.join(logdir, 'globus')
 
 """ HTTPS domains """
-GLOBUS_DATA_DOMAIN = 'https://data.rda.ucar.edu'
-GLOBUS_STRATUS_DOMAIN = 'https://osdata.rda.ucar.edu'
-GLOBUS_REQUEST_DOMAIN = 'https://request.rda.ucar.edu'
+GLOBUS_DATA_DOMAIN = 'https://data.gdex.ucar.edu'
+GLOBUS_STRATUS_DOMAIN = 'https://osdata.gdex.ucar.edu'
+GLOBUS_REQUEST_DOMAIN = 'https://request.gdex.ucar.edu'
 CGD_HTTPS_DOMAIN = 'https://g-09c647.7a577b.6fbd.data.globus.org'
 
 """ Endpoint IDs """
