@@ -792,7 +792,7 @@ def parse_opts():
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request', 'gdex-data', 'gdex-request'], help="RDA shared endpoint canonical name. Valid names are 'gdex-data', 'gdex-request','datashare', 'stratus', and 'data_request'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'stratus', 'data_request', 'gdex-data', 'gdex-request', 'gdex-os'], help="GDEX guest collection canonical name. Valid names are 'gdex-data', 'gdex-request','datashare', 'stratus', 'data_request', and 'gdex-os'. Multiple names can be provided, separated by white space (e.g. -n datashare stratus).")
 	parser.add_argument('-o', '--owner-id', action="store", help='A Globus Auth identity id.')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
