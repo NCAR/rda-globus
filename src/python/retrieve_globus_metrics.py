@@ -39,14 +39,13 @@ import logging.handlers
 my_logger = logging.getLogger(__name__)
 
 # All valid endpoints
-all_endpoints = ['gdex-data', 'gdex-request', 'gdex-os', 'rda#datashare', 'rda#stratus']
+all_endpoints = ['gdex-data', 'gdex-request', 'gdex-os', 'rda#datashare']
 
 # Endpoint UUIDs
 endpoint_id_gdex_data = MyEndpoints['gdex-data']
 endpoint_id_gdex_os = MyEndpoints['gdex-os']
 endpoint_id_data_request = MyEndpoints['gdex-request']
 endpoint_id_datashare = MyEndpoints['rda#datashare']
-endpoint_id_stratus = MyEndpoints['rda#stratus']
 
 #=========================================================================================
 def main(opts):
