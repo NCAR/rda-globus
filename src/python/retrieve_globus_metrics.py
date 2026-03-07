@@ -61,19 +61,19 @@ def main(opts):
 		filters = set_filters(filter_args)
 
 		# Print opts to logger
-		msg = "ENDPOINT: {}\n".format(ep)
-		msg += "ENDPOINT ID: {}\n".format(MyEndpoints[ep])
+		msg = f"ENDPOINT: {ep}\n"
+		msg += f"ENDPOINT ID: {MyEndpoints[ep]}\n"
 		if opts['owner_id']:
-			msg += "GLOBUS OWNER ID: {}\n".format(opts['owner_id'])
-		msg += "START: {}\n".format(opts['start_date'])
-		msg += "END: {}\n".format(opts['end_date'])
-		msg += "TASK ONLY: {}\n".format(opts['task_only'])
-		my_logger.info("\n{}".format(msg))
+			msg += f"GLOBUS OWNER ID: {opts['owner_id']}\n"
+		msg += f"START: {opts['start_date']}\n"
+		msg += f"END: {opts['end_date']}\n"
+		msg += f"TASK ONLY: {opts['task_only']}\n"
+		my_logger.info(f"\n{msg}")
 
 		# Print opts to email log (PBS)
 		cache_email_logmsg(msg)
 
-		my_logger.info("Getting Globus metrics for endpoint {} ({})".format(ep, filters['filter_endpoint']))
+		my_logger.info(f"Getting Globus metrics for endpoint {ep} ({filters['filter_endpoint']})")
 	
 		# Get Globus transfer tasks
 		transfer_tasks = get_tasks(filters)
@@ -91,14 +91,14 @@ def main(opts):
 					if (len(data_transfers) > 0):
 						add_successful_transfers('gofile', data_transfers, task_id, bytes, endpoint_id)
 					else:
-						msg = "[main] Warning: No successful transfers found for task ID {}.".format(task_id)
+						msg = f"[main] Warning: No successful transfers found for task ID {task_id}."
 						my_logger.warning(msg)
 						cache_email_logmsg(msg)
 					# Update usage from gdex-data and gdex-os endpoints into table allusage
 					if (endpoint_id in [endpoint_id_datashare, endpoint_id_gdex_data, endpoint_id_gdex_os]):
 						update_allusage(task_id)
 		else:
-			msg = "No transfer tasks found for endpoint {} ({}) and date range {}".format(ep, filters['filter_endpoint'], filters['filter_completion_time'])
+			msg = f"No transfer tasks found for endpoint {ep} ({filters['filter_endpoint']}) and date range {filters['filter_completion_time']}"
 			my_logger.info(msg)
 			cache_email_logmsg(msg)
 	
@@ -114,29 +114,29 @@ def get_tasks(filters):
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
 		tc = TransferClient(authorizer=tc_authorizer)
 		for task in tc.paginated.endpoint_manager_task_list(**filters).items():
-			if task['type'] == 'SUCCEEDED':
+			if task['type'] == 'TRANSFER':
 				tasks.append(task)
 	except GlobusAPIError as e:
-		msg = ("[get_tasks] Globus API Error\n"
-		       "HTTP status: {}\n"
-		       "Error code: {}\n"
-		       "Error message: {}").format(e.http_status, e.code, e.message)
+		msg = (f"[get_tasks] Globus API Error\n"
+		       f"HTTP status: {e.http_status}\n"
+		       f"Error code: {e.code}\n"
+		       f"Error message: {e.message}")
 		my_logger.error(msg)
 		cache_email_logmsg(msg)
 		send_log_email(error=e.message)
 		raise e
 	except NetworkError as e:
-		msg = ("[get_tasks] Network Error\n"
-			   "HTTP status: {}\n"
-		       "Error code: {}\n"
-		       "Error message: {}").format(e.http_status, e.code, e.message)
+		msg = (f"[get_tasks] Network Error\n"
+			   f"HTTP status: {e.http_status}\n"
+		       f"Error code: {e.code}\n"
+		       f"Error message: {e.message}")
 		my_logger.error(msg)
 		cache_email_logmsg(msg)
 		send_log_email(error=e.message)
 		raise e
 	except GlobusError as e:
-		msg = ("[get_tasks] Globus Error\n"
-		       "Error message: {}").format(e.message)
+		msg = (f"[get_tasks] Globus Error\n"
+		       f"Error message: {e.message}")
 		my_logger.exception(msg)
 		cache_email_logmsg(msg)
 		send_log_email(error=e.message)
@@ -183,7 +183,7 @@ def add_tasks(go_table, data):
 		# change record key 'owner_string' to 'username'
 		rec['username'] = rec.pop('owner_string')
 
-		condition = "task_id='{0}'".format(rec['task_id'])
+		condition = f"task_id='{rec['task_id']}'"
 		myrec = pgget(go_table, task_keys_str, condition)
 		if (len(myrec) > 0):
 			try:
@@ -197,14 +197,14 @@ def add_tasks(go_table, data):
 				pgupdt(go_table, rec, condition)
 				count_updt+=1
 			else:
-				my_logger.info("[add_tasks] DB record for task ID {0} exists and is up to date.".format(rec['task_id']))
+				my_logger.info(f"[add_tasks] DB record for task ID {rec['task_id']} exists and is up to date.")
 		else:
 			rec['request_time'] = rec['request_time'][:19]
 			rec['completion_time'] = rec['completion_time'][:19]
 			pgadd(go_table, rec)
 			count_add+=1
 
-	msg = "[add_tasks] {0} new transfer tasks added and {1} transfer tasks updated in table {2}".format(count_add, count_updt, go_table)
+	msg = f"[add_tasks] {count_add} new transfer tasks added and {count_updt} transfer tasks updated in table {go_table}"
 	my_logger.info(msg)
 	cache_email_logmsg(msg)
 		
@@ -226,25 +226,25 @@ def get_successful_transfers(task_id):
 		for transfer in tc.paginated.endpoint_manager_task_successful_transfers(task_id).items():
 			transfers.append(transfer)
 	except GlobusAPIError as e:
-		msg = ("[get_successful_transfers] Globus API Error\n"
-		       "HTTP status: {}\n"
-		       "Error code: {}\n"
-		       "Error message: {}").format(e.http_status, e.code, e.message)
+		msg = (f"[get_successful_transfers] Globus API Error\n"
+		       f"HTTP status: {e.http_status}\n"
+		       f"Error code: {e.code}\n"
+		       f"Error message: {e.message}")
 		my_logger.error(msg)
 		cache_email_logmsg(msg)
 		raise e
 	except NetworkError as e:
-		msg = ("[get_successful_transfers] Network Error\n"
-			   "HTTP status: {}\n"
-		       "Error code: {}\n"
-		       "Error message: {}").format(e.http_status, e.code, e.message)
+		msg = (f"[get_successful_transfers] Network Error\n"
+			   f"HTTP status: {e.http_status}\n"
+		       f"Error code: {e.code}\n"
+		       f"Error message: {e.message}")
 		my_logger.error(msg)
 		cache_email_logmsg(msg)
 		send_log_email(error=e.message)
 		raise e
 	except GlobusError as e:
-		msg = ("[get_successful_transfers] Globus Error\n"
-		       "Error message: {}").format(e.message)
+		msg = (f"[get_successful_transfers] Globus Error\n"
+		       f"Error message: {e.message}")
 		my_logger.exception(msg)
 		cache_email_logmsg(msg)
 		send_log_email(error=e.message)
@@ -289,13 +289,13 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 			else:
 				msg = "[prepare_transfer_recs] transfer file not found"
 				my_logger.warning(msg)
-				msg = "[prepare_transfer_recs] source_path: {}".format(source_path)
+				msg = f"[prepare_transfer_recs] source_path: {source_path}"
 				my_logger.info(msg)
 				return transfer_recs
 			
 			field = 'wfile'
-			table = 'wfile_{}'.format(dsid)
-			condition = "wfile='{}'".format(tfile)
+			table = f'wfile_{dsid}'
+			condition = f"wfile='{tfile}'"
 			myrec = pgget(table, 'data_size', condition)
 			
 			if (len(myrec) > 0):
@@ -321,14 +321,14 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 				my_logger.warning(msg)
 				return transfer_recs
 			
-			condition = "rindex='{0}'".format(rindex)
+			condition = f"rindex='{rindex}'"
 			myrec = pgget('dsrqst', 'dsid', condition)
 			if (len(myrec) == 0):
 				myrec = pgget('dspurge', 'dsid', condition)
 			if (len(myrec) > 0):
 				dsid = myrec['dsid']
 			else:
-				my_logger.warning("Request index {0} not found".format(rindex))
+				my_logger.warning(f"Request index {rindex} not found")
 				dsid = None
 			
 			transfer_recs.append({
@@ -350,7 +350,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	""" Insert/update list of files transferred successfully """
 
-	my_logger.info("[add_successful_transfers] Adding successful transfers for task_id: {0}".format(task_id))
+	my_logger.info(f"[add_successful_transfers] Adding successful transfers for task_id: {task_id}")
 	
 	count_add = 0
 	count_updt = 0
@@ -360,12 +360,12 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 	if (len(data) >= 1):
 		records = prepare_transfer_recs(data, task_id, bytes, endpoint)
 		if (len(records) == 0):
-			msg = "[add_successful_transfers] Task ID {}: transfer_recs is empty".format(task_id)
+			msg = f"[add_successful_transfers] Task ID {task_id}: transfer_recs is empty"
 			my_logger.warning(msg)
 			cache_email_logmsg(msg)				
 			return
 	else:
-		my_logger.warning("[add_successful_transfers] There are no successful transfers in the return document.")
+		my_logger.warning(f"[add_successful_transfers] Task ID {task_id}: There are no successful transfers in the return document.")
 		return
 	
 	# Keys to retain from Globus API response
@@ -384,7 +384,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			continue
 		else:
 			if (endpoint in [endpoint_id_datashare, endpoint_id_gdex_data, endpoint_id_gdex_os]):
-				condition = "task_id='{0}' AND source_path='{1}'".format(records[i]['task_id'], records[i]['source_path'])
+				condition = f"task_id='{records[i]['task_id']}' AND source_path='{records[i]['source_path']}'"
 				myrec = pgget(go_table, keys_str, condition)
 				if (len(myrec) > 0):
 					if not (records[i] == myrec):
@@ -398,7 +398,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			elif (endpoint == endpoint_id_data_request):
 				dsrqst_count += 1
 			else:
-				my_logger.warning('[add_successful_transfers] Endpoint {0} not found'.format(endpoint))
+				my_logger.warning(f"[add_successful_transfers] Endpoint {endpoint} not found")
 				return
 
 	if (endpoint == endpoint_id_data_request and len(records) > 0):
@@ -416,7 +416,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		                   'size': bytes,
 		                   'count': dsrqst_count
 		                   })
-		condition = "task_id='{0}' AND rindex={1}".format(task_id, dsrqst_rec[0]['rindex'])
+		condition = f"task_id='{task_id}' AND rindex={dsrqst_rec[0]['rindex']}"
 		myrec = pgget(go_table, keys_str, condition)
 		if (len(myrec) > 0):
 			if not (dsrqst_rec == myrec):
@@ -428,12 +428,12 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 			pgadd(go_table, dsrqst_rec[0])
 			count_add += 1
 	
-	msg_add_updt = "[add_successful_transfers] Task ID {0}: {1} transfers added and {2} transfers updated".format(task_id, count_add, count_updt)
+	msg_add_updt = f"[add_successful_transfers] Task ID {task_id}: {count_add} transfers added and {count_updt} transfers updated"
 	my_logger.info(msg_add_updt)
 	cache_email_logmsg(msg_add_updt)
 	
 	if (count_none > 0):
-		msg_none = "[add_successful_transfers] Task ID {0}: {1} transfers already up to date".format(task_id, count_none)
+		msg_none = f"[add_successful_transfers] Task ID {task_id}: {count_none} transfers already up to date"
 		my_logger.info(msg_none)
 		cache_email_logmsg(msg_none)
 
@@ -450,7 +450,7 @@ def update_allusage(task_id):
 	count_add = 0
 	count_updt = 0
 	
-	condition = "task_id='{0}'".format(task_id)
+	condition = f"task_id='{task_id}'"
 	myrec = pgget('gotask', 'email, completion_time, bytes_transferred, EXTRACT(QUARTER FROM completion_time) AS quarter', condition)
 	if (len(myrec) > 0):
 		email = myrec['email']
@@ -458,7 +458,7 @@ def update_allusage(task_id):
 		bytes_transferred = myrec['bytes_transferred']
 		quarter = int(myrec['quarter'])
 	else:
-		my_logger.warning("[update_allusage] Task ID {0} not found in dssdb.gotask.".format(task_id))
+		my_logger.warning(f"[update_allusage] Task ID {task_id} not found in dssdb.gotask.")
 		return
 	
 	# Format date and time.
@@ -469,17 +469,17 @@ def update_allusage(task_id):
 	# Get user org_type and country
 	wuid = check_wuser_wuid(email)
 	if not wuid:
-		my_logger.info("wuid not found for email {}".format(email))
+		my_logger.info(f"[update_allusage] wuid not found for email {email}")
 		org_type = None
 		country = None
 	else:
-		condition = "wuid={}".format(wuid)
+		condition = f"wuid={wuid}"
 		myrec = pgget('wuser', 'org_type, country', condition)
 		if (len(myrec) > 0):
 			org_type = myrec['org_type']
 			country = myrec['country']
 		else:
-			my_logger.info("wuser not found for email {}, task_id {}.".format(email, task_id))
+			my_logger.info(f"[update_allusage] wuser not found for email {email}, task_id {task_id}.")
 			org_type = None
 			country = None
 	
@@ -498,7 +498,7 @@ def update_allusage(task_id):
 
 	# Get dsid and calculate size.  Query table gofile and handle multiple records, if
 	# necessary.
-	condition = "task_id='{0}' GROUP BY dsid".format(task_id)
+	condition = f"task_id='{task_id}' GROUP BY dsid"
 	myrecs = pgmget('gofile','dsid, SUM(size) as sum', condition)
 
 	if myrecs:
@@ -512,14 +512,14 @@ def update_allusage(task_id):
 			usage_record.update(task_record)
 			all_recs.append(usage_record)
 	else:
-		my_logger.info("[update_allusage] Task ID {0} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0".format(task_id))
+		my_logger.info(f"[update_allusage] Task ID {task_id} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0")
 		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
 		usage_record.update(task_record)
 		all_recs.append(usage_record)
 
 	for i in range(len(all_recs)):
 		# check if record already exists in allusage table (dsid, date, time, and size will match)
-		table = "allusage_{}".format(completion_year)
+		table = f"allusage_{completion_year}"
 		fields = ['aidx', 'email']
 		fields_str = ",".join(fields)
 		dsid = all_recs[i]['dsid']
@@ -527,7 +527,7 @@ def update_allusage(task_id):
 		time = all_recs[i]['time']
 		size = all_recs[i]['size']
 		email = all_recs[i]['email']
-		cond = "dsid='{0}' AND date='{1}' AND time='{2}' AND size={3} AND method='{4}'".format(dsid, date, time, size, method)
+		cond = f"dsid='{dsid}' AND date='{date}' AND time='{time}' AND size={size} AND method='{method}'"
 		myrec = pgget(table, fields_str, cond)
 
 		if (len(myrec) > 0):
@@ -536,7 +536,7 @@ def update_allusage(task_id):
 				continue
 			else:
 				# update email with allusage record
-				cond = "aidx={}".format(myrec['aidx'])
+				cond = f"aidx={myrec['aidx']}"
 				pgupdt(table, all_recs[i], cond)
 				count_updt += 1
 		else:
@@ -544,11 +544,11 @@ def update_allusage(task_id):
 			try:
 				count_add += add_yearly_allusage(completion_year, all_recs[i], docheck=4)
 			except Exception as e:
-				msg = "[update_allusage] Error adding/updating allusage record.\n{}".format(traceback.format_exc(e))
+				msg = f"[update_allusage] Error adding/updating allusage record.\n{traceback.format_exc(e)}"
 				my_logger.error(msg)
 				cache_email_logmsg(msg)
 
-	msg = "[update_allusage] Task ID {0}: {1}/{2} metrics added/updated in allusage table.".format(task_id, count_add, count_updt)
+	msg = f"[update_allusage] Task ID {task_id}: {count_add}/{count_updt} metrics added/updated in allusage table."
 	my_logger.info(msg)
 	cache_email_logmsg(msg)
 
@@ -617,30 +617,30 @@ def get_globus_email(data):
 			username = result.data['identities'][0]['username']
 			if username.find(rda_oidc) > 0:
 				email = username.replace(rda_oidc,'')
-				my_logger.info("NCAR RDA identity found.  User email updated to {}".format(email))
+				my_logger.info(f"NCAR RDA identity found.  User email updated to {email}")
 			else:
 				email = result.data['identities'][0]['email']
 		except GlobusAPIError as e:
-			msg = ("[get_globus_email] Globus API Error\n"
-		       	   "HTTP status: {}\n"
-		           "Error code: {}\n"
-		           "Error message: {}").format(e.http_status, e.code, e.message)
+			msg = (f"[get_globus_email] Globus API Error\n"
+		       	   f"HTTP status: {e.http_status}\n"
+		           f"Error code: {e.code}\n"
+		           f"Error message: {e.message}")
 			my_logger.error(msg)
 			cache_email_logmsg(msg)
 			send_log_email(error=e.message)
 			raise e
 		except NetworkError as e:
-			msg = ("[get_globus_email] Network Error\n"
-			       "HTTP status: {}\n"
-		           "Error code: {}\n"
-		           "Error message: {}").format(e.http_status, e.code, e.message)
+			msg = (f"[get_globus_email] Network Error\n"
+			       f"HTTP status: {e.http_status}\n"
+		           f"Error code: {e.code}\n"
+		           f"Error message: {e.message}")
 			my_logger.error(msg)
 			cache_email_logmsg(msg)
 			send_log_email(error=e.message)
 			raise e
 		except GlobusError as e:
-			msg = ("[get_globus_email] Globus Error\n"
-		           "Error message: {}").format(e.message)
+			msg = (f"[get_globus_email] Globus Error\n"
+		           f"Error message: {e.message}")
 			my_logger.exception(msg)
 			cache_email_logmsg(msg)
 			send_log_email(error=e.message)
@@ -660,7 +660,7 @@ def check_email(data):
 
 	emails = []
 	for i in range(len(data)):
-		condition = " WHERE username='{0}' AND status='ACTIVE'".format(data[i]['owner_id'])
+		condition = f" WHERE username='{data[i]['owner_id']}' AND status='ACTIVE'"
 		myrec = myget('gouser', ['email'], condition)
 		if 'email' in myrec:
 			emails.append(myrec)
@@ -673,7 +673,7 @@ def update_records(list1,list2):
 	""" Update the records list of task dictionaries """
 
 	if (len(list1) != len(list2)):
-		my_logger.warning("[update_records] Mismatch between len list1 ({0}) and len list2 ({1})".format(len(list1),len(list2)))
+		my_logger.warning(f"[update_records] Mismatch between len list1 ({len(list1)}) and len list2 ({len(list2)})")
 		return
 
 	for i in range(len(list1)):
@@ -707,8 +707,8 @@ def handle_error(r, data):
 	   len(data['DATA']) = 0
 	"""
 
-	msg = "Error {0}: {1}".format(str(r.status_code), data['message'])
-	msg += " Resource: {0}".format(data['resource'])
+	msg = f"Error {r.status_code}: {data['message']}"
+	msg += f" Resource: {data['resource']}"
 	my_logger.error(msg)
 	error_code = r.headers['x-transfer-api-error']
 	
@@ -728,16 +728,16 @@ def set_filters(filter_args):
 	if (filter_args['owner_id'] != ''): filters['filter_owner_id'] = filter_args['owner_id']
 	if (filter_args['start_date'] != ''):
 		if (filter_args['end_date'] != ''):
-			filters['filter_completion_time'] = "{0},{1}".format(filter_args['start_date'], filter_args['end_date'])
+			filters['filter_completion_time'] = f"{filter_args['start_date']},{filter_args['end_date']}"
 		else:
-			filters['filter_completion_time'] = "{0}".format(filter_args['start_date'])
+			filters['filter_completion_time'] = f"{filter_args['start_date']}"
 	else:
 		if (filter_args['end_date'] !=''):
-			filters['filter_completion_time'] = ",{0}".format(filter_args['end_date'])
+			filters['filter_completion_time'] = f",{filter_args['end_date']}"
 
 	my_logger.debug('FILTERS   :')
 	for key in filters:
-		msg = '{0}: {1}'.format(key,filters[key])
+		msg = f"{key}: {filters[key]}"
 		my_logger.debug(msg)
 
 	return filters
@@ -751,7 +751,7 @@ def configure_email_log():
 	ckrec = pgget('dscheck', 'cindex,command', condition)
 	if (len(ckrec) > 0):
 		PGLOG['DSCHECK'] = ckrec
-		my_logger.info("[configure_log] dscheck record found with dscheck index {}".format(PGLOG['DSCHECK']['cindex']))
+		my_logger.info(f"[configure_log] dscheck record found with dscheck index {PGLOG['DSCHECK']['cindex']}")
 
 #=========================================================================================
 def cache_email_logmsg(msg, error=None):
