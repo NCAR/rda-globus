@@ -114,8 +114,7 @@ def get_tasks(filters):
 		tc_authorizer = RefreshTokenAuthorizer(MyGlobus['transfer_refresh_token'], load_app_client())
 		tc = TransferClient(authorizer=tc_authorizer)
 		for task in tc.paginated.endpoint_manager_task_list(**filters).items():
-			if task['type'] == 'TRANSFER':
-				tasks.append(task)
+			tasks.append(task)
 	except GlobusAPIError as e:
 		msg = (f"[get_tasks] Globus API Error\n"
 		       f"HTTP status: {e.http_status}\n"
@@ -724,6 +723,7 @@ def set_filters(filter_args):
 	my_logger.debug('[set_filters] Defining Globus API filters')
 	filters = {}
 	filters['filter_status'] = 'SUCCEEDED'
+	filters['filter_type'] = 'TRANSFER'
 	if (filter_args['endpoint_name']): filters['filter_endpoint'] = MyEndpoints[filter_args['endpoint_name']]
 	if (filter_args['owner_id'] != ''): filters['filter_owner_id'] = filter_args['owner_id']
 	if (filter_args['start_date'] != ''):
