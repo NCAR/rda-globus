@@ -35,10 +35,13 @@ GLOBUS_AUTH_BASE_URL = 'https://auth.globus.org/v2/'
 GLOBUS_APP_URL = 'https://app.globus.org/'
 GLOBUS_SHARE_URL = 'https://app.globus.org/file-manager'
 REDIRECT_URI = '/cgi-bin/rdaGlobusTransfer'
-RDA_DATA_PATH = '/glade/campaign/collections/gdex'
+GDEX_DATA_PATH = '/glade/campaign/collections/gdex'
+RDA_DATA_PATH = GDEX_DATA_PATH
+GDEX_WORK_PATH = '/lustre/desc1/gdex'
+
 
 """ Set up logging directory """
-workdir = os.path.join(RDA_DATA_PATH, 'work/tcram')
+workdir = os.path.join(GDEX_WORK_PATH, 'work/tcram')
 logdir = os.environ.get('LOGDIR', workdir)
 LOGPATH = os.path.join(logdir, 'globus')
 
@@ -49,11 +52,7 @@ GLOBUS_REQUEST_DOMAIN = 'https://request.gdex.ucar.edu'
 CGD_HTTPS_DOMAIN = 'https://g-09c647.7a577b.6fbd.data.globus.org'
 
 """ Endpoint IDs """
-RDA_DATASET_ENDPOINT = 'b6b5d5e8-eb14-4f6b-8928-c02429d67998'
-RDA_DSRQST_ENDPOINT = 'e6cd9f43-935c-42e3-8d19-764d03241719'
 NCAR_HOST_ENDPOINT = 'dd1ee92a-6d04-11e5-ba46-22000b92c6ec'
-
-RDA_GLADE_ENDPOINT = '7f0acd80-dfb2-4412-b7b5-ebc970bedf24'
 RDA_QUASAR_ENDPOINT = 'e50caa88-feae-11ea-81a2-0e2f230cc907'
 RDA_QUASAR_DR_ENDPOINT = '4c42c32c-feaf-11ea-81a2-0e2f230cc907'
 
@@ -71,12 +70,6 @@ MyGlobus = {
    'url': GLOBUS_TRANSFER_BASE_URL,
    'transfer_refresh_token': TRANSFER_REFRESH_TOKEN,
    'auth_refresh_token': AUTH_REFRESH_TOKEN,
-   'datashare_ep': RDA_DATASET_ENDPOINT,
-   'data_request_ep' : RDA_DSRQST_ENDPOINT,
-   'datashare_legacy' : 'rda#datashare',
-   'data_request_legacy' : 'rda#data_request',
-   'datashare_ep_base' : RDA_DATA_PATH + '/data/',
-   'data_request_ep_base' : RDA_DATA_PATH + '/transfer/',
    'host_endpoint_id' : NCAR_HOST_ENDPOINT,
    'client_id': CLIENT_ID,
    'client_secret': CLIENT_SECRET,
@@ -85,24 +78,17 @@ MyGlobus = {
    'globusURL': GLOBUS_APP_URL,
    'globus_share_url': GLOBUS_SHARE_URL,
    'rda_quasar_client_id': RDA_QUASAR_CLIENT_ID,
-   'rda_glade_endpoint': RDA_GLADE_ENDPOINT,
    'quasar_endpoint': RDA_QUASAR_ENDPOINT,
    'quasar_dr_endpoint': RDA_QUASAR_DR_ENDPOINT
 }
 
 # Endpoint dict mapping endpoint display names and aliases to endpoint IDs
 MyEndpoints = {
-    'NCAR RDA Data Requests': RDA_DSRQST_ENDPOINT,
-    'NCAR RDA Dataset Archive': RDA_DATASET_ENDPOINT,
-    'NCAR RDA GLADE': RDA_GLADE_ENDPOINT,
     'NCAR RDA Quasar': RDA_QUASAR_ENDPOINT,
     'NCAR RDA Quasar DRDATA': RDA_QUASAR_DR_ENDPOINT,
-    'rda-glade': RDA_GLADE_ENDPOINT,
     'rda-quasar': RDA_QUASAR_ENDPOINT,
     'rda-quasar-drdata': RDA_QUASAR_DR_ENDPOINT,
     'rda-cgd': GLOBUS_CGD_ENDPOINT_ID,
-    'rda#datashare': RDA_DATASET_ENDPOINT,
-    'rda#data_request': RDA_DSRQST_ENDPOINT,
     'rda#cgd': GLOBUS_CGD_ENDPOINT_ID,
 	'gdex-data': GDEX_DATASET_ENDPOINT,
     'gdex-request': GDEX_DSRQST_ENDPOINT,
