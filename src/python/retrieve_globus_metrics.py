@@ -39,7 +39,7 @@ import logging.handlers
 my_logger = logging.getLogger(__name__)
 
 # All valid endpoints
-all_endpoints = ['gdex-data', 'gdex-request', 'gdex-os', 'rda#datashare']
+all_endpoints = ['gdex-data', 'gdex-request', 'gdex-os']
 
 # Endpoint UUIDs
 endpoint_id_gdex_data = MyEndpoints['gdex-data']
