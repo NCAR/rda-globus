@@ -45,7 +45,6 @@ all_endpoints = ['gdex-data', 'gdex-request', 'gdex-os']
 endpoint_id_gdex_data = MyEndpoints['gdex-data']
 endpoint_id_gdex_os = MyEndpoints['gdex-os']
 endpoint_id_data_request = MyEndpoints['gdex-request']
-endpoint_id_datashare = MyEndpoints['rda#datashare']
 
 #=========================================================================================
 def main(opts):
@@ -95,7 +94,7 @@ def main(opts):
 						my_logger.warning(msg)
 						cache_email_logmsg(msg)
 					# Update usage from gdex-data and gdex-os endpoints into table allusage
-					if (endpoint_id in [endpoint_id_datashare, endpoint_id_gdex_data, endpoint_id_gdex_os]):
+					if (endpoint_id in [endpoint_id_gdex_data, endpoint_id_gdex_os]):
 						update_allusage(task_id)
 		else:
 			msg = f"No transfer tasks found for endpoint {ep} ({filters['filter_endpoint']}) and date range {filters['filter_completion_time']}"
@@ -270,7 +269,7 @@ def prepare_transfer_recs(data, task_id, bytes, endpoint):
 		data_type = data[i]['DATA_TYPE']
 		pathsplit = source_path.split("/")
 
-		if (endpoint in [endpoint_id_datashare, endpoint_id_gdex_data, endpoint_id_gdex_os]):
+		if (endpoint in [endpoint_id_gdex_data, endpoint_id_gdex_os]):
 			# Query file size from wfile_dnnnnnn.data_size
 		    
 			# Get dsid from source_path
@@ -383,7 +382,7 @@ def add_successful_transfers(go_table, data, task_id, bytes, endpoint):
 		if searchObj:
 			continue
 		else:
-			if (endpoint in [endpoint_id_datashare, endpoint_id_gdex_data, endpoint_id_gdex_os]):
+			if (endpoint in [endpoint_id_gdex_data, endpoint_id_gdex_os]):
 				condition = f"task_id='{records[i]['task_id']}' AND source_path='{records[i]['source_path']}'"
 				myrec = pgget(go_table, keys_str, condition)
 				if (len(myrec) > 0):
@@ -512,8 +511,8 @@ def update_allusage(task_id):
 			usage_record.update(task_record)
 			all_recs.append(usage_record)
 	else:
-		my_logger.info(f"[update_allusage] Task ID {task_id} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0")
-		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
+		my_logger.info(f"[update_allusage] Task ID {task_id} not found in table gofile. Adding/updating record in allusage with dsid=d000000")
+		usage_record = {'dsid': 'd000000', 'size': bytes_transferred}
 		usage_record.update(task_record)
 		all_recs.append(usage_record)
 
@@ -594,10 +593,6 @@ def map_endpoint_names(data):
 			data[i]['source_endpoint'] = 'gdex-os'
 		if source_endpoint_id == MyEndpoints['gdex-request']:
 			data[i]['source_endpoint'] = 'gdex-request'
-		if source_endpoint_id == MyEndpoints['rda#datashare']:
-			data[i]['source_endpoint'] = 'rda#datashare'
-		if source_endpoint_id == MyEndpoints['rda#data_request']:
-			data[i]['source_endpoint'] = 'rda#data_request'
 	return data
 
 #=========================================================================================
@@ -786,12 +781,12 @@ def parse_opts():
 	desc = "Get Globus task transfer metrics from the Globus Transfer API and store the metrics in RDADB."	
 	epilog = textwrap.dedent('''\
 	Example:
-	  - Retrieve transfer metrics for endpoint rda#datashare between 1 Jan - 31 Jan 2017:
-	              retrieve_globus_metrics.py -n datashare -s 2017-01-01 -e 2017-01-31	
+	  - Retrieve transfer metrics for endpoint gdex-data between 1 Jan - 31 Jan 2026:
+	              retrieve_globus_metrics.py -n gdex-data -s 2026-01-01 -e 2026-01-31	
 	''')
 
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=desc, epilog=textwrap.dedent(epilog))
-	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['datashare', 'data_request', 'gdex-data', 'gdex-request', 'gdex-os'], help="GDEX guest collection canonical name. Valid names are 'gdex-data', 'gdex-request','datashare', 'data_request', and 'gdex-os'. Multiple names can be provided, separated by white space (e.g. -n datashare gdex-data).")
+	parser.add_argument('-n', '--endpoint-name', action="store", required=False, nargs='*', choices=['gdex-data', 'gdex-request', 'gdex-os'], help="GDEX guest collection canonical name. Valid names are 'gdex-data', 'gdex-request', and 'gdex-os'. Multiple names can be provided, separated by white space (e.g. -n gdex-data gdex-os).")
 	parser.add_argument('-o', '--owner-id', action="store", help='A Globus Auth identity id.')
 	parser.add_argument('-s', '--start-date', action="store", help='Begin date for search.  Default is 30 days prior.')
 	parser.add_argument('-e', '--end-date', action="store", help='End date for search.  Default is current date.')
@@ -807,10 +802,12 @@ def parse_opts():
 			parser.error('A maximum of 6 endpoint names is allowed.')
 
 		for ep in opts['endpoint_name']:
-			if(re.search(r'datashare', ep)):
-				endpoint = 'rda#datashare'
-			elif(re.search(r'data_request', ep)):
+			if(re.search(r'gdex-data', ep)):
+				endpoint = 'gdex-data'
+			elif(re.search(r'gdex-request', ep)):
 				endpoint = 'gdex-request'
+			elif(re.search(r'gdex-os', ep)):
+				endpoint = 'gdex-os'
 			else:
 				endpoint = ep
 			endpoints.append(endpoint)
