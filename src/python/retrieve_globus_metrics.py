@@ -511,8 +511,8 @@ def update_allusage(task_id):
 			usage_record.update(task_record)
 			all_recs.append(usage_record)
 	else:
-		my_logger.info(f"[update_allusage] Task ID {task_id} not found in table gofile. Adding/updating record in allusage with dsid=ds000.0")
-		usage_record = {'dsid': 'ds000.0', 'size': bytes_transferred}
+		my_logger.info(f"[update_allusage] Task ID {task_id} not found in table gofile. Adding/updating record in allusage with dsid=d000000")
+		usage_record = {'dsid': 'd000000', 'size': bytes_transferred}
 		usage_record.update(task_record)
 		all_recs.append(usage_record)
 
